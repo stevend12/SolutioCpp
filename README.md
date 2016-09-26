@@ -2,7 +2,7 @@
 
 This repository was started with the goal of creating a C++ framework for
 applications of physics in medicine, particularly radiation therapy and medical
-imaging. From this framework I hope that applications can be created that are
+imaging. From this framework applications can be created that are
 high-performance, inexpensive, and transparent (i.e. removing the "black box"
 from medical software). The repository is a companion to the website
 [Solutio in silico](http://www.solutioinsilico.com).
