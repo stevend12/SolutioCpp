@@ -18,7 +18,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// Data Interpolation Header File (DataInterpolation.hpp)                     //
+// DataInterpolation.hpp                                                      //
+// Data Interpolation Functions                                               //
 // Created September 27, 2016 (Steven Dolly)                                  //
 //                                                                            //
 // This header file contains template functions to interpolate one- and two-  //
@@ -30,7 +31,7 @@
 #ifndef DATAINTERPOLATION_HPP
 #define DATAINTERPOLATION_HPP
 
-// C++ header files
+// Standard C++ header files
 #include <vector>
 
 // C header files
