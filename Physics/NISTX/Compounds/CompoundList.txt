@@ -1,0 +1,48 @@
+A-150 Tissue-Equivalent Plastic	a150.nistx
+Adipose Tissue (ICRU-44)	adipose.nistx
+Air, Dry (near sea level)	air.nistx
+Alanine	alanine.nistx
+B-100 Bone-Equivalent Plastic	b100.nistx
+Bakelite	bakelite.nistx
+Blood, Whole (ICRU-44)	blood.nistx
+Bone, Cortical (ICRU-44)	bone.nistx
+Brain, Grey/White Matter (ICRU-44)	brain.nistx
+Breast Tissue (ICRU-44)	breast.nistx
+C-552 Air-equivalent Plastic	c552.nistx
+Cadmium Telluride	telluride.nistx
+Calcium Fluoride	fluoride.nistx
+Calcium Sulfate	calcium.nistx
+15 mmol L-1 Ceric Ammonium Sulfate Solution	ceric.nistx
+Cesium Iodide	cesium.nistx
+Concrete, Ordinary	concrete.nistx
+Concrete, Barite (TYPE BA)	concreteba.nistx
+Eye Lens (ICRU-44)	eye.nistx
+Ferrous Sulfate Standard Fricke	fricke.nistx
+Gadolinium Oxysulfide	gadolinium.nistx
+Gafchromic Sensor	gafchromic.nistx
+Gallium Arsenide	gallium.nistx
+Glass, Borosilicate (Pyrex)	pyrex.nistx
+Glass, Lead	glass.nistx
+Lithium Fluride	lithiumflu.nistx
+Lithium Tetraborate	lithium.nistx
+Lung Tissue (ICRU-44)	lung.nistx
+Magnesium Tetroborate	magnesium.nistx
+Mercuric Iodide	mercuric.nistx
+Muscle, Skeletal (ICRU-44)	muscle.nistx
+Ovary (ICRU-44)	ovary.nistx
+Photographic Emulsion (Kodak Type AA)	kodak.nistx
+Photographic Emulsion (Standard Nuclear)	photoemul.nistx
+Plastic Scintillator, Vinyltoluene	vinyl.nistx
+Polyethylene	polyethylene.nistx
+Polyethylene Terephthalate, (Mylar)	mylar.nistx
+Polymethyl Methacrylate	pmma.nistx
+Polystyrene	polystyrene.nistx
+Polytetrafluoroethylene, (Teflon)	teflon.nistx
+Polyvinyl Chloride	polyvinyl.nistx
+Radiochromic Dye Film, Nylon Base	nylonfilm.nistx
+Testis (ICRU-44)	testis.nistx
+Tissue, Soft (ICRU-44)	tissue.nistx
+Tissue, Soft (ICRU Four-Component)	tissue4.nistx
+Tissue-Equivalent Gas, Methane Based	temethane.nistx
+Tissue-Equivalent Gas, Propane Based	tepropane.nistx
+Water, Liquid	water.nistx

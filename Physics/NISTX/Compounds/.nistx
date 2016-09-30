@@ -1,0 +1,20 @@
+# .nistx
+# Attenuation data for () obtained directly from the NIST website
+
+# Material Name
+
+
+# Z/A
+
+
+# Mean exitation energy (eV)
+
+
+# Density
+
+
+# Material composition (Z: weight fraction)
+
+# Attenuation data
+# Each row includes a photon energy, a mass attenuation coefficient, and a mass
+# energy absorption coefficient
