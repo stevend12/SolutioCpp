@@ -34,7 +34,7 @@
 // Standard C++ header files
 #include <vector>
 
-// C header files
+// Standard C header files
 #include <cmath>
 
 namespace solutio

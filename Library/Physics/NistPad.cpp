@@ -69,7 +69,24 @@ namespace solutio
     int z, counter;
     double input;
     
-    fin.open(file_name.c_str());
+    // Load element data file names
+    std::vector<std::string> elements;
+    fin.open("/home/steven/C++/SolutioCpp/Library/Physics/NISTX/Elements/ElementList.txt");
+    while(std::getline(fin, line))
+    {
+      elements.push_back(line);
+    }
+    fin.close();
+    
+    // Load compound file names
+    std::vector<std::string> compounds;
+    
+    // Check to see if function input matched a valid element compound
+    
+    // Open NIST data file
+    std::string full_path =
+        "/home/steven/C++/SolutioCpp/Library/Physics/NISTX/Elements/"+file_name;
+    fin.open(full_path.c_str());
     
     // Read in material information from header
     for(int n = 0; n < 5; n++) std::getline(fin, line);
