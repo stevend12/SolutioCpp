@@ -33,6 +33,7 @@
 
 // Standard C++ header files
 #include <vector>
+#include <utility>
 
 // Standard C header files
 #include <cmath>
@@ -79,6 +80,19 @@ namespace solutio
     T f = (x_value - x_data[(index-1)]) / (x_data[index] - x_data[(index-1)]);
     T t_value = f*y_2 + (1-f)*y_1;
     return t_value;
+  }
+  
+  // Normal linear interpolation for 1D vector<pair> data
+  template <class T>
+  T LinearInterpolation(std::vector< std::pair<T,T> > data, T x_value)
+  {
+    int index = 0;
+    while((index < data.size()) && (x_value >= data[index].first)) index++;
+    if(index <= 0) index = 1;
+    if(index >= data.size()) index = data.size()-1;
+    T f = (x_value - data[(index-1)].first) / (data[index].first - data[(index-1)].first);
+    T y_value = f*data[index].second + (1-f)*data[(index-1)].second;
+    return y_value;
   }
   
   //////////////////////////////////////////////////////////////////////////////

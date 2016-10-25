@@ -29,6 +29,7 @@
 
 // C++ headers
 #include <iostream>
+#include <fstream>
 
 // Solutio library headers
 #include "Physics/NistPad.hpp"
@@ -38,12 +39,38 @@ int main()
 {
   std::cout << "This program tests photon aspects of the Solutio library.\n";
   
-  // Load NIST attenuation data for lead and interpolate
-  solutio::NistPad Al;
-  Al.Load("82-Lead.nistx");
-  std::cout << Al.MassAttenuation(2.5) << '\n';
+  // Test NistPad class
+  std::cout << "Photon mass attenution coefficients @ 2.5 MeV:\n";
+  
+  // Load NIST attenuation data for lead (using atomic number) and interpolate
+  solutio::NistPad Lead;
+  Lead.Load(82);
+  std::cout << "Lead: " << Lead.MassAttenuation(2.5) << '\n';
+  
+  // Load NIST attenuation data for water (using name) and interpolate
+  solutio::NistPad Aluminum;
+  Aluminum.Load("Aluminum");
+  std::cout << "Aluminum: " << Aluminum.MassAttenuation(2.5) << '\n';
+  
+  // Load NIST attenuation data for water (using name) and interpolate
+  solutio::NistPad Water;
+  Water.Load("Water");
+  std::cout << "Water: " << Water.MassAttenuation(2.5) << '\n' << '\n';
+  Water.PrintData();
   
   // Calculate tungsten x-ray spectum using the TASMIP algorithm
+  std::vector<double> kVp120 = solutio::Tasmip(120, 0.0, "Aluminum");
+  std::vector<double> kVp120_3mm_Al = solutio::Tasmip(120, 3.0, "Aluminum");
+  std::vector<double> kVp120_3mm_Cu = solutio::Tasmip(120, 3.0, "Copper");
+  
+  // Print spectrum data to file; read using Octave/Matlab and PhotonResults.m
+  std::ofstream fout("spectrums.txt");
+  for(int n = 0; n < 151; n++){
+    fout << kVp120[n] << '\t';
+    fout << kVp120_3mm_Al[n] << '\t';
+    fout << kVp120_3mm_Cu[n] << '\n';
+  }
+  fout.close();
 
   // Return if success
   return 0;

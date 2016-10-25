@@ -31,6 +31,9 @@
 // Class header
 #include "Physics/NistPad.hpp"
 
+// Standard C headers
+#include <cstdlib>
+
 // Standard C++ headers
 #include <iostream>
 #include <fstream>
@@ -53,14 +56,20 @@ namespace solutio
     
   }
   
-  // Constructor tht automatically loads data file 
-  NistPad::NistPad(std::string file_name)
+  // Constructor that automatically loads element data based on atomic number
+  NistPad::NistPad(int atomic_number)
   {
-    Load(file_name);
+    Load(atomic_number);
+  }
+  
+  // Constructor that automatically loads element/compound data based on name 
+  NistPad::NistPad(std::string name)
+  {
+    Load(name);
   }
 
-  // Data loading function
-  bool NistPad::Load(std::string file_name)
+  // Data reading function
+  bool NistPad::ReadFile(std::string file_path)
   {
     std::ifstream fin;
     std::string line, str;
@@ -69,24 +78,7 @@ namespace solutio
     int z, counter;
     double input;
     
-    // Load element data file names
-    std::vector<std::string> elements;
-    fin.open("/home/steven/C++/SolutioCpp/Library/Physics/NISTX/Elements/ElementList.txt");
-    while(std::getline(fin, line))
-    {
-      elements.push_back(line);
-    }
-    fin.close();
-    
-    // Load compound file names
-    std::vector<std::string> compounds;
-    
-    // Check to see if function input matched a valid element compound
-    
-    // Open NIST data file
-    std::string full_path =
-        "/home/steven/C++/SolutioCpp/Library/Physics/NISTX/Elements/"+file_name;
-    fin.open(full_path.c_str());
+    fin.open(file_path.c_str());
     
     // Read in material information from header
     for(int n = 0; n < 5; n++) std::getline(fin, line);
@@ -147,6 +139,96 @@ namespace solutio
     fin.close();
     
     return true;
+  }
+  
+  // Data loading function if element atomic number is given
+  bool NistPad::Load(int atomic_number){
+    std::ifstream fin;
+    std::string line;
+  
+    // Base data directory; currently hard-coded but this needs to be changed
+    std::string base_dir = "/home/steven/C++/SolutioCpp/Library/Physics/NISTX/";
+    
+    // Load element data file names
+    std::string element_list = base_dir + "Elements/ElementList.txt";
+    std::vector<std::string> elements;
+    
+    fin.open(element_list.c_str());
+    while(std::getline(fin, line)){ elements.push_back(line); }
+    fin.close();
+    
+    ReadFile(base_dir + "Elements/" + elements[(atomic_number-1)]);
+    
+    return true;
+  }
+
+  // Data loading function if element/compound name is given
+  bool NistPad::Load(std::string name){
+    std::ifstream fin;
+    std::string line;
+    bool found = false, element = false;
+    size_t p1, p2;
+    int id;
+  
+    // Base data directory; currently hard-coded but this needs to be changed
+    std::string base_dir = "/home/steven/C++/SolutioCpp/Library/Physics/NISTX/";
+    
+    // Load element data file names; search elements first
+    std::string element_list = base_dir + "Elements/ElementList.txt";
+    std::vector<std::string> element_names, element_files;
+    fin.open(element_list.c_str());
+    while(std::getline(fin, line))
+    {
+      element_files.push_back(line);
+      p1 = line.find('-')+1;
+      p2 = line.find('.');
+      //std::cout << line.substr(p1, p2-p1) << '\n';
+      element_names.push_back(line.substr(p1, p2-p1));
+    }
+    fin.close();
+    for(int n = 0; n < element_names.size(); n++){
+      if(element_names[n] == name){
+        id = n;
+        found = true;
+        element = true;
+        break;
+      }
+    }
+    
+    // If not an element, search compounds
+    std::string compound_list = base_dir + "Compounds/CompoundList.txt";
+    std::vector<std::string> compound_names, compound_files;
+    fin.open(compound_list.c_str());
+    while(std::getline(fin, line))
+    {
+      p1 = line.find('\t');
+      compound_names.push_back(line.substr(0,p1));
+      compound_files.push_back(line.substr(p1+1));
+    }
+    fin.close();
+    for(int n = 0; n < compound_names.size(); n++){
+      if(compound_names[n] == name ||
+          compound_files[n].substr(0,compound_files[n].find('.')) == name)
+      {
+        id = n;
+        found = true;
+        break;
+      }
+    }
+    
+    if(found){
+      if(element){
+        ReadFile(base_dir + "Elements/" + element_files[id]);
+      }
+      else {
+        ReadFile(base_dir + "Compounds/" + compound_files[id]);
+      }
+    }
+    else {
+      std::cout << "Error: could not find specified element/material!\n";
+    }
+    
+    return found;
   }
   
   // Change material name if desired
@@ -214,13 +296,15 @@ namespace solutio
     }
     std::cout << '\n';
     
-    std::cout << "Absorption Edges\n";
-    std::cout << "----------------\n";
-    for(int n = 0; n < absorption_edges.size(); n++)
-    {
-      std::cout << energies[(absorption_edges[n])] << '\t' <<
-          mass_attenuation[(absorption_edges[n])] << '\t' <<
-          mass_energy_absorption[(absorption_edges[n])] << '\n';
+    if(absorption_edges.size() > 0){
+      std::cout << "Absorption Edges\n";
+      std::cout << "----------------\n";
+      for(int n = 0; n < absorption_edges.size(); n++)
+      {
+        std::cout << energies[(absorption_edges[n])] << '\t' <<
+            mass_attenuation[(absorption_edges[n])] << '\t' <<
+            mass_energy_absorption[(absorption_edges[n])] << '\n';
+      }
     }
   }
 }

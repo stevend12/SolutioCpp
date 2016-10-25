@@ -41,6 +41,7 @@
 #define TASMIP_HPP
 
 // Standard C++ header files
+#include <string>
 #include <vector>
 
 // Standard C header files
@@ -52,7 +53,7 @@
 namespace solutio
 {
   std::vector<double> Tasmip(int tube_potential,
-      double mm_aluminum_filtration)
+      double mm_filtration, std::string filter_material)
   {
   
     std::vector<double> spectrum;
@@ -222,7 +223,7 @@ namespace solutio
     };
 
     // Aluminum attenuation data, from NIST database
-    NistPad NistAl("/home/steven/C++/TempSolutio/Physics/NISTX/Elements/13-Aluminum.nistx");
+    NistPad NistAl(filter_material);
 	
     // Generate spectrum for selected kVp value and Al thickness
     double energy, sum, mu, attenuation;
@@ -235,7 +236,7 @@ namespace solutio
         // Calculate attenuation by filtration
         energy = double(n) / 1000.0;
         mu = NistAl.LinearAttenuation(energy);
-        attenuation = exp(-mu*mm_aluminum_filtration*0.1);
+        attenuation = exp(-mu*mm_filtration*0.1);
 
         // Calculate spectrum using TASMIP polynomials and apply filtration
         sum = 0.0;

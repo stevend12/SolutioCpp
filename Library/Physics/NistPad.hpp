@@ -44,12 +44,16 @@ namespace solutio
       // Default constructor and destructor
       NistPad();
       ~NistPad();
-      // Constructor that automatically loads data if file name is given
-      NistPad(std::string file_name);
+      // Constructor that automatically loads element data based on atomic number
+      NistPad(int atomic_number);
+      // Constructor that automatically loads element/compound data based on name 
+      NistPad(std::string name);
       // Get and set functions
-      std::string get_name(){ return name;}
-      // File loading function (returns true if successful)
-      bool Load(std::string file_name);
+      std::string get_name(){ return name; }
+      // File loading functions (returns true if successful)
+      bool ReadFile(std::string file_name);
+      bool Load(int atomic_number);
+      bool Load(std::string name);
       // Material editing
       void Rename(std::string new_name);
       void ForceDensity(float new_density);
