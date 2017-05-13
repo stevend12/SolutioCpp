@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/* Copyright 2016 Steven Dolly                                                */
+/* Copyright 2016-2017 Steven Dolly                                           */
 /*                                                                            */
 /* Licensed under the Apache License, Version 2.0 (the "License");            */
 /* you may not use this file except in compliance with the License.           */
@@ -44,13 +44,16 @@ namespace solutio
       // Default constructor and destructor
       NistPad();
       ~NistPad();
+      // Constructor that also sets data folder path
+      NistPad(std::string folder);
       // Constructor that automatically loads element data based on atomic number
-      NistPad(int atomic_number);
+      NistPad(std::string folder, int atomic_number);
       // Constructor that automatically loads element/compound data based on name 
-      NistPad(std::string name);
+      NistPad(std::string folder, std::string name);
       // Get and set functions
       std::string get_name(){ return name; }
       // File loading functions (returns true if successful)
+      bool SetDataFolder(std::string folder);
       bool ReadFile(std::string file_name);
       bool Load(int atomic_number);
       bool Load(std::string name);
@@ -65,6 +68,8 @@ namespace solutio
       // Prints all data to terminal screen
       void PrintData();
     private:
+      std::string data_folder;
+      
       std::string name;
       unsigned int num_elements;
       bool is_element;

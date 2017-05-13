@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/* Copyright 2016 Steven Dolly                                                */
+/* Copyright 2016-2017 Steven Dolly                                           */
 /*                                                                            */
 /* Licensed under the Apache License, Version 2.0 (the "License");            */
 /* you may not use this file except in compliance with the License.           */
@@ -56,15 +56,21 @@ namespace solutio
     
   }
   
+  NistPad::NistPad(std::string folder){
+    data_folder = folder;
+  }
+  
   // Constructor that automatically loads element data based on atomic number
-  NistPad::NistPad(int atomic_number)
+  NistPad::NistPad(std::string folder, int atomic_number)
   {
+    data_folder = folder;
     Load(atomic_number);
   }
   
   // Constructor that automatically loads element/compound data based on name 
-  NistPad::NistPad(std::string name)
+  NistPad::NistPad(std::string folder, std::string name)
   {
+    data_folder = folder;
     Load(name);
   }
 
@@ -145,19 +151,16 @@ namespace solutio
   bool NistPad::Load(int atomic_number){
     std::ifstream fin;
     std::string line;
-  
-    // Base data directory; currently hard-coded but this needs to be changed
-    std::string base_dir = "/home/steven/C++/SolutioCpp/Library/Physics/NISTX/";
     
     // Load element data file names
-    std::string element_list = base_dir + "Elements/ElementList.txt";
+    std::string element_list = data_folder + "/Elements/ElementList.txt";
     std::vector<std::string> elements;
     
     fin.open(element_list.c_str());
     while(std::getline(fin, line)){ elements.push_back(line); }
     fin.close();
     
-    ReadFile(base_dir + "Elements/" + elements[(atomic_number-1)]);
+    ReadFile(data_folder + "/Elements/" + elements[(atomic_number-1)]);
     
     return true;
   }
@@ -169,12 +172,9 @@ namespace solutio
     bool found = false, element = false;
     size_t p1, p2;
     int id;
-  
-    // Base data directory; currently hard-coded but this needs to be changed
-    std::string base_dir = "/home/steven/C++/SolutioCpp/Library/Physics/NISTX/";
     
     // Load element data file names; search elements first
-    std::string element_list = base_dir + "Elements/ElementList.txt";
+    std::string element_list = data_folder + "/Elements/ElementList.txt";
     std::vector<std::string> element_names, element_files;
     fin.open(element_list.c_str());
     while(std::getline(fin, line))
@@ -196,7 +196,7 @@ namespace solutio
     }
     
     // If not an element, search compounds
-    std::string compound_list = base_dir + "Compounds/CompoundList.txt";
+    std::string compound_list = data_folder + "/Compounds/CompoundList.txt";
     std::vector<std::string> compound_names, compound_files;
     fin.open(compound_list.c_str());
     while(std::getline(fin, line))
@@ -218,10 +218,10 @@ namespace solutio
     
     if(found){
       if(element){
-        ReadFile(base_dir + "Elements/" + element_files[id]);
+        ReadFile(data_folder + "/Elements/" + element_files[id]);
       }
       else {
-        ReadFile(base_dir + "Compounds/" + compound_files[id]);
+        ReadFile(data_folder + "/Compounds/" + compound_files[id]);
       }
     }
     else {

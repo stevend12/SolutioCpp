@@ -6,5 +6,7 @@ endif()
 
 project(SolutioMedPhys)
 
+file(COPY ${CMAKE_SOURCE_DIR}/Data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 add_subdirectory(Library)
 add_subdirectory(Examples)

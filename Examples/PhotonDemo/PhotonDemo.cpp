@@ -42,26 +42,29 @@ int main()
   // Test NistPad class
   std::cout << "Photon mass attenution coefficients @ 2.5 MeV:\n";
   
+  // Set data folder
+  std::string folder = "../../Data/NISTX";
+  
   // Load NIST attenuation data for lead (using atomic number) and interpolate
-  solutio::NistPad Lead;
+  solutio::NistPad Lead(folder);
   Lead.Load(82);
   std::cout << "Lead: " << Lead.MassAttenuation(2.5) << '\n';
   
   // Load NIST attenuation data for water (using name) and interpolate
-  solutio::NistPad Aluminum;
+  solutio::NistPad Aluminum(folder);
   Aluminum.Load("Aluminum");
   std::cout << "Aluminum: " << Aluminum.MassAttenuation(2.5) << '\n';
   
   // Load NIST attenuation data for water (using name) and interpolate
-  solutio::NistPad Water;
+  solutio::NistPad Water(folder);
   Water.Load("Water");
   std::cout << "Water: " << Water.MassAttenuation(2.5) << '\n' << '\n';
   Water.PrintData();
   
   // Calculate tungsten x-ray spectum using the TASMIP algorithm
-  std::vector<double> kVp120 = solutio::Tasmip(120, 0.0, "Aluminum");
-  std::vector<double> kVp120_3mm_Al = solutio::Tasmip(120, 3.0, "Aluminum");
-  std::vector<double> kVp120_3mm_Cu = solutio::Tasmip(120, 3.0, "Copper");
+  std::vector<double> kVp120 = solutio::Tasmip(120, 0.0, "Aluminum", folder);
+  std::vector<double> kVp120_3mm_Al = solutio::Tasmip(120, 3.0, "Aluminum", folder);
+  std::vector<double> kVp120_3mm_Cu = solutio::Tasmip(120, 3.0, "Copper", folder);
   
   // Print spectrum data to file; read using Octave/Matlab and PhotonResults.m
   std::ofstream fout("spectrums.txt");

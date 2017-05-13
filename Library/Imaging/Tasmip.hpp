@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/* Copyright 2016 Steven Dolly                                                */
+/* Copyright 2016-2017 Steven Dolly                                           */
 /*                                                                            */
 /* Licensed under the Apache License, Version 2.0 (the "License");            */
 /* you may not use this file except in compliance with the License.           */
@@ -52,8 +52,8 @@
 
 namespace solutio
 {
-  std::vector<double> Tasmip(int tube_potential,
-      double mm_filtration, std::string filter_material)
+  std::vector<double> Tasmip(int tube_potential, double mm_filtration,
+      std::string filter_material, std::string folder)
   {
   
     std::vector<double> spectrum;
@@ -223,7 +223,7 @@ namespace solutio
     };
 
     // Aluminum attenuation data, from NIST database
-    NistPad NistAl(filter_material);
+    NistPad NistAl(folder, filter_material);
 	
     // Generate spectrum for selected kVp value and Al thickness
     double energy, sum, mu, attenuation;
