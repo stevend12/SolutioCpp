@@ -60,12 +60,17 @@ namespace solutio
       // Material editing
       void Rename(std::string new_name);
       void ForceDensity(float new_density);
-      // Get values from data using log interpolation
+      // Get attenuation values from data using log interpolation
       double MassAttenuation(double energy);
       double LinearAttenuation(double energy);
       double MassAbsorption(double energy);
       double LinearAbsorption(double energy);
-      // Prints all data to terminal screen
+      // Get material values
+      double GetZtoA(){ return z_to_a_ratio; }
+      double GetI(){ return mean_exitation_energy; }
+      double GetDensity(){ return density; }
+      // Prints data to terminal screen
+      void PrintTable();
       void PrintData();
     private:
       std::string data_folder;

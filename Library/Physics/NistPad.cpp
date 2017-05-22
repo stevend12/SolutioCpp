@@ -56,7 +56,8 @@ namespace solutio
     
   }
   
-  NistPad::NistPad(std::string folder){
+  NistPad::NistPad(std::string folder)
+  {
     data_folder = folder;
   }
   
@@ -101,12 +102,15 @@ namespace solutio
     std::stringstream(line) >> density;
     
     for(int n = 0; n < 2; n++) std::getline(fin, line);
-    while(reading_elements){
+    while(reading_elements)
+    {
       std::getline(fin, line);
-      if(line.empty()){
+      if(line.empty())
+      {
         reading_elements = false;
       }
-      else {
+      else
+      {
         pos = line.find(':');
         std::stringstream(line.substr(0, pos)) >> z;
         atomic_number.push_back(z);
@@ -121,7 +125,8 @@ namespace solutio
     // Read in attenuation data
     counter = 0;
     for(int n = 0; n < 3; n++) std::getline(fin, line);
-    while(std::getline(fin, line)){
+    while(std::getline(fin, line))
+    {
       if(line[1] != '.') absorption_edges.push_back(counter);
       
       pos = line.find('.'); pos--;
@@ -148,7 +153,8 @@ namespace solutio
   }
   
   // Data loading function if element atomic number is given
-  bool NistPad::Load(int atomic_number){
+  bool NistPad::Load(int atomic_number)
+  {
     std::ifstream fin;
     std::string line;
     
@@ -166,7 +172,8 @@ namespace solutio
   }
 
   // Data loading function if element/compound name is given
-  bool NistPad::Load(std::string name){
+  bool NistPad::Load(std::string name)
+  {
     std::ifstream fin;
     std::string line;
     bool found = false, element = false;
@@ -186,8 +193,10 @@ namespace solutio
       element_names.push_back(line.substr(p1, p2-p1));
     }
     fin.close();
-    for(int n = 0; n < element_names.size(); n++){
-      if(element_names[n] == name){
+    for(int n = 0; n < element_names.size(); n++)
+    {
+      if(element_names[n] == name)
+      {
         id = n;
         found = true;
         element = true;
@@ -206,7 +215,8 @@ namespace solutio
       compound_files.push_back(line.substr(p1+1));
     }
     fin.close();
-    for(int n = 0; n < compound_names.size(); n++){
+    for(int n = 0; n < compound_names.size(); n++)
+    {
       if(compound_names[n] == name ||
           compound_files[n].substr(0,compound_files[n].find('.')) == name)
       {
@@ -216,15 +226,19 @@ namespace solutio
       }
     }
     
-    if(found){
-      if(element){
+    if(found)
+    {
+      if(element)
+      {
         ReadFile(data_folder + "/Elements/" + element_files[id]);
       }
-      else {
+      else
+      {
         ReadFile(data_folder + "/Compounds/" + compound_files[id]);
       }
     }
-    else {
+    else
+    {
       std::cout << "Error: could not find specified element/material!\n";
     }
     
@@ -268,6 +282,26 @@ namespace solutio
   }
 
   // Print data to terminal screen
+  void NistPad::PrintTable()
+  {
+    for(int n = 0; n < energies.size(); n++)
+    {
+      std::cout << energies[n] << '\t' << mass_attenuation[n] << '\t' <<
+          mass_energy_absorption[n] << '\n';
+    }
+    std::cout << '\n';
+    if(absorption_edges.size() > 0)
+    {
+      for(int n = 0; n < absorption_edges.size(); n++)
+      {
+        std::cout << energies[(absorption_edges[n])] << '\t' <<
+            mass_attenuation[(absorption_edges[n])] << '\t' <<
+            mass_energy_absorption[(absorption_edges[n])] << '\n';
+      }
+    }
+  }
+  
+  // Print data to terminal screen
   void NistPad::PrintData()
   {
     std::cout << name << '\n';
@@ -288,23 +322,6 @@ namespace solutio
     std::cout << '\n';
   
     std::cout << "Attenuation Data\n";
-    std::cout << "----------------\n";
-    for(int n = 0; n < energies.size(); n++)
-    {
-      std::cout << energies[n] << '\t' << mass_attenuation[n] << '\t' <<
-          mass_energy_absorption[n] << '\n';
-    }
-    std::cout << '\n';
-    
-    if(absorption_edges.size() > 0){
-      std::cout << "Absorption Edges\n";
-      std::cout << "----------------\n";
-      for(int n = 0; n < absorption_edges.size(); n++)
-      {
-        std::cout << energies[(absorption_edges[n])] << '\t' <<
-            mass_attenuation[(absorption_edges[n])] << '\t' <<
-            mass_energy_absorption[(absorption_edges[n])] << '\n';
-      }
-    }
+    PrintTable();
   }
 }
