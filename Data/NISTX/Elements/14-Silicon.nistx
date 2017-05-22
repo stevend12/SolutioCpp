@@ -19,7 +19,6 @@ Silicon
 # Attenuation data
 # Each row includes a photon energy, a mass attenuation coefficient, and a mass
 # energy absorption coefficient
-
 1.00000E-03  1.570E+03  1.567E+03 
 1.50000E-03  5.355E+02  5.331E+02 
 1.83890E-03  3.092E+02  3.070E+02 
