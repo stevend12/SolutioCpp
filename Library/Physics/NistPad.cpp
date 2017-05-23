@@ -84,6 +84,7 @@ namespace solutio
     size_t pos;
     int z, counter;
     double input;
+    std::pair<int,double> entry;
     
     fin.open(file_path.c_str());
     
@@ -113,12 +114,13 @@ namespace solutio
       {
         pos = line.find(':');
         std::stringstream(line.substr(0, pos)) >> z;
-        atomic_number.push_back(z);
+        entry.first = z;
         std::stringstream(line.substr(pos+1)) >> input;
-        weight_fraction.push_back(input);
+        entry.second = input;
+        atomic_composition.push_back(entry);
       }
     }
-    num_elements = atomic_number.size();
+    num_elements = atomic_composition.size();
     if(num_elements == 1) is_element = true;
     else is_element = false;
     
@@ -286,7 +288,7 @@ namespace solutio
   {
     for(int n = 0; n < energies.size(); n++)
     {
-      std::cout << energies[n] << '\t' << mass_attenuation[n] << '\t' <<
+      std::cout << energies[n] << ' ' << mass_attenuation[n] << ' ' <<
           mass_energy_absorption[n] << '\n';
     }
     std::cout << '\n';
@@ -294,8 +296,8 @@ namespace solutio
     {
       for(int n = 0; n < absorption_edges.size(); n++)
       {
-        std::cout << energies[(absorption_edges[n])] << '\t' <<
-            mass_attenuation[(absorption_edges[n])] << '\t' <<
+        std::cout << energies[(absorption_edges[n])] << ' ' <<
+            mass_attenuation[(absorption_edges[n])] << ' ' <<
             mass_energy_absorption[(absorption_edges[n])] << '\n';
       }
     }
@@ -317,11 +319,12 @@ namespace solutio
     std::cout << "------------------\n";
     for(int n = 0; n < num_elements; n++)
     {
-      std::cout << atomic_number[n] << " : " << weight_fraction[n] << '\n';
+      std::cout << atomic_composition[n].first << " : " << atomic_composition[n].second << '\n';
     }
     std::cout << '\n';
   
     std::cout << "Attenuation Data\n";
+    std::cout << "------------------\n";
     PrintTable();
   }
 }
