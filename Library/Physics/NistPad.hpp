@@ -69,6 +69,10 @@ namespace solutio
       double GetZtoA(){ return z_to_a_ratio; }
       double GetI(){ return mean_exitation_energy; }
       double GetDensity(){ return density; }
+      std::vector< std::pair<int,double> > GetComposition()
+      {
+        return atomic_composition;
+      }
       // Prints data to terminal screen
       void PrintTable();
       void PrintData();
@@ -78,8 +82,7 @@ namespace solutio
       std::string name;
       unsigned int num_elements;
       bool is_element;
-      std::vector<int> atomic_number;
-      std::vector<double> weight_fraction;
+      std::vector< std::pair<int,double> > atomic_composition;
       double z_to_a_ratio;
       double mean_exitation_energy;
       double density;
