@@ -18,34 +18,33 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// Tasmip.hpp                                                                 //
-// TASMIP Algorithm Function File                                             //
-// Created September 30, 2016 (Steven Dolly)                                  //
+// GeometricObject.hpp                                                        //
+// Geometric Object Parent Class                                              //
+// Created June 2, 2017 (Steven Dolly)                                        //
 //                                                                            //
-// This function uses TASMIP to generate realistic x-ray spectra from a       //
-// tungsten source, given a tube voltage (kVp) and filtration thickness of    //
-// Aluminum, in mm (mmAl).                                                    //
-//                                                                            //
-// Publication information:                                                   //
-// John M. Boone and J. Anthony Seibert, "An accurate method for              //
-// computer-generating tungsten anode x-ray spectra from 30 to 140 kV",       //
-// Med. Phys. 24(11), November 1997                                           //
+// This header file contains a class for a generalized three-dimensional      //
+// geometric object, and is used as a parent class from which to derive all   //
+// specific geometric objects (e.g. cylinder, sphere).                        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Header guards
-#ifndef TASMIP_HPP
-#define TASMIP_HPP
+// Header guard
+#ifndef GEOMETRICOBJECT_HPP
+#define GEOMETRICOBJECT_HPP
 
-// Standard C++ header files
-#include <string>
-#include <vector>
+// Custom headers
+#include "Ray3.hpp"
 
 namespace solutio
 {
-  std::vector<double> Tasmip(int tube_potential, double mm_filtration,
-      std::string filter_material, std::string folder);
+  class GeometricObject
+  {
+    public:
+      virtual double RayPathlength(Ray3 ray){ return 0.0; };
+    protected:
+      Vec3<double> centroid;
+      double volume;
+  };
 }
 
-// End header guard
 #endif

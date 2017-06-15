@@ -18,34 +18,59 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// Tasmip.hpp                                                                 //
-// TASMIP Algorithm Function File                                             //
-// Created September 30, 2016 (Steven Dolly)                                  //
+// Ray Tracing CT Simulation                                                  //
+// (RayCT.hpp)                                                                //
 //                                                                            //
-// This function uses TASMIP to generate realistic x-ray spectra from a       //
-// tungsten source, given a tube voltage (kVp) and filtration thickness of    //
-// Aluminum, in mm (mmAl).                                                    //
+// Steven Dolly                                                               //
+// June 12, 2017                                                              //
 //                                                                            //
-// Publication information:                                                   //
-// John M. Boone and J. Anthony Seibert, "An accurate method for              //
-// computer-generating tungsten anode x-ray spectra from 30 to 140 kV",       //
-// Med. Phys. 24(11), November 1997                                           //
+// This file contains the header for the class which handles the computer     //
+// simulation of a CT scanner using ray-tracing and exponential attenuation.  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Header guards
-#ifndef TASMIP_HPP
-#define TASMIP_HPP
+// Header guard
+#ifndef RAYCT_HPP
+#define RAYCT_HPP
 
-// Standard C++ header files
-#include <string>
+// C++ headers
 #include <vector>
+#include <string>
 
-namespace solutio
-{
-  std::vector<double> Tasmip(int tube_potential, double mm_filtration,
-      std::string filter_material, std::string folder);
+// Custom headers
+#include "Imaging/ObjectModelXray.hpp"
+
+namespace solutio {
+  class RayCT
+  {
+    public:
+      void SetNistDataFolder(std::string folder);
+      void SetGeometry(double radius, int n_c, double d_c, int n_r, double d_r);
+      void SetAcquisition(int kVp, double photons, int projs);
+      double RandNormal(double mean, double stddev);
+      void AddPoissonNoise(std::vector<double> &projection);
+      std::vector<double> AcquireAirScan();
+      std::vector<double> ObjectProjection(ObjectModelXray &M, double angle,
+          double z, std::vector<double> spectrum);
+      std::vector<double> AcquireAxialProjections(ObjectModelXray &M, double z);
+    private:
+      // Data folder for NISTX data
+      std::string data_folder;
+      // Scanner geometry parameters
+      double scanner_radius;
+      int num_channels;
+      double channel_width;
+      int num_rows;
+      double row_width;
+      // Acquisition parameters
+      int tube_potential;
+      double num_photons;
+      int num_projections;
+      // Derived parameters
+      double fan_angle;
+      double d_fan_angle;
+      double fov;
+  };
 }
 
-// End header guard
 #endif

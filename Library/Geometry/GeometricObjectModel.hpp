@@ -18,34 +18,44 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// Tasmip.hpp                                                                 //
-// TASMIP Algorithm Function File                                             //
-// Created September 30, 2016 (Steven Dolly)                                  //
+// GeometricObjectModel.hpp                                                   //
+// Geometric Object Model Class                                               //
+// Created June 10, 2017 (Steven Dolly)                                       //
 //                                                                            //
-// This function uses TASMIP to generate realistic x-ray spectra from a       //
-// tungsten source, given a tube voltage (kVp) and filtration thickness of    //
-// Aluminum, in mm (mmAl).                                                    //
-//                                                                            //
-// Publication information:                                                   //
-// John M. Boone and J. Anthony Seibert, "An accurate method for              //
-// computer-generating tungsten anode x-ray spectra from 30 to 140 kV",       //
-// Med. Phys. 24(11), November 1997                                           //
+// This header file contains a class for a generalized three-dimensional      //
+// geometric object model. This is a collection of geometric objects, with    //
+// information regarding parent-child relationships.                          //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Header guards
-#ifndef TASMIP_HPP
-#define TASMIP_HPP
+// Header guard
+#ifndef GEOMETRICOBJECTMODEL_HPP
+#define GEOMETRICOBJECTMODEL_HPP
 
-// Standard C++ header files
+// C++ headers
 #include <string>
 #include <vector>
 
+// Custom headers
+#include "GeometricObject.hpp"
+
 namespace solutio
 {
-  std::vector<double> Tasmip(int tube_potential, double mm_filtration,
-      std::string filter_material, std::string folder);
+  class GeometricObjectModel
+  {
+    public:
+      virtual void AddGeometricObject(std::string name, GeometricObject &G,
+          std::string parent_name);
+      void MakeTree();
+    protected:
+      void AssignParent(std::string parent);
+      std::vector<std::string> object_name;
+      std::vector<std::string> object_type;
+      std::vector<int> object_parent;
+      int world_id;
+      std::vector<GeometricObject *> object_pointers;
+      std::vector< std::vector<int> > object_levels;
+  };
 }
 
-// End header guard
 #endif

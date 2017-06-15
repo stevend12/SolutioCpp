@@ -18,34 +18,41 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// Tasmip.hpp                                                                 //
-// TASMIP Algorithm Function File                                             //
-// Created September 30, 2016 (Steven Dolly)                                  //
+// Cylinder.hpp                                                               //
+// Cylinder Geometric Object Class                                            //
+// Created June 2, 2017 (Steven Dolly)                                        //
 //                                                                            //
-// This function uses TASMIP to generate realistic x-ray spectra from a       //
-// tungsten source, given a tube voltage (kVp) and filtration thickness of    //
-// Aluminum, in mm (mmAl).                                                    //
-//                                                                            //
-// Publication information:                                                   //
-// John M. Boone and J. Anthony Seibert, "An accurate method for              //
-// computer-generating tungsten anode x-ray spectra from 30 to 140 kV",       //
-// Med. Phys. 24(11), November 1997                                           //
+// This header file contains a class for a three-dimensional cylindrical      //
+// geometric object, including basic geometric definitions and ray            //
+// intersection calculations.                                                 //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Header guards
-#ifndef TASMIP_HPP
-#define TASMIP_HPP
+#ifndef CYLINDER_HPP
+#define CYLINDER_HPP
 
-// Standard C++ header files
-#include <string>
-#include <vector>
+// Custom headers
+#include "Vec3.hpp"
+#include "Ray3.hpp"
+#include "GeometricObject.hpp"
 
 namespace solutio
 {
-  std::vector<double> Tasmip(int tube_potential, double mm_filtration,
-      std::string filter_material, std::string folder);
+  class Cylinder : public GeometricObject
+  {
+    public:
+      // Constructor and setter
+      Cylinder(Vec3<double> c, double r, double h);
+      // Get functions
+      double GetRadius(){ return radius; }
+      double GetHeight(){ return height; }
+      // Calc functions
+      double CalcVolume();
+      double RayPathlength(Ray3 ray);
+    private:
+      double radius;
+      double height;
+  };
 }
 
-// End header guard
 #endif

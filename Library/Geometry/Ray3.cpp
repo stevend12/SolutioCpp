@@ -18,34 +18,49 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// Tasmip.hpp                                                                 //
-// TASMIP Algorithm Function File                                             //
-// Created September 30, 2016 (Steven Dolly)                                  //
+// Ray3.cpp                                                                   //
+// 3D Ray Class Main File                                                     //
+// Created June 2, 2017 (Steven Dolly)                                        //
 //                                                                            //
-// This function uses TASMIP to generate realistic x-ray spectra from a       //
-// tungsten source, given a tube voltage (kVp) and filtration thickness of    //
-// Aluminum, in mm (mmAl).                                                    //
-//                                                                            //
-// Publication information:                                                   //
-// John M. Boone and J. Anthony Seibert, "An accurate method for              //
-// computer-generating tungsten anode x-ray spectra from 30 to 140 kV",       //
-// Med. Phys. 24(11), November 1997                                           //
+// This main file contains a class for a double-precision three-dimensional   //
+// ray, with simple math operation functions.                                 //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Header guards
-#ifndef TASMIP_HPP
-#define TASMIP_HPP
-
-// Standard C++ header files
-#include <string>
-#include <vector>
+// Class header
+#include "Ray3.hpp"
 
 namespace solutio
 {
-  std::vector<double> Tasmip(int tube_potential, double mm_filtration,
-      std::string filter_material, std::string folder);
+  // Default constructor (set to all zeros)
+  Ray3::Ray3()
+  {
+    Vec3<double> o, d;
+    SetRay(o, d);
+  }
+  // Constructor with origin and direction setter
+  Ray3::Ray3(Vec3<double> o, Vec3<double> d)
+  {
+    SetRay(o, d);
+  }
+  // Set functions
+  void Ray3::SetRay(Vec3<double> o, Vec3<double> d)
+  {
+    origin = o;
+    direction = d;
+  }
+  // Get functions
+  Vec3<double> Ray3::GetPoint(double t)
+  {
+    Vec3<double> point;
+    point.x = origin.x + t*direction.x;
+    point.y = origin.y + t*direction.y;
+    point.z = origin.z + t*direction.z;
+    return point;
+  }
+  
+  double Ray3::GetLength()
+  {
+    return direction.Magnitude();
+  }
 }
-
-// End header guard
-#endif

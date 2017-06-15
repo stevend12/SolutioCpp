@@ -242,6 +242,7 @@ namespace solutio
     else
     {
       std::cout << "Error: could not find specified element/material!\n";
+      std::cout << "Attempted search: " << data_folder << '\n';
     }
     
     return found;

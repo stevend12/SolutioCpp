@@ -18,34 +18,42 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// Tasmip.hpp                                                                 //
-// TASMIP Algorithm Function File                                             //
-// Created September 30, 2016 (Steven Dolly)                                  //
+// Ray3.hpp                                                                   //
+// 3D Ray Class Header File                                                   //
+// Created June 1, 2017 (Steven Dolly)                                        //
 //                                                                            //
-// This function uses TASMIP to generate realistic x-ray spectra from a       //
-// tungsten source, given a tube voltage (kVp) and filtration thickness of    //
-// Aluminum, in mm (mmAl).                                                    //
-//                                                                            //
-// Publication information:                                                   //
-// John M. Boone and J. Anthony Seibert, "An accurate method for              //
-// computer-generating tungsten anode x-ray spectra from 30 to 140 kV",       //
-// Med. Phys. 24(11), November 1997                                           //
+// This header file contains a class for a double-precision three-dimensional //
+// ray, with simple math operation functions.                                 //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Header guards
-#ifndef TASMIP_HPP
-#define TASMIP_HPP
+// Header guard
+#ifndef RAY3_HPP
+#define RAY3_HPP
 
-// Standard C++ header files
-#include <string>
-#include <vector>
+// Standard C header files
+#include <cmath>
+
+// Custom headers
+#include "Vec3.hpp"
 
 namespace solutio
 {
-  std::vector<double> Tasmip(int tube_potential, double mm_filtration,
-      std::string filter_material, std::string folder);
+  class Ray3
+  {
+    public:
+      // Default constructor (set to all zeros)
+      Ray3();
+      // Constructor with origin and direction setter
+      Ray3(Vec3<double> o, Vec3<double> d);
+      // Ray origin & direction
+      Vec3<double> origin, direction;
+      // Set functions
+      void SetRay(Vec3<double> o, Vec3<double> d);
+      // Get functions
+      Vec3<double> GetPoint(double t);
+      double GetLength();
+  };
 }
 
-// End header guard
 #endif
