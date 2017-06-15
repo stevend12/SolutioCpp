@@ -18,34 +18,51 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// Tasmip.hpp                                                                 //
-// TASMIP Algorithm Function File                                             //
-// Created September 30, 2016 (Steven Dolly)                                  //
+// Cylinder.cpp                                                               //
+// Cylinder Geometric Object Class                                            //
+// Created June 2, 2017 (Steven Dolly)                                        //
 //                                                                            //
-// This function uses TASMIP to generate realistic x-ray spectra from a       //
-// tungsten source, given a tube voltage (kVp) and filtration thickness of    //
-// Aluminum, in mm (mmAl).                                                    //
-//                                                                            //
-// Publication information:                                                   //
-// John M. Boone and J. Anthony Seibert, "An accurate method for              //
-// computer-generating tungsten anode x-ray spectra from 30 to 140 kV",       //
-// Med. Phys. 24(11), November 1997                                           //
+// This main file contains a class for a three-dimensional cylindrical        //
+// geometric object, including basic geometric definitions and ray            //
+// intersection calculations.                                                 //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Header guards
-#ifndef TASMIP_HPP
-#define TASMIP_HPP
+// Class header
+#include "Cylinder.hpp"
 
-// Standard C++ header files
-#include <string>
-#include <vector>
+// C Headers
+#include <cmath>
 
 namespace solutio
 {
-  std::vector<double> Tasmip(int tube_potential, double mm_filtration,
-      std::string filter_material, std::string folder);
+  Cylinder::Cylinder(Vec3<double> c, double r, double h)
+  {
+    centroid = c;
+    radius = r;
+    height = h;
+  }
+  
+  double Cylinder::CalcVolume()
+  {
+    volume = M_PI*pow(radius,2.0)*height;
+    return volume;
+  }
+  
+  double Cylinder::RayPathlength(Ray3 ray)
+  {
+    double solution[2];
+    double L = ray.direction.Magnitude();
+    double q_a = pow(ray.direction.x,2) + pow(ray.direction.y,2);
+    double q_b = 2*(ray.direction.x*ray.origin.x + ray.direction.y*ray.origin.y);
+    double q_c = pow(ray.origin.x,2) + pow(ray.origin.y,2) - pow(radius,2);
+    double q_check = pow(q_b,2) - 4*q_a*q_c;
+    if(q_check >= 0)
+    {
+      solution[0] = (-q_b + sqrt(q_check)) / (2*q_a);
+      solution[1] = (-q_b - sqrt(q_check)) / (2*q_a);
+      return (L * fabs(solution[0]-solution[1]));
+    }
+    else return 0.0;
+  }
 }
-
-// End header guard
-#endif
