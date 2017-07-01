@@ -149,7 +149,6 @@ namespace solutio
     Ray3 source_ray;
     double gamma, x, y, L, sum;
     Vec3<double> detector_pos;
-    std::ofstream fout("detectors.txt");
     for(int r = 0; r < num_rows; r++){
       for(int c = 0; c < num_channels; c++){
         gamma = (-fan_angle/2.0) + ((2.0*c+1.0)*d_fan_angle)/2.0;
@@ -158,7 +157,6 @@ namespace solutio
         detector_pos.x = x*cos(source_angle) - y*sin(source_angle);
         detector_pos.y = x*sin(source_angle) + y*cos(source_angle);
         detector_pos.z = 2.0*row_width * (double(r) - (double(num_rows)/2.0) + 0.5);
-        fout << detector_pos.x << '\t' << detector_pos.y << '\t' << detector_pos.z << '\n';
         source_ray.SetRay(source_position, detector_pos - source_position);
         L = source_ray.GetLength();
         sum = 0.0;
@@ -168,7 +166,6 @@ namespace solutio
         air_scan_proj.push_back(sum);
       }
     }
-    fout.close();
     
     // Scale, add noise and spatial blurring
     double value;
