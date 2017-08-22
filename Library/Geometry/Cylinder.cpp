@@ -54,8 +54,9 @@ namespace solutio
     double solution[2];
     double L = ray.direction.Magnitude();
     double q_a = pow(ray.direction.x,2) + pow(ray.direction.y,2);
-    double q_b = 2*(ray.direction.x*ray.origin.x + ray.direction.y*ray.origin.y);
-    double q_c = pow(ray.origin.x,2) + pow(ray.origin.y,2) - pow(radius,2);
+    double q_b = 2*ray.direction.x*(ray.origin.x-centroid.x) +
+        2*(ray.direction.y*(ray.origin.y - centroid.y));
+    double q_c = pow((ray.origin.x-centroid.x),2) + pow((ray.origin.y-centroid.y),2) - pow(radius,2);
     double q_check = pow(q_b,2) - 4*q_a*q_c;
     if(q_check >= 0)
     {

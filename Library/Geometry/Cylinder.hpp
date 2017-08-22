@@ -44,6 +44,7 @@ namespace solutio
       // Constructor and setter
       Cylinder(Vec3<double> c, double r, double h);
       // Get functions
+      Vec3<double> GetCentroid(){ return centroid; }
       double GetRadius(){ return radius; }
       double GetHeight(){ return height; }
       // Calc functions

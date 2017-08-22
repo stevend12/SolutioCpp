@@ -151,9 +151,8 @@ namespace solutio
     Vec3<double> detector_pos;
     for(int r = 0; r < num_rows; r++){
       for(int c = 0; c < num_channels; c++){
-        gamma = (-fan_angle/2.0) + ((2.0*c+1.0)*d_fan_angle)/2.0;
-        x = -1.0*(2.0*scanner_radius*cos(gamma) - scanner_radius);
-        y = 2.0*scanner_radius*sin(gamma);
+        x = scanner_radius*(2.0*cos((M_PI - fan_angle/2.0 + d_fan_angle/2.0 + c*d_fan_angle)) + 1.0);
+        y = 2.0*scanner_radius*sin((M_PI - fan_angle/2.0 + d_fan_angle/2.0 + c*d_fan_angle));
         detector_pos.x = x*cos(source_angle) - y*sin(source_angle);
         detector_pos.y = x*sin(source_angle) + y*cos(source_angle);
         detector_pos.z = 2.0*row_width * (double(r) - (double(num_rows)/2.0) + 0.5);
@@ -190,8 +189,8 @@ namespace solutio
     Ray3 source_ray;
     
     // Set source position (z position always equal to 0)
-    x0 = scanner_radius*cos(angle);// + (-1.0*0.5*detector_channel_width*sin(angle));
-    y0 = scanner_radius*sin(angle);// + (0.5*detector_channel_width*cos(angle));
+    x0 = scanner_radius*cos(angle);// + (-1.0*0.5*channel_width*sin(angle));
+    y0 = scanner_radius*sin(angle);// + (0.5*channel_width*cos(angle));
     source_position.Set(x0, y0, z);
   
     // Calculate attenuation for each source ray
@@ -199,17 +198,18 @@ namespace solutio
       for(int c = 0; c < num_channels; c++){
         // Set initial detector coordinates
         Ray3 source_ray;
-        gamma = (-fan_angle/2.0) + ((2.0*c+1.0)*d_fan_angle)/2.0;
-        x1 = -1.0*(2.0*scanner_radius*cos(gamma) - scanner_radius);
-        y1 = 2.0*scanner_radius*sin(gamma);
+        x1 = scanner_radius*(2.0*cos((M_PI - fan_angle/2.0 + d_fan_angle/2.0
+            + c*d_fan_angle)) + 1.0);
+        y1 = 2.0*scanner_radius*sin((M_PI - fan_angle/2.0 + d_fan_angle/2.0
+            + c*d_fan_angle));
         // Rotate to source angle
         detector_pos.x = x1*cos(angle) - y1*sin(angle);
         detector_pos.y = x1*sin(angle) + y1*cos(angle);
         detector_pos.z = z + (2.0*row_width * (double(r) -
             (double(num_rows)/2.0) + 0.5));
         // Shift for 1/4 detector offset
-        //x2 += (-1.0*0.5*detector_channel_width*sin(angle));
-        //y2 += (0.5*detector_channel_width*cos(angle));
+        //detector_pos.x += (-1.0*0.5*channel_width*sin(angle));
+        //detector_pos.y += (0.5*channel_width*cos(angle));
         // Assign ray parameters
         source_ray.SetRay(source_position, detector_pos - source_position);
         
