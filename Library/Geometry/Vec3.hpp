@@ -108,6 +108,16 @@ namespace solutio
     diff.z = a.z - b.z;
     return diff;
   }
+  
+  template <class T>
+  Vec3<T> operator*(const Vec3<T> &a, const T &b)
+  {
+    Vec3<T> prod;
+    prod.x = a.x*b;
+    prod.y = a.y*b;
+    prod.z = a.z*b;
+    return prod;
+  }
 
   // Special vector functions for vector class
   template <class T>

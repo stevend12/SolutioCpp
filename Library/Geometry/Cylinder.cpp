@@ -33,6 +33,7 @@
 
 // C Headers
 #include <cmath>
+#include <iostream>
 
 namespace solutio
 {
@@ -53,17 +54,26 @@ namespace solutio
   {
     double solution[2];
     double L = ray.direction.Magnitude();
+    // Calculate coefficients for the quadratic equation
     double q_a = pow(ray.direction.x,2) + pow(ray.direction.y,2);
     double q_b = 2*ray.direction.x*(ray.origin.x-centroid.x) +
         2*(ray.direction.y*(ray.origin.y - centroid.y));
     double q_c = pow((ray.origin.x-centroid.x),2) + pow((ray.origin.y-centroid.y),2) - pow(radius,2);
     double q_check = pow(q_b,2) - 4*q_a*q_c;
-    if(q_check >= 0)
+    // No solution
+    if(q_check < 0.0) return 0.0;
+    // One or two solutions
+    else
     {
       solution[0] = (-q_b + sqrt(q_check)) / (2*q_a);
       solution[1] = (-q_b - sqrt(q_check)) / (2*q_a);
-      return (L * fabs(solution[0]-solution[1]));
+      double d_center = sqrt(pow(ray.origin.x-centroid.x,2.0)+pow(ray.origin.y-centroid.y,2.0));
+      if(d_center < radius)
+      {
+        double positive_value = std::max(solution[0], solution[1]);
+        return (L * positive_value);
+      }
+      else return (L * fabs(solution[0]-solution[1]));
     }
-    else return 0.0;
   }
 }

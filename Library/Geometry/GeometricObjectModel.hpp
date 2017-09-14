@@ -38,6 +38,7 @@
 
 // Custom headers
 #include "GeometricObject.hpp"
+#include "Ray3.hpp"
 
 namespace solutio
 {
@@ -47,6 +48,7 @@ namespace solutio
       virtual void AddGeometricObject(std::string name, GeometricObject &G,
           std::string parent_name);
       void MakeTree();
+      std::vector< std::pair<int, double> > CalcRayPathlength(Ray3 ray);
     protected:
       void AssignParent(std::string parent);
       std::vector<std::string> object_name;
