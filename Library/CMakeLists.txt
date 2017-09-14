@@ -23,6 +23,9 @@ set(SOURCE
   # Physics
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.cpp
   # Utilities
+  
+  # Therapy
+  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.cpp
 )
 
 set(HEADERS
@@ -41,6 +44,8 @@ set(HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.hpp
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/DataInterpolation.hpp
+  # Therapy
+  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.hpp
 )
 
 add_library(solutio STATIC ${SOURCE} ${HEADERS})
