@@ -112,4 +112,64 @@ namespace solutio
       object_levels.push_back(current_level);
     }
   }
+  
+  std::vector< std::pair<int, double> > GeometricObjectModel::CalcRayPathlength(Ray3 ray)
+  {
+    int parent_id;
+    double length;
+    std::vector<double> pathlengths;
+    std::vector<int> ray_object_ids;
+    std::vector<bool> ray_intersect(object_parent.size());
+    std::vector< std::pair<int, double> > intersection_list;
+    std::pair<int, double> list_entry;
+    
+    // Check world first
+    length = object_pointers[0]->RayPathlength(ray);
+    if (length < 1e-10)
+    {
+      list_entry.first = -1;
+      list_entry.second = 0.0;
+      intersection_list.push_back(list_entry);
+      return intersection_list;
+    }
+    else
+    {
+      pathlengths.push_back(ray.direction.Magnitude());
+      ray_object_ids.push_back(world_id);
+      ray_intersect[0] = true;
+    }
+    // Loop for each subsequent level
+    for(int m = 1; m < object_levels.size(); m++)
+    {
+      for(int n = 0; n < object_levels[m].size(); n++)
+      {
+        if(!ray_intersect[(object_parent[(object_levels[m][n])])]) continue;
+        // Check if ray intersects with any children
+        length = object_pointers[(object_levels[m][n])]->RayPathlength(ray);
+        
+        // Save material IDs and path lengths for children, subtract pathlengths
+        // from parents
+        if(length > 1.0e-10)
+        {
+          pathlengths.push_back(length);
+          ray_object_ids.push_back((object_levels[m][n]));
+          ray_intersect[(object_levels[m][n])] = true;
+          
+          parent_id = 0;
+          while(object_parent[(object_levels[m][n])] !=
+              ray_object_ids[parent_id]) parent_id++;
+          pathlengths[parent_id] -= length;
+          
+        }
+        else { ray_intersect[(object_levels[m][n])] = false; }
+      }
+    }
+    for(int n = 0; n < pathlengths.size(); n++){
+      list_entry.first = ray_object_ids[n];
+      list_entry.second = pathlengths[n];
+      intersection_list.push_back(list_entry);
+    }
+    
+    return intersection_list;
+  }
 }
