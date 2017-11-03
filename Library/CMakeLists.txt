@@ -23,7 +23,7 @@ set(SOURCE
   # Physics
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.cpp
   # Utilities
-  
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.cpp
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/DoseTG43.cpp

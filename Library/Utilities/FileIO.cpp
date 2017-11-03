@@ -18,54 +18,36 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// DoseTG43.hpp                                                               //
-// TG-43 Based Brachytherapy Dose Calculation Class                           //
+// FileIO.cpp                                                                 //
+// File Read/Write Helper Functions                                           //
 // Created November 3, 2017 (Steven Dolly)                                    //
 //                                                                            //
-// This header file defines a class for dose calculation for brachytherapy    //
-// sources, using the TG-43 based methodology. The DoseTG43 class reads in    //
-// source data and calculates the dose to a point for a given location, in    //
-// polar coordinates.                                                         //
+// This main file contains helper functions to read/write text files.         //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Header guards
-#ifndef DOSETG43_HPP
-#define DOSETG43_HPP
+// Main header file
+#include "FileIO.hpp"
 
 // Standard C++ header files
-#include <string>
-#include <vector>
+#include <sstream>
 
 namespace solutio
 {
-  float GeometryFactorTG43(float r, float theta, bool is_line, float L);
-  
-  class DoseTG43
+  void LineRead(const std::string &s, char delim, std::vector<std::string> &elems)
   {
-    public:
-      // Load data from text file
-      void LoadData(std::string file_name, char delimiter);
-      // Get values
-      float Get_dose_rate_constant(){ return dose_rate_constant; }
-      float Get_g_r(float r);
-      float Get_anisotropy_2d(float r, float theta);
-      // Calculate dose rate to point (r, theta), given air kerma strength (aks)
-      float CalcDoseRate(float aks, float r, float theta);
-    private:
-      // Dose rate constant
-      float dose_rate_constant;
-      // Source length
-      float source_length;
-      // Radial dose function data
-      std::vector<float> r_g_r;
-      std::vector<float> g_r_data;
-      // 2D anisotropy factor data
-      std::vector<float> theta_anisotropy_2d;
-      std::vector<float> r_anisotropy_2d;
-      std::vector< std::vector<float> > anisotropy_2d_data;
-  };
+    std::stringstream ss;
+    ss.str(s);
+    std::string item;
+    while (std::getline(ss, item, delim)){
+      elems.push_back(item);
+    }
+  }
+  
+  std::vector<std::string> LineRead(const std::string &s, char delim)
+  {
+    std::vector<std::string> elems;
+    LineRead(s, delim, elems);
+    return elems;
+  }
 }
-
-// End header guard
-#endif
