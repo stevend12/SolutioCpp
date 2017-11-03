@@ -40,7 +40,6 @@
 
 namespace solutio
 {
-
   //////////////////////////////////////////////////////////////////////////////
   //                                                                          //
   // Normal linear interpolation: unspecified sample size                     //
