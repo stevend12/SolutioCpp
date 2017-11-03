@@ -45,7 +45,7 @@ In short, the version number is represented as x.y.z, where:
 
 The framework will be distributed under the Apache 2.0 License, enabling all
 users to develop their own applications for both personal and commerical use.
-The main conditions are that you attach the Apache 2.0 lisence to any source
+The main conditions are that you attach the Apache 2.0 license to any source
 code you use, and that any changes you make are properly documented. Please read
 the [LICENSE](./LICENSE) file for more information about the Apache 2.0 License.
  
