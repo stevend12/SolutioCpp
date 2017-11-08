@@ -18,19 +18,19 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// DoseTG43.hpp                                                               //
+// BrachyDose43.hpp                                                           //
 // TG-43 Based Brachytherapy Dose Calculation Class                           //
 // Created November 3, 2017 (Steven Dolly)                                    //
 //                                                                            //
 // This header file defines a class for dose calculation for brachytherapy    //
-// sources, using the TG-43 based methodology. The DoseTG43 class reads in    //
-// source data and calculates the dose to a point for a given location, in    //
+// sources, using the TG-43 based methodology. The BrachyDose43 class reads   //
+// in source data and calculates the dose to a point for a given location, in //
 // polar coordinates.                                                         //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 // Class header
-#include "DoseTG43.hpp"
+#include "BrachyDose43.hpp"
 
 // Standard C++ header files
 #include <iostream>
@@ -72,7 +72,7 @@ namespace solutio
     return geometry_factor;
   }
   
-  void DoseTG43::LoadData(std::string file_name, char delimiter)
+  void BrachyDose43::LoadData(std::string file_name, char delimiter)
   {
     // Initialization and open file
     std::ifstream fin;
@@ -139,18 +139,18 @@ namespace solutio
     fin.close();
   }
   
-  float DoseTG43::Get_g_r(float r)
+  float BrachyDose43::Get_g_r(float r)
   {
     return solutio::LinearInterpolation(r_g_r, g_r_data, r);
   }
   
-  float DoseTG43::Get_anisotropy_2d(float r, float theta)
+  float BrachyDose43::Get_anisotropy_2d(float r, float theta)
   {
     return solutio::LinearInterpolation(theta_anisotropy_2d, r_anisotropy_2d,
         anisotropy_2d_data, theta, r);
   }
   
-  float DoseTG43::CalcDoseRate(float aks, float r, float theta)
+  float BrachyDose43::CalcDoseRate(float aks, float r, float theta)
   {
     float G = GeometryFactorTG43(r, theta, true, source_length);
     float g = Get_g_r(r);

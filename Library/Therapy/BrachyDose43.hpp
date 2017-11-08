@@ -18,13 +18,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// DoseTG43.hpp                                                               //
+// BrachyDose43.hpp                                                           //
 // TG-43 Based Brachytherapy Dose Calculation Class                           //
 // Created November 3, 2017 (Steven Dolly)                                    //
 //                                                                            //
 // This header file defines a class for dose calculation for brachytherapy    //
-// sources, using the TG-43 based methodology. The DoseTG43 class reads in    //
-// source data and calculates the dose to a point for a given location, in    //
+// sources, using the TG-43 based methodology. The BrachyDose43 class reads   //
+// in source data and calculates the dose to a point for a given location, in //
 // polar coordinates.                                                         //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@ namespace solutio
 {
   float GeometryFactorTG43(float r, float theta, bool is_line, float L);
   
-  class DoseTG43
+  class BrachyDose43
   {
     public:
       // Load data from text file

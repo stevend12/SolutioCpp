@@ -26,7 +26,7 @@ set(SOURCE
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.cpp
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/DoseTG43.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.cpp
 )
 
 set(HEADERS
@@ -48,7 +48,7 @@ set(HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.hpp
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/DoseTG43.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.hpp
 )
 
 add_library(solutio STATIC ${SOURCE} ${HEADERS})
