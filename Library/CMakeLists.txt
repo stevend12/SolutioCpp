@@ -6,6 +6,15 @@ endif()
 
 project(solutio)
 
+# FFTW
+find_library(FFTW_LIBRARY NAMES fftw3 fftw fftw3_omp)
+set(FFTW_LIBRARIES "${FFTW_LIBRARY}")
+
+# Set compiler flags and linked libraries
+SET(GCC_COVERAGE_COMPILE_FLAGS "-fopenmp -std=c++11")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+
+# Set include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(LIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE)
 
@@ -24,6 +33,8 @@ set(SOURCE
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.cpp
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.cc
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.cpp
@@ -46,9 +57,11 @@ set(HEADERS
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/DataInterpolation.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.h
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.hpp
 )
 
-add_library(solutio STATIC ${SOURCE} ${HEADERS})
+add_library(solutio STATIC ${SOURCE} ${HEADERS} ${FFTW_LIBRARIES})

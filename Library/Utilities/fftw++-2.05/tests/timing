@@ -1,0 +1,197 @@
+#!/bin/sh
+
+# script for timing convolution routines.
+# usage: timing <program> [start] [stop] [implicit=yes/no] [explicit[yes/no]
+# where program is one of: 
+# cconv, cconv2, cconv3, conv, conv2, conv3, tconv, or tconv2
+
+# an optional start or stop value X gives a problem size of 2^X.
+# implicit or explicit routines can be turned on or off by entering
+# "yes" or "no" at the appropriate location. The script will automatically
+# decrease stop values if the provided value produces a computation
+# that does not fit in the computer's RAM.
+
+# typical start/stop values:
+# 1D runs: 6 20
+# 2D runs: 6 13 (12 for tconv2)
+# 3D runs: 2 8 
+
+start=0
+stop=0
+
+if [ "$1" = "" ]; then
+    echo Usage: $0 "["cconv\|conv\|tconv\|conv2\|cconv2\|tconv2\|cconv3\|conv3"]" "["start"]" "["stop"]" "["implicit: yes/no"]" "["explicit: yes/no"]"
+    echo start and stop values are optional.
+    echo yes and no arguments are optional
+    exit
+fi
+
+# total system RAM:
+#RAM=$(free  | head -n 2 | sed '1,1d' | awk '{ print  $2 '})
+
+# for available RAM, use:
+RAM=$(free  | head -n 2 | sed '1,1d' | awk '{ print  $3 '})
+RAM=$( echo 1024*$RAM | bc)
+
+#echo $RAM
+max=10000
+
+N0=10000000
+if [ "$HOSTTYPE" = "x86_64-linux" ]; then
+    N0=100000000
+fi
+
+if [ -z "$4" ]; then
+    implicit=yes
+else
+    implicit=$4
+fi
+if [ -z "$5" ]; then
+    explicit=yes
+else
+    explicit=$5
+fi
+
+divisor=0;
+N=$N0
+
+if [ "$1" = "conv" ]; then
+    shift=1;
+    offset=2;
+    divisor=3;
+    outdir=timings1r
+    N=$N0
+    start=6
+    stop=20
+fi
+if [ "$1" = "conv2" ]; then
+    shift=1;
+    offset=2;
+    divisor=3;
+    outdir=timings2r
+    prune=yes
+    start=8
+    stop=16
+    max=$( python -c "from math import *; print int(floor(log($RAM/8/3^2)/log(2)/2))")
+    #max=$( python -c "from math import *; print int(floor(0.5*log($RAM/96)/log(2)))")
+fi
+
+if [ "$1" = "cconv" ]; then
+    outdir=timings1c
+    N=$N0
+    start=6
+    stop=20
+fi
+if [ "$1" = "cconv2" ]; then
+    outdir=timings2c
+    prune=yes
+    start=8
+    stop=15
+    max=$( python -c "from math import *; print int(floor(log($RAM/16/2/2^2)/log(2)/2))")
+#    max=$( python -c "from math import *; print int(floor(0.5*log($RAM/64)/log(2)))")
+fi
+if [ "$1" = "tconv" ]; then
+    shift=2;
+    offset=3;
+    divisor=4;
+    outdir=timings1t
+    N=$N0
+    start=6
+    stop=20
+fi
+if [ "$1" = "tconv2" ]; then
+    shift=2;
+    offset=3;
+    divisor=4;
+    outdir=timings2t
+    prune=yes
+    start=8
+    stop=18
+    max=$( python -c "from math import *; print int(floor(log($RAM/8/3/4^2)/log(2)/2))")
+fi
+if [ "$1" = "cconv3" ]; then
+    outdir=timings3c
+    prune=yes
+    start=4
+    stop=18
+    max=$( python -c "from math import *; print int(floor(log($RAM/16/2^3)/log(2)/3))")
+#    max=$( python -c "from math import *; print int(floor(log($RAM/96)/log(2)/3))")
+fi
+if [ "$1" = "conv3" ]; then
+    outdir=timings3r
+    prune=no
+    explicit=no
+    start=4
+    stop=18
+    max=$( python -c "from math import *; print int(floor(log($RAM/192)/log(2)/3))")
+fi
+
+if [ "$outdir" = "" ]; then
+    echo "wrong program name!"
+    exit
+fi
+mkdir -p $outdir
+cd $outdir
+if [ "$explicit" = "yes" ]; then
+    rm -f explicit pruned
+fi
+if [ "$implicit" = "yes" ]; then
+    rm -f implicit
+fi
+cd ..
+
+if [ "$BASH_VERSION" = "" ]; then
+    #  Ubuntu used dash, which messes up "echo -e"
+    EOPTS=""
+else
+    # we are using bash.
+    EOPTS="-e"
+fi
+
+if [ "$start" = "0" ]; then
+    start=6
+fi
+if [ "$start" = "0" ]; then
+    stop=8
+fi
+
+if [ "$2" != "" ]; then
+    start=$2
+fi
+if [ "$3" != "" ]; then
+    stop=$3
+fi
+
+if [ $stop -ge $max ]; then
+    stop=$max
+fi
+
+echo $start to $stop
+echo Timing:
+
+i=$start;
+while (test $i -le $stop); do
+    echo -n $i" "
+    m=$( echo 2^$i | bc)
+    if [ "$implicit" = "yes" ]; then
+	#echo implicit
+	output="$(./$1 -m $m -i -n $N| grep -A 1 Implicit | tail -n 1)"
+	echo $EOPTS $output | cat >> $outdir/implicit
+    fi
+
+    if [ "$divisor" != "0" ]; then
+ 	m=$( echo \(2^\($i+$shift\)+$offset\)/$divisor | bc)
+    fi
+    if [ "$explicit" = "yes" ]; then
+	#echo explicit
+	output="$(./$1 -m $m -e -n $N| grep -A 1 Explicit | tail -n 1)"
+	echo $EOPTS $output | cat >> $outdir/explicit
+	if [ "$prune" = "yes" ]; then
+	    #echo prune
+	    output="$(./$1 -m $m -p -n $N| grep -A 1 Pruned | tail -n 1)"
+	    echo $EOPTS $output | cat >> $outdir/pruned
+	fi
+    fi
+    i=$((i+1))
+done
+echo
