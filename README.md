@@ -8,10 +8,13 @@ from medical software). The repository is a companion to the website
 [Solutio in silico](http://www.solutioinsilico.com).
 
 ## Install
-You will need to install the following components to use this framework:
-  * C++ Compiler (preferably GCC/MinGW)
-  * CMake
-  * ITK
+CMake is used to build the library and examples. The following packages are
+required and need to be installed separately:
+
+  * ITK (minimum install only)
+  * FFTW
+
+Some packages (fftw++) are included with the source.
   
 ## Examples
 TODO

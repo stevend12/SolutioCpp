@@ -5,3 +5,4 @@ if(COMMAND CMAKE_POLICY)
 endif()
 
 add_subdirectory(PhotonDemo)
+add_subdirectory(RayCtDemo)
