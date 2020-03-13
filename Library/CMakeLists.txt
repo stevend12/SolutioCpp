@@ -1,4 +1,4 @@
-# This is the CMakeLists file for the PhotonDemo program.
+# This is the CMakeLists file for the Library folder source code.
 cmake_minimum_required(VERSION 2.8.9)
 if(COMMAND CMAKE_POLICY)
   cmake_policy(SET CMP0003 NEW)
@@ -11,8 +11,12 @@ project(solutio)
 find_library(FFTW_LIBRARY NAMES fftw3)
 set(FFTW_LIBRARIES "${FFTW_LIBRARY}")
 
+# Grassroots DICOM (GDCM)
+find_package(GDCM)
+set(GDCM_LIB gdcmMSFF)
+
 # Set compiler flags and linked libraries
-SET(GCC_COVERAGE_COMPILE_FLAGS "-fopenmp -std=c++11")
+SET(GCC_COVERAGE_COMPILE_FLAGS "-fopenmp -std=c++17")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 
 # Set include directories
@@ -36,6 +40,8 @@ set(SOURCE
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomDatabase.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomIODs.cpp
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.cpp
@@ -60,9 +66,14 @@ set(HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomAttributes.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomDatabase.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomIODs.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomModules.hpp
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.hpp
 )
 
 add_library(solutio STATIC ${SOURCE} ${HEADERS} ${FFTW_LIBRARIES})
+target_link_libraries(solutio gdcmMSFF)
