@@ -7,7 +7,8 @@ endif()
 project(solutio)
 
 # FFTW
-find_library(FFTW_LIBRARY NAMES fftw3 fftw fftw3_omp)
+#find_library(FFTW_LIBRARY NAMES fftw3 fftw fftw3_omp)
+find_library(FFTW_LIBRARY NAMES fftw3)
 set(FFTW_LIBRARIES "${FFTW_LIBRARY}")
 
 # Set compiler flags and linked libraries
