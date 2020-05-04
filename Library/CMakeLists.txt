@@ -77,3 +77,13 @@ set(HEADERS
 
 add_library(solutio STATIC ${SOURCE} ${HEADERS} ${FFTW_LIBRARIES})
 target_link_libraries(solutio gdcmMSFF)
+
+# Install library
+install(TARGETS solutio)
+# Install headers
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Geometry DESTINATION "include/SolutioCpp" FILES_MATCHING PATTERN "*.hpp")
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Imaging DESTINATION "include/SolutioCpp" FILES_MATCHING PATTERN "*.hpp")
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Physics DESTINATION "include/SolutioCpp" FILES_MATCHING PATTERN "*.hpp")
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Utilities DESTINATION "include/SolutioCpp"
+  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Therapy DESTINATION "include/SolutioCpp" FILES_MATCHING PATTERN "*.hpp")
