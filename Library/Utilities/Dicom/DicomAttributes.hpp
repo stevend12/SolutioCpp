@@ -43,6 +43,7 @@
 #include <gdcmAttribute.h>
 #include <gdcmItem.h>
 #include <gdcmSequenceOfItems.h>
+#include <gdcmSequenceOfFragments.h>
 
 namespace solutio {
   // Base attribute class; enables use of read/write functions for all attributes
@@ -84,8 +85,14 @@ namespace solutio {
       }
       void ReadAttribute(const gdcm::DataSet &data)
       {
-        att.Set(data);
-        value = att.GetValue();
+        if(data.FindDataElement(att.GetTag()))
+        {
+          att.Set(data);
+          std::stringstream ss;
+          ss << att.GetValue();
+          value = ss.str();
+        }
+        else value = "";
       }
       void InsertAttribute(gdcm::DataSet &data)
       {
@@ -138,8 +145,10 @@ namespace solutio {
       {
         values.clear();
         att.Set(data);
-        //const T * val = att.GetValues();
-        //for(int n = 0; n < length; n++) value.push_back(val[n]);
+        for(unsigned int n = 0; n < att.GetNumberOfValues(); n++)
+        {
+          values.push_back(att.GetValue(n));
+        }
       }
       void InsertAttribute(gdcm::DataSet &data)
       {
@@ -191,11 +200,19 @@ namespace solutio {
   class PixelDataAttribute : public BaseAttribute
   {
     public:
-      //double GetValue(int n){ return values[n]; }
+      std::vector<char> GetValue(){ return pixel_data; }
       void SetValue(std::vector<char> buffer){ pixel_data = buffer; }
       void ReadAttribute(const gdcm::DataSet &data)
       {
+        const gdcm::DataElement de = data.GetDataElement(gdcm::Tag(0x7fe0,0x0010));
+        const gdcm::ByteValue *bv = de.GetByteValue();
+        const char * temp_buffer = bv->GetPointer();
 
+        pixel_data.clear();
+        for(unsigned long int nb = 0; nb < bv->GetLength(); nb++)
+        {
+          pixel_data.push_back(temp_buffer[nb]);
+        }
       }
       void InsertAttribute(gdcm::DataSet &data)
       {

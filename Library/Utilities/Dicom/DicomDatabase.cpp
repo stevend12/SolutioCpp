@@ -32,133 +32,133 @@
 #include "DicomDatabase.hpp"
 
 #include <iostream>
-//#include <filesystem>
+#include <filesystem>
 #include <vector>
+#include <iterator>
+
+#include <gdcmReader.h>
 
 namespace solutio {
   DicomDatabaseFile::DicomDatabaseFile()
   {
-    patient_name = "";
-    study_uid = "";
-    series_uid = "";
-    instance_uid = "";
-    sop_class_uid = "";
-    sop_instance_uid = "";
-    file_path = "";
+    modality_name = file_path = "";
   }
-  /*
+
+  bool DicomDatabaseFile::ReadDicomFile(std::string file_name)
+  {
+    // Load DICOM file using GDCM
+    gdcm::Reader reader;
+    reader.SetFileName(file_name.c_str());
+    if(!reader.Read())
+    {
+      std::cout << "Could not read: " << file_name << std::endl;
+      return false;
+    }
+    gdcm::File &file = reader.GetFile();
+    gdcm::DataSet &ds = file.GetDataSet();
+    if(ds.IsEmpty())
+    {
+      std::cout << "DICOM data file " << file_name << " is empty.\n";
+      return false;
+    }
+    // Read DICOM modules
+    Patient.Read(ds);
+    //std::cout << "Patient Name: " << Patient.PatientName.GetValue() << '\n';
+    Study.Read(ds);
+    //std::cout << "Study UID: " << Study.StudyInstanceUID.GetValue() << '\n';
+    Series.Read(ds);
+    //std::cout << "Series UID: " << Series.SeriesInstanceUID.GetValue() << '\n';
+    SOPCommon.Read(ds);
+    //std::cout << "SOP Class UID: " << SOPCommon.SOPClassUID.GetValue() << '\n';
+    // Assign modality label based on SOP class UID; match to list
+    // (DO NOT USE SWITCH!)
+    // Single and multi-frame CT
+    std::string class_uid = SOPCommon.SOPClassUID.GetValue();
+    if(class_uid[(class_uid.length()-1)] == '\0') class_uid.erase(class_uid.length()-1);
+    if(class_uid == "1.2.840.10008.5.1.4.1.1.2") modality_name = "CT";
+    else if(class_uid == "1.2.840.10008.5.1.4.1.1.2.1") modality_name = "CT";
+    // MRI
+    else if(class_uid == "1.2.840.10008.5.1.4.1.1.4") modality_name = "MR";
+    else if(class_uid == "1.2.840.10008.5.1.4.1.1.4.1") modality_name = "MR";
+    // PET
+    else if(class_uid == "1.2.840.10008.5.1.4.1.1.128") modality_name = "PET";
+    else if(class_uid == "1.2.840.10008.5.1.4.1.1.130") modality_name = "PET";
+    // US
+    else if(class_uid == "1.2.840.10008.5.1.4.1.1.6.1") modality_name = "US";
+    else if(class_uid == "1.2.840.10008.5.1.4.1.1.3.1") modality_name = "US";
+    // Radiation therapy data files
+    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.1") modality_name = "RT Image";
+    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.2") modality_name = "RT Dose";
+    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.3") modality_name = "RT Structure Set";
+    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.4") modality_name = "RT Beams Treatment Record";
+    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.5") modality_name = "RT Plan";
+    else modality_name = "Not Supported";
+    // Get absolute file path
+    std::filesystem::path p = file_name;
+    file_path = std::filesystem::absolute(p).u8string();
+
+    return true;
+  }
+
+  void DicomDatabaseSeries::SetInfo(std::string psuid, std::string suid, std::string mn)
+  {
+    parent_study_uid = psuid;
+    series_uid = suid;
+    modality_name = mn;
+  }
+
   void DicomDatabase::MakeDatabase(std::string database_path)
   {
+    // Make list of files in directory and sub-directories
     std::vector<std::string> file_list;
-    std::string path = "Data";
-    for(const auto & entry : std::filesystem::recursive_directory_iterator(path))
+    for(const auto & entry : std::filesystem::recursive_directory_iterator(database_path))
     {
-      file_list.push_back(entry.path().string());
+      if(!std::filesystem::is_directory(entry.path()))
+      {
+        file_list.push_back(entry.path().string());
+      }
     }
-    //std::vector<string>::iterator it;
-    //it = std::unique(file_list.begin(), file_list.end());
-    //file_list =
+    // Read and organize each file
+    std::vector<std::string>::iterator file_it;
+    for(file_it = file_list.begin(); file_it != file_list.end(); file_it++)
+    {
+      // Attempt to read file
+      DicomDatabaseFile temp_file;
+      if(!temp_file.ReadDicomFile(*file_it)) continue;
+      dicom_files.push_back(temp_file);
+      // Check patient
+      if(std::find(patient_list.begin(), patient_list.end(),
+        temp_file.Patient.PatientName.GetValue()) == patient_list.end())
+      {
+        patient_list.push_back(temp_file.Patient.PatientName.GetValue());
+      }
+      // Check study
+      auto study_it = std::find_if(study_list.begin(), study_list.end(),
+        [&temp_file](const std::pair<std::string, int>& el){
+          return el.first == temp_file.Study.StudyInstanceUID.GetValue();} );
+      if(study_it == study_list.end())
+      {
+        std::pair<std::string, int> stp(temp_file.Study.StudyInstanceUID.GetValue(),
+          std::distance(study_list.begin(), study_it));
+        study_list.push_back(stp);
+      }
+      // Check series and assign file
+      auto series_it = std::find_if(series_list.begin(), series_list.end(),
+        [&temp_file](DicomDatabaseSeries& el){
+          return el.GetSeriesUID() == temp_file.Series.SeriesInstanceUID.GetValue();} );
+      if(series_it == series_list.end())
+      {
+        DicomDatabaseSeries temp_series;
+        temp_series.SetInfo(temp_file.Study.StudyInstanceUID.GetValue(),
+          temp_file.Series.SeriesInstanceUID.GetValue(), temp_file.modality_name);
+        temp_series.AddFileID(std::distance(file_list.begin(), file_it));
+        series_list.push_back(temp_series);
+      }
+      else
+      {
+        series_list[(std::distance(series_list.begin(), series_it))].AddFileID(
+          std::distance(file_list.begin(), file_it));
+      }
+    }
   }
-
-  void DicomDatabaseFile::ScanDicomFile(std::string file_name)
-  {
-    // Check to see if it's DICOM
-    size_t dcm = file_name.find(".dcm");
-    size_t dcmdir = file_name.find("DICOMDIR");
-    size_t blank = file_name.find(".");
-    if((dcm == std::string::npos) && (blank != std::string::npos)){
-      std::cout << "File is not DICOM.\n";
-      D.is_dicom = false;
-      return D;
-    }
-    if(dcmdir != std::string::npos){
-      std::cout << "Skipping DICOMDIR.\n";
-      D.is_dicom = false;
-      return D;
-    }
-
-    // Set file name and check reader
-    gdcm::Reader RTReader;
-    RTReader.SetFileName(file_name.c_str());
-    if(!RTReader.Read()){
-      std::cout << "File is not DICOM or cannot be read.\n";
-      D.is_dicom = false;
-      return D;
-    }
-
-    // If it is DICOM, get header data
-    const gdcm::DataSet& Header = RTReader.GetFile().GetDataSet();
-    if(Header.IsEmpty()){
-      std::cout << "DICOM data file is empty.\n";
-      D.is_dicom = false;
-      return D;
-    }
-
-    // Set directory from file name
-    const char pathSeparator =
-      #ifdef _WIN32
-        '\\';
-      #else
-        '/';
-      #endif
-    D.dir = file_name.substr(0, file_name.find_last_of(pathSeparator));
-    //std::cout << D.dir << '\n';
-
-    gdcm::Attribute<0x0010,0x0010> pt_name_att;
-    pt_name_att.Set(Header);
-    D.name = pt_name_att.GetValue();
-
-    // Study UID
-    gdcm::Attribute<0x0020,0x000d> study_uid_att;
-    study_uid_att.Set(Header);
-    D.study_uid = study_uid_att.GetValue();
-    D.study_uid.erase(std::remove(D.study_uid.begin(),
-        D.study_uid.end(), '\0'), D.study_uid.end());
-
-    // Series UID
-    gdcm::Attribute<0x0020,0x000e> series_uid_att;
-    series_uid_att.Set(Header);
-    D.series_uid = series_uid_att.GetValue();
-    //D.series_uid.erase(std::remove(D.series_uid.begin(),
-        //D.series_uid.end(), '\0'), D.series_uid.end());
-
-    // Get DICOM file type/modality
-
-    // SOP Class UID
-    gdcm::Attribute<0x0008,0x0016> class_uid_att;
-    class_uid_att.Set(Header);
-    std::string class_uid = class_uid_att.GetValue();
-    class_uid.erase(std::remove(class_uid.begin(), class_uid.end(), '\0'), class_uid.end());
-    // Match to list (DO NOT USE SWITCH!)
-    // Single and multi-frame CT
-    if(class_uid == "1.2.840.10008.5.1.4.1.1.2") D.file_type = "CT";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.2.1") D.file_type = "CT";
-    // MRI
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.4") D.file_type = "MR";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.4.1") D.file_type = "MR";
-    // PET
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.128") D.file_type = "PET";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.130") D.file_type = "PET";
-    // US
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.6.1") D.file_type = "US";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.3.1") D.file_type = "US";
-    // Radiation therapy data files
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.1") D.file_type = "RT Image";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.2") D.file_type = "RT Dose";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.3") D.file_type = "RT Structure Set";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.4") D.file_type = "RT Beams";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.5") D.file_type = "RT Plan";
-    else D.file_type = "Not Supported";
-    D.sop_class_uid = class_uid;
-
-    // SOP Instance UID
-    gdcm::Attribute<0x0008,0x0018> sop_instance_uid_att;
-    sop_instance_uid_att.Set(Header);
-    std::string sop_in_uid = sop_instance_uid_att.GetValue();
-    sop_in_uid.erase(std::remove(sop_in_uid.begin(), sop_in_uid.end(), '\0'), sop_in_uid.end());
-    D.sop_instance_uid = sop_in_uid;
-
-    return D;
-  }
-  */
 }

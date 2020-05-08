@@ -52,20 +52,19 @@ namespace solutio {
       GeneralImageModule GeneralImage;
       ImagePlaneModule ImagePlane;
       ImagePixelModule ImagePixel;
+      void ReadImageModules(gdcm::DataSet& H);
   };
 
   class CTImageIOD : public BaseImageIOD
   {
     public:
       CTImageIOD();
-      void SetVolumePixelData(std::vector<char> vpd){ volume_pixel_data = vpd; }
-      bool ReadSeries();
-      bool WriteSeries(std::string folder, std::string sopi_base,
-        int sopi_start, int num_slices);
+      bool Read(std::string file_name);
+      bool Write();
+      bool WriteSeriesFromSingle(std::string folder, std::string sopi_base,
+        int sopi_start, int num_slices, std::vector<char> volume_pixel_data);
       CTImageModule CTImage;
-    private:
-      // Pixel data for entire volume (not just one slice)
-      std::vector<char> volume_pixel_data;
+      std::vector<int16_t> GetHUImage();
   };
 
   class RTStructureSetIOD : public BaseIOD

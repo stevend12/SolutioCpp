@@ -34,22 +34,41 @@
 
 #include <string>
 
+#include "DicomModules.hpp"
+
 namespace solutio {
   // Struct that contains just enough information from the DICOM file header to properly
-  // organize the files and series hierarchically
+  // organize the files hierarchically (patient, study, series, etc.)
   class DicomDatabaseFile
   {
     public:
       DicomDatabaseFile();
-      std::string patient_name;
-      std::string study_uid;
-      std::string series_uid;
-      std::string instance_uid;
-      std::string sop_class_uid;
-      std::string sop_instance_uid;
-      std::string modality;
+      PatientModule Patient;
+      GeneralStudyModule Study;
+      GeneralSeriesModule Series;
+      SOPCommonModule SOPCommon;
+      std::string modality_name;
       std::string file_path;
-      //void ScanDicomFile(std::string file_name);
+      bool ReadDicomFile(std::string file_name);
+    private:
+      //bool is_dicom;
+  };
+  // Struct that contains a DICOM series (i.e. a group of DICOM files)
+  class DicomDatabaseSeries
+  {
+    public:
+      void SetInfo(std::string psuid, std::string suid, std::string mn);
+      void AddFileID(int id){ file_ids.push_back(id); }
+      bool CheckStudy(std::string uid){ return (uid == parent_study_uid); }
+      int GetNumFiles(){ return file_ids.size(); }
+      std::string GetStudyUID(){ return parent_study_uid; }
+      std::string GetSeriesUID(){ return series_uid; }
+      std::string GetModalityName(){ return modality_name; }
+    private:
+      std::string parent_study_uid;
+      std::string series_uid;
+      std::string modality_name;
+      std::vector<int> file_ids;
   };
 
   // Class to organize the database files hierarchically into a nested list of DICOM objects
@@ -57,11 +76,12 @@ namespace solutio {
   {
     public:
       void MakeDatabase(std::string database_path);
-      //void MakeItemList(std::string list_file_name);
-      //int GetNumItems(){ return ItemList.size(); }
-      //DicomID * GetItem(int l){ return &ItemList[l]; }
+      std::vector<std::string> GetSeriesFileNames();
     private:
-      //std::vector<DicomDatabaseFile> DicomFileList;
+      std::vector<DicomDatabaseFile> dicom_files;
+      std::vector<std::string> patient_list;
+      std::vector< std::pair<std::string, int> > study_list;
+      std::vector<DicomDatabaseSeries> series_list;
   };
 }
 

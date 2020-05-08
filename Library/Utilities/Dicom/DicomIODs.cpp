@@ -31,9 +31,23 @@
 
 #include "DicomIODs.hpp"
 
+#include <gdcmReader.h>
 #include <gdcmWriter.h>
 
 namespace solutio {
+  void BaseImageIOD::ReadImageModules(gdcm::DataSet& H)
+  {
+    Patient.Read(H);
+    SOPCommon.Read(H);
+    GeneralStudy.Read(H);
+    GeneralSeries.Read(H);
+    FrameOfReference.Read(H);
+    GeneralEquipment.Read(H);
+    GeneralImage.Read(H);
+    ImagePlane.Read(H);
+    ImagePixel.Read(H);
+  }
+
   CTImageIOD::CTImageIOD()
   {
     // Set SOP Common class to CT Image IOD
@@ -42,13 +56,35 @@ namespace solutio {
     GeneralSeries.Modality.SetValue("CT");
   }
 
-  bool CTImageIOD::ReadSeries()
+  bool CTImageIOD::Read(std::string file_name)
   {
+    // Load DICOM file using GDCM
+    gdcm::Reader reader;
+    reader.SetFileName(file_name.c_str());
+    if(!reader.Read())
+    {
+      std::cout << "Could not read: " << file_name << std::endl;
+      return false;
+    }
+    gdcm::File &file = reader.GetFile();
+    gdcm::DataSet &ds = file.GetDataSet();
+    if(ds.IsEmpty())
+    {
+      std::cout << "DICOM data file " << file_name << " is empty.\n";
+      return false;
+    }
+    ReadImageModules(ds);
+    CTImage.Read(ds);
     return true;
   }
 
-  bool CTImageIOD::WriteSeries(std::string folder, std::string sopi_base,
-    int sopi_start, int num_slices)
+  bool CTImageIOD::Write()
+  {
+    return false;
+  }
+
+  bool CTImageIOD::WriteSeriesFromSingle(std::string folder, std::string sopi_base,
+    int sopi_start, int num_slices, std::vector<char> volume_pixel_data)
   {
     // Calculation variables for CT slices
     double ct_origin[3] = {ImagePlane.ImagePosition.GetValue(0),
@@ -105,6 +141,22 @@ namespace solutio {
       }
     }
     return true;
+  }
+
+  std::vector<int16_t> CTImageIOD::GetHUImage()
+  {
+    double slope = CTImage.RescaleSlope.GetValue();
+    double intercept = CTImage.RescaleIntercept.GetValue();
+    std::vector<char> image_buffer = ImagePixel.PixelData.GetValue();
+    std::vector<int16_t> hu_buffer;
+    for(unsigned long int n = 0; n < image_buffer.size(); n+=2)
+    {
+      uint16_t raw;
+      *((char*)(&raw) + 1) = image_buffer[(n+1)];
+      *((char*)(&raw) + 0) = image_buffer[n];
+      hu_buffer.push_back(round(slope*double(raw) + intercept));
+    }
+    return hu_buffer;
   }
 
   RTStructureSetIOD::RTStructureSetIOD()
