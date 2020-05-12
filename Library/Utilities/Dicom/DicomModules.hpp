@@ -460,8 +460,21 @@ namespace solutio {
 
         ImageType.SetValue("ORIGINAL\\PRIMARY\\BLANK");
 
-        BaseAttribute * a[6] = { &RTImageLabel, &RTImageLabel,
-          &RTImageDescription, &ImageType, &ConversionType, &ReferencedRTPlanSequence };
+        BaseAttribute * a[40] = { &RTImageLabel, &RTImageName, &RTImageDescription,
+          &ImageType, &ConversionType, &ReportedValuesOrigin, &RTImagePlane,
+          &XRayImageReceptorTranslation, &XRayImageReceptorAngle, &RTImageOrientation,
+          &ImagePlanePixelSpacing, &RTImagePosition, &RadiationMachineName,
+          &PrimaryDosimeterUnit, &RadiationMachineSAD, &RadiationMachineSSD,
+          &RTImageSID, &SourceToReferenceObjectDistance, &ReferencedRTPlanSequence,
+          &ReferencedBeamNumber, &ReferencedFractionGroupNumber, &FractionNumber,
+          &StartCumulativeMetersetWeight, &EndCumulativeMetersetWeight,
+          /* Exposure Sequence, */ &GantryAngle, &GantryPitchAngle,
+          &BeamLimitingDeviceAngle, &PatientSupportAngle,
+          &TableTopEccentricAxisDistance, &TableTopEccentricAngle,
+          &TableTopPitchAngle, &TableTopRollAngle, &TableTopVerticalPosition,
+          &TableTopLongitudinalPosition, &TableTopLateralPosition, &IsocenterPosition,
+          &PatientPosition, &ExposureTime, &ExposureTimeInMs, &MetersetExposure
+        };
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
       }
       // RT Image Label (3002,0002)
