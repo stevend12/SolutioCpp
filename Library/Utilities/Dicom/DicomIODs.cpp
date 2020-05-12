@@ -35,30 +35,44 @@
 #include <gdcmWriter.h>
 
 namespace solutio {
-  void BaseImageIOD::ReadImageModules(gdcm::DataSet& H)
+  std::vector< std::tuple<std::string, std::string, std::string> >
+    SupportedIODList {
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.2","CT","CT"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.1","RTIMAGE","RI"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.2","RTDOSE","RD"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.3","RTSTRUCT","RS")
+  };
+
+  BaseIOD::BaseIOD()
   {
-    Patient.Read(H);
-    SOPCommon.Read(H);
-    GeneralStudy.Read(H);
-    GeneralSeries.Read(H);
-    FrameOfReference.Read(H);
-    GeneralEquipment.Read(H);
-    GeneralImage.Read(H);
-    ImagePlane.Read(H);
-    ImagePixel.Read(H);
+    Modules.push_back(&Patient);
+    Modules.push_back(&SOPCommon);
   }
 
-  CTImageIOD::CTImageIOD()
+  bool BaseIOD::IsIODSupported(std::string sop_class)
   {
-    // Set SOP Common class to CT Image IOD
-    SOPCommon.SOPClassUID.SetValue("1.2.840.10008.5.1.4.1.1.2");
-    // Set modality to CT
-    GeneralSeries.Modality.SetValue("CT");
+    bool ans;
+    auto it = std::find_if(SupportedIODList.begin(), SupportedIODList.end(),
+      [&sop_class](const std::tuple<std::string, std::string, std::string>& e)
+        {return std::get<0>(e) == sop_class;});
+    if (it != SupportedIODList.end()) ans = true;
+    else ans = false;
+    return ans;
   }
 
-  bool CTImageIOD::Read(std::string file_name)
+  std::string BaseIOD::GetFilePrefix(std::string sop_class)
   {
-    // Load DICOM file using GDCM
+    std::string ans = "";
+    auto it = std::find_if(SupportedIODList.begin(), SupportedIODList.end(),
+      [&sop_class](const std::tuple<std::string, std::string, std::string>& e)
+        {return std::get<0>(e) == sop_class;});
+    if (it != SupportedIODList.end()) ans = std::get<2>(*it);
+    return ans;
+  }
+
+  bool BaseIOD::Read(std::string file_name)
+  {
+    // Open and read DICOM file using GDCM reader
     gdcm::Reader reader;
     reader.SetFileName(file_name.c_str());
     if(!reader.Read())
@@ -73,14 +87,64 @@ namespace solutio {
       std::cout << "DICOM data file " << file_name << " is empty.\n";
       return false;
     }
-    ReadImageModules(ds);
-    CTImage.Read(ds);
+    // Read all modules
+    std::vector<DicomModule *>::iterator it;
+    for(it = Modules.begin(); it != Modules.end(); it++) (*it)->Read(ds);
+    // Return true for success
     return true;
   }
 
-  bool CTImageIOD::Write()
+  bool BaseIOD::Write(std::string file_name = "")
   {
-    return false;
+    // Infer file name from SOP UIDs if not given
+    if(file_name == "")
+    {
+      std::string file_pre = "NA";
+      if(IsIODSupported(SOPCommon.SOPClassUID.GetValue()))
+      {
+        file_pre = GetFilePrefix(SOPCommon.SOPClassUID.GetValue());
+      }
+      file_name = file_pre+"."+SOPCommon.SOPInstanceUID.GetValue()+".dcm";
+    }
+    // Open file to write using GDCM writer
+    gdcm::Writer writer;
+    gdcm::File &file = writer.GetFile();
+    gdcm::DataSet &ds = file.GetDataSet();
+    gdcm::FileMetaInformation &header = file.GetHeader();
+    header.SetDataSetTransferSyntax(gdcm::TransferSyntax::ImplicitVRLittleEndian);
+    // Insert all modules
+    std::vector<DicomModule *>::iterator it;
+    for(it = Modules.begin(); it != Modules.end(); it++) (*it)->Insert(ds);
+    // Write file
+    writer.SetFileName(file_name.c_str());
+    if(!writer.Write())
+    {
+      std::cerr << "Error: unable to write\n";
+      return false;
+    }
+    // Return true for success
+    return true;
+  }
+
+  BaseImageIOD::BaseImageIOD()
+  {
+    Modules.push_back(&GeneralStudy);
+    Modules.push_back(&GeneralSeries);
+    Modules.push_back(&FrameOfReference);
+    Modules.push_back(&GeneralEquipment);
+    Modules.push_back(&GeneralImage);
+    Modules.push_back(&ImagePlane);
+    Modules.push_back(&ImagePixel);
+  }
+
+  CTImageIOD::CTImageIOD()
+  {
+    // Set SOP Common class to CT Image IOD
+    SOPCommon.SOPClassUID.SetValue("1.2.840.10008.5.1.4.1.1.2");
+    // Set modality to CT
+    GeneralSeries.Modality.SetValue("CT");
+    // Add CT-specific modules
+    Modules.push_back(&CTImage);
   }
 
   bool CTImageIOD::WriteSeriesFromSingle(std::string folder, std::string sopi_base,
@@ -97,26 +161,11 @@ namespace solutio {
     {
       std::string current_uid = sopi_base + "." + std::to_string(sopi_start+n);
 
-      gdcm::Writer writer;
-      gdcm::File &file = writer.GetFile();
-      gdcm::DataSet &ds = file.GetDataSet();
-      gdcm::FileMetaInformation &header = file.GetHeader();
-
-      header.SetDataSetTransferSyntax(gdcm::TransferSyntax::ImplicitVRLittleEndian);
-
-      Patient.Insert(ds);
-      GeneralStudy.Insert(ds);
-      GeneralSeries.Insert(ds);
-      FrameOfReference.Insert(ds);
-      GeneralEquipment.Insert(ds);
-
       GeneralImage.InstanceNumber.SetValue(sopi_start+n);
-      GeneralImage.Insert(ds);
 
       ImagePlane.ImagePosition.SetValue(ct_origin[0], 0);
       ImagePlane.ImagePosition.SetValue(ct_origin[1], 1);
       ImagePlane.ImagePosition.SetValue(ct_origin[2]-((n-1)*slice_thickness), 2);
-      ImagePlane.Insert(ds);
 
       std::vector<char>::const_iterator first =
         volume_pixel_data.begin() + n*slice_buffer_size;
@@ -124,17 +173,13 @@ namespace solutio {
         volume_pixel_data.begin() + (n+1)*slice_buffer_size;
       std::vector<char> slice_buffer(first, last);
       ImagePixel.PixelData.SetValue(slice_buffer);
-      ImagePixel.Insert(ds);
-
-      CTImage.Insert(ds);
 
       SOPCommon.SOPInstanceUID.SetValue(current_uid);
-      SOPCommon.Insert(ds);
 
       // Set the filename
-      std::string series_filename = "CT." + current_uid + ".dcm";
-      writer.SetFileName((folder+series_filename).c_str());
-      if(!writer.Write())
+      std::string series_file_name = "CT." + current_uid + ".dcm";
+      bool did_write = Write(folder+series_file_name);
+      if(!did_write)
       {
         std::cerr << "Error: unable to write\n";
         return false;
@@ -159,42 +204,21 @@ namespace solutio {
     return hu_buffer;
   }
 
-  RTStructureSetIOD::RTStructureSetIOD()
+  RTImageIOD::RTImageIOD()
   {
     // Set SOP Common class to CT Image IOD
-    SOPCommon.SOPClassUID.SetValue("1.2.840.10008.5.1.4.1.1.481.3");
+    SOPCommon.SOPClassUID.SetValue("1.2.840.10008.5.1.4.1.1.481.1");
     // Set modality to RTSTRUCT
-    RTSeries.Modality.SetValue("RTSTRUCT");
-  }
-
-  bool RTStructureSetIOD::Write(std::string filename = "")
-  {
-    if(filename == "") filename = "RS."+SOPCommon.SOPInstanceUID.GetValue()+".dcm";
-
-    gdcm::Writer writer;
-    gdcm::File &file = writer.GetFile();
-    gdcm::DataSet &ds = file.GetDataSet();
-
-    gdcm::FileMetaInformation &header = file.GetHeader();
-    header.SetDataSetTransferSyntax(gdcm::TransferSyntax::ImplicitVRLittleEndian);
-
-    Patient.Insert(ds);
-    GeneralStudy.Insert(ds);
-    RTSeries.Insert(ds);
-    GeneralEquipment.Insert(ds);
-    StructureSet.Insert(ds);
-    ROIContour.Insert(ds);
-    RTROIObservations.Insert(ds);
-    SOPCommon.Insert(ds);
-
-    writer.SetFileName(filename.c_str());
-    if(!writer.Write())
-    {
-      std::cerr << "Error: unable to write\n";
-      return false;
-    }
-
-    return true;
+    RTSeries.Modality.SetValue("RTIMAGE");
+    // Add RT-image specific modules
+    Modules.push_back(&GeneralStudy);
+    Modules.push_back(&RTSeries);
+    Modules.push_back(&FrameOfReference);
+    Modules.push_back(&GeneralEquipment);
+    Modules.push_back(&GeneralImage);
+    Modules.push_back(&ImagePixel);
+    //Modules.push_back(&Multiframe);
+    Modules.push_back(&RTImage);
   }
 
   RTDoseIOD::RTDoseIOD()
@@ -203,38 +227,30 @@ namespace solutio {
     SOPCommon.SOPClassUID.SetValue("1.2.840.10008.5.1.4.1.1.481.2");
     // Set modality to RTSTRUCT
     RTSeries.Modality.SetValue("RTDOSE");
+    // Add RT-dose specific modules
+    Modules.push_back(&GeneralStudy);
+    Modules.push_back(&RTSeries);
+    Modules.push_back(&FrameOfReference);
+    Modules.push_back(&GeneralEquipment);
+    Modules.push_back(&GeneralImage);
+    Modules.push_back(&ImagePlane);
+    Modules.push_back(&ImagePixel);
+    Modules.push_back(&Multiframe);
+    Modules.push_back(&RTDose);
   }
 
-  bool RTDoseIOD::Write(std::string filename = "")
+  RTStructureSetIOD::RTStructureSetIOD()
   {
-    if(filename == "") filename = "RD."+SOPCommon.SOPInstanceUID.GetValue()+".dcm";
-
-    gdcm::Writer writer;
-    gdcm::File &file = writer.GetFile();
-    gdcm::DataSet &ds = file.GetDataSet();
-
-    gdcm::FileMetaInformation &header = file.GetHeader();
-    header.SetDataSetTransferSyntax(gdcm::TransferSyntax::ImplicitVRLittleEndian);
-
-    Patient.Insert(ds);
-    GeneralStudy.Insert(ds);
-    RTSeries.Insert(ds);
-    FrameOfReference.Insert(ds);
-    GeneralEquipment.Insert(ds);
-    GeneralImage.Insert(ds);
-    ImagePlane.Insert(ds);
-    ImagePixel.Insert(ds);
-    Multiframe.Insert(ds);
-    RTDose.Insert(ds);
-    SOPCommon.Insert(ds);
-
-    writer.SetFileName(filename.c_str());
-    if(!writer.Write())
-    {
-      std::cerr << "Error: unable to write\n";
-      return false;
-    }
-
-    return true;
+    // Set SOP Common class to CT Image IOD
+    SOPCommon.SOPClassUID.SetValue("1.2.840.10008.5.1.4.1.1.481.3");
+    // Set modality to RTSTRUCT
+    RTSeries.Modality.SetValue("RTSTRUCT");
+    // Add RT-structure set specific modules
+    Modules.push_back(&GeneralStudy);
+    Modules.push_back(&RTSeries);
+    Modules.push_back(&GeneralEquipment);
+    Modules.push_back(&StructureSet);
+    Modules.push_back(&ROIContour);
+    Modules.push_back(&RTROIObservations);
   }
 }

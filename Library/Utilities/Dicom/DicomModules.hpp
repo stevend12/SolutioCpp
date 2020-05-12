@@ -43,18 +43,18 @@ namespace solutio {
       {
         ie_name = name = "";
       }
-      virtual void Read(const gdcm::DataSet& H)
+      void Read(const gdcm::DataSet& data) // removed virtual
       {
         for(int n = 0; n < attribute_list.size(); n++)
         {
-          attribute_list[n]->ReadAttribute(H);
+          attribute_list[n]->ReadAttribute(data);
         }
       }
-      virtual void Insert(gdcm::DataSet& H)
+      void Insert(gdcm::DataSet& data)
       {
         for(int n = 0; n < attribute_list.size(); n++)
         {
-          attribute_list[n]->InsertAttribute(H);
+          attribute_list[n]->InsertAttribute(data);
         }
       }
       std::string GetIE(){ return ie_name; }
@@ -416,6 +416,7 @@ namespace solutio {
       TagAttribute<0x0028,0x0009> FrameIncrementPointer;
   };
 
+  // RT Dose module, excluding attributes belonging to ImagePixel
   class RTDoseModule : public DicomModule
   {
     public:
@@ -444,6 +445,107 @@ namespace solutio {
       MultiNumberAttribute<0x3004,0x000c> GridFrameOffsetVector;
       // Dose Grid Scaling (3004,000E)
       SingleValueAttribute<double,0x3004,0x000e> DoseGridScaling;
+  };
+
+  // RT Image module, excluding attributes belonging to ImagePixel
+  class RTImageModule : public DicomModule
+  {
+    public:
+      RTImageModule() : XRayImageReceptorTranslation(0.0, 3),
+        RTImageOrientation(0.0, 6), ImagePlanePixelSpacing(0.0, 2),
+        RTImagePosition(0.0, 2), IsocenterPosition(0.0, 3)
+      {
+        ie_name = "Image";
+        name = "RT Image";
+
+        ImageType.SetValue("ORIGINAL\\PRIMARY\\BLANK");
+
+        BaseAttribute * a[6] = { &RTImageLabel, &RTImageLabel,
+          &RTImageDescription, &ImageType, &ConversionType, &ReferencedRTPlanSequence };
+        attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      // RT Image Label (3002,0002)
+      SingleValueAttribute<std::string,0x3002,0x0002> RTImageLabel;
+      // RT Image Name (3002,0003)
+      SingleValueAttribute<std::string,0x3002,0x0003> RTImageName;
+      // RT Image Description (3002,0004)
+      SingleValueAttribute<std::string,0x3002,0x0004> RTImageDescription;
+      // Image Type (0008,0008)
+      SingleValueAttribute<std::string,0x0008,0x0008> ImageType;
+      // Conversion Type (0008,0064)
+      SingleValueAttribute<std::string,0x0008,0x0064> ConversionType;
+      // Reported Values Origin (3002,000A)
+      SingleValueAttribute<std::string,0x3002,0x000a> ReportedValuesOrigin;
+      // RT Image Plane (3002,000C)
+      SingleValueAttribute<std::string,0x3002,0x000c> RTImagePlane;
+      // X-Ray Image Receptor Translation (3002,000D)
+      MultiNumberAttribute<0x3002,0x000d> XRayImageReceptorTranslation;
+      // X-Ray Image Receptor Angle (3002,000E)
+      SingleValueAttribute<double,0x3002,0x000e> XRayImageReceptorAngle;
+      // RT Image Orientation (3002,0010)
+      MultiNumberAttribute<0x3002,0x0010> RTImageOrientation;
+      // Image Plane Pixel Spacing (3002,0011)
+      MultiNumberAttribute<0x3002,0x0011> ImagePlanePixelSpacing;
+      // RT Image Position (3002,0012)
+      MultiNumberAttribute<0x3002,0x0012> RTImagePosition;
+      // Radiation Machine Name (3002,0020)
+      SingleValueAttribute<std::string,0x3002,0x0020> RadiationMachineName;
+      // Primary Dosimeter Unit (300A,00B3)
+      SingleValueAttribute<std::string,0x300a,0x00b3> PrimaryDosimeterUnit;
+      // Radiation Machine SAD (3002,0022)
+      SingleValueAttribute<double,0x3002,0x0022> RadiationMachineSAD;
+      // Radiation Machine SSD (3002,0024)
+      SingleValueAttribute<double,0x3002,0x0024> RadiationMachineSSD;
+      // RT Image SID (3002,0026)
+      SingleValueAttribute<double,0x3002,0x0026> RTImageSID;
+      // Source to Reference Object Distance (3002,0028)
+      SingleValueAttribute<double,0x3002,0x0028> SourceToReferenceObjectDistance;
+      // Referenced RT Plan Sequence (300C,0002)
+      ReferencedRTPlanSequenceAttribute ReferencedRTPlanSequence;
+      // Referenced Beam Number (300C,0006)
+      SingleValueAttribute<unsigned int,0x300c,0x0006> ReferencedBeamNumber;
+      // Referenced Fraction Group Number (300C,0022)
+      SingleValueAttribute<unsigned int,0x300c,0x0022> ReferencedFractionGroupNumber;
+      // Fraction Number (3002,0029)
+      SingleValueAttribute<unsigned int,0x3002,0x0029> FractionNumber;
+      // Start Cumulative Meterset Weight (300C,0008)
+      SingleValueAttribute<double,0x300c,0x0008> StartCumulativeMetersetWeight;
+      // End Cumulative Meterset Weight (300C,0009)
+      SingleValueAttribute<double,0x300c,0x0009> EndCumulativeMetersetWeight;
+      // Exposure Sequence (3002,0030)
+
+      // Gantry Angle (300A,011E)
+      SingleValueAttribute<double,0x300a,0x011e> GantryAngle;
+      // Gantry Pitch Angle (300A,014A)
+      SingleValueAttribute<double,0x300a,0x014a> GantryPitchAngle;
+      // Beam Limiting Device Angle (300A,0120)
+      SingleValueAttribute<double,0x300a,0x0120> BeamLimitingDeviceAngle;
+      // Patient Support Angle (300A,0122)
+      SingleValueAttribute<double,0x300a,0x0122> PatientSupportAngle;
+      // Table Top Eccentric Axis Distance (300A,0124)
+      SingleValueAttribute<double,0x300a,0x0124> TableTopEccentricAxisDistance;
+      // Table Top Eccentric Angle (300A,0125)
+      SingleValueAttribute<double,0x300a,0x0125> TableTopEccentricAngle;
+      // Table Top Pitch Angle (300A,0140)
+      SingleValueAttribute<double,0x300a,0x0140> TableTopPitchAngle;
+      // Table Top Roll Angle (300A,0144)
+      SingleValueAttribute<double,0x300a,0x0144> TableTopRollAngle;
+      // Table Top Vertical Position (300A,0128)
+      SingleValueAttribute<double,0x300a,0x0128> TableTopVerticalPosition;
+      // Table Top Longitudinal Position (300A,0129)
+      SingleValueAttribute<double,0x300a,0x0129> TableTopLongitudinalPosition;
+      // Table Top Lateral Position (300A,012A)
+      SingleValueAttribute<double,0x300a,0x012a> TableTopLateralPosition;
+      // Isocenter Position (300A,012C)
+      MultiNumberAttribute<0x300a,0x012c> IsocenterPosition;
+      // Patient Position (0018,5100)
+      SingleValueAttribute<std::string,0x0018,0x5100> PatientPosition;
+      // Exposure Time (0018,1150)
+      SingleValueAttribute<double,0x0018,0x1150> ExposureTime;
+      // Exposure Time in ms (0018,9328)
+      SingleValueAttribute<double,0x0018,0x9328> ExposureTimeInMs;
+      // Meterset Exposure (3002,0032)
+      SingleValueAttribute<double,0x3002,0x0032> MetersetExposure;
   };
 }
 

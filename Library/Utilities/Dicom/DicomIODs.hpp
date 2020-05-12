@@ -35,16 +35,26 @@
 #include "DicomModules.hpp"
 
 namespace solutio {
+  // List of supported modalities
+  extern std::vector< std::tuple<std::string, std::string, std::string> > SupportedIODList;
+  // Base class for all IODs
   class BaseIOD
   {
     public:
+      BaseIOD();
+      bool IsIODSupported(std::string sop_class);
+      std::string GetFilePrefix(std::string sop_class);
+      bool Read(std::string file_name);
+      bool Write(std::string file_name);
       PatientModule Patient;
       SOPCommonModule SOPCommon;
+      std::vector<DicomModule *> Modules;
   };
-
+  // Base class for all image-based IODs (excluding RT IODs)
   class BaseImageIOD : public BaseIOD
   {
     public:
+      BaseImageIOD();
       GeneralStudyModule GeneralStudy;
       GeneralSeriesModule GeneralSeries;
       FrameOfReferenceModule FrameOfReference;
@@ -52,41 +62,36 @@ namespace solutio {
       GeneralImageModule GeneralImage;
       ImagePlaneModule ImagePlane;
       ImagePixelModule ImagePixel;
-      void ReadImageModules(gdcm::DataSet& H);
   };
 
   class CTImageIOD : public BaseImageIOD
   {
     public:
       CTImageIOD();
-      bool Read(std::string file_name);
-      bool Write();
       bool WriteSeriesFromSingle(std::string folder, std::string sopi_base,
         int sopi_start, int num_slices, std::vector<char> volume_pixel_data);
       CTImageModule CTImage;
       std::vector<int16_t> GetHUImage();
   };
 
-  class RTStructureSetIOD : public BaseIOD
+  class RTImageIOD : public BaseIOD
   {
     public:
-      RTStructureSetIOD();
-      bool Read();
-      bool Write(std::string filename);
+      RTImageIOD();
       GeneralStudyModule GeneralStudy;
       RTSeriesModule RTSeries;
+      FrameOfReferenceModule FrameOfReference;
       GeneralEquipmentModule GeneralEquipment;
-      StructureSetModule StructureSet;
-      ROIContourModule ROIContour;
-      RTROIObservationsModule RTROIObservations;
+      GeneralImageModule GeneralImage;
+      ImagePixelModule ImagePixel;
+      //MultiframeModule Multiframe;
+      RTImageModule RTImage;
   };
 
   class RTDoseIOD : public BaseIOD
   {
     public:
       RTDoseIOD();
-      bool Read();
-      bool Write(std::string filename);
       GeneralStudyModule GeneralStudy;
       RTSeriesModule RTSeries;
       FrameOfReferenceModule FrameOfReference;
@@ -96,6 +101,18 @@ namespace solutio {
       ImagePixelModule ImagePixel;
       MultiframeModule Multiframe;
       RTDoseModule RTDose;
+  };
+
+  class RTStructureSetIOD : public BaseIOD
+  {
+    public:
+      RTStructureSetIOD();
+      GeneralStudyModule GeneralStudy;
+      RTSeriesModule RTSeries;
+      GeneralEquipmentModule GeneralEquipment;
+      StructureSetModule StructureSet;
+      ROIContourModule ROIContour;
+      RTROIObservationsModule RTROIObservations;
   };
 }
 

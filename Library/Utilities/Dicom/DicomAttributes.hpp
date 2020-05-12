@@ -43,10 +43,9 @@
 #include <gdcmAttribute.h>
 #include <gdcmItem.h>
 #include <gdcmSequenceOfItems.h>
-#include <gdcmSequenceOfFragments.h>
 
 namespace solutio {
-  // Base attribute class; enables use of read/write functions for all attributes
+  // Base attribute class; enables use of read/insert functions for all attributes
   class BaseAttribute
   {
     public:
