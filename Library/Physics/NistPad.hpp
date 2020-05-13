@@ -41,9 +41,6 @@ namespace solutio
   class NistPad
   {
     public:
-      // Default constructor and destructor
-      NistPad();
-      ~NistPad();
       // Constructor that also sets data folder path
       NistPad(std::string folder);
       // Constructor that automatically loads element data based on atomic number
@@ -53,7 +50,6 @@ namespace solutio
       // Get and set functions
       std::string GetName(){ return name; }
       // File loading functions (returns true if successful)
-      bool SetDataFolder(std::string folder);
       bool ReadFile(std::string file_name);
       bool Load(int atomic_number);
       bool Load(std::string name);

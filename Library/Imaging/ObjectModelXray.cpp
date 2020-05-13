@@ -59,15 +59,15 @@ namespace solutio
     NewMat.ForceDensity(new_density);
     MuData.push_back(NewMat);
   }
-  
+
   void ObjectModelXray::AssignMaterial(std::string material)
   {
     bool found = false;
     for(int n = 0; n < MuData.size(); n++)
     {
-      if(material == MuData[n].get_name())
+      if(material == MuData[n].GetName())
       {
-        object_material_name.push_back(MuData[n].get_name());
+        object_material_name.push_back(MuData[n].GetName());
         object_material_id.push_back(n);
         found = true;
         break;
@@ -75,14 +75,14 @@ namespace solutio
     }
     if(!found) std::cout << "Error: could not find element/material!\n";
   }
-  
+
   void ObjectModelXray::AddObject(std::string name, GeometricObject &G,
       std::string parent_name, std::string material_name)
   {
     AddGeometricObject(name, G, parent_name);
     AssignMaterial(material_name);
   }
-  
+
   void ObjectModelXray::TabulateAttenuationLists(std::vector<double> energies,
       std::vector<double> spectrum)
   {
@@ -108,7 +108,7 @@ namespace solutio
       tabulated_mu_lists.push_back(current_list);
     }
   }
-  
+
   bool ObjectModelXray::IsListTabulated()
   {
     return (tabulated_mu_lists.size() != 0);
@@ -123,15 +123,15 @@ namespace solutio
     std::vector<int> ray_object_ids;
     std::vector<int> ray_materials;
     std::vector<bool> ray_intersect(object_parent.size());
-  
+
     // Start at outermost level (the "world")
     pathlengths.push_back(ray.direction.Magnitude());
     ray_object_ids.push_back(world_id);
     ray_materials.push_back(object_material_id[world_id]);
     ray_intersect[0] = true;
-  
+
     // Loop for each subsequent level
-   
+
     for(int m = 1; m < object_levels.size(); m++)
     {
       for(int n = 0; n < object_levels[m].size(); n++)
@@ -139,7 +139,7 @@ namespace solutio
         if(!ray_intersect[(object_parent[(object_levels[m][n])])]) continue;
         // Check if ray intersects with any children
         length = object_pointers[(object_levels[m][n])]->RayPathlength(ray);
-        
+
         // Save material IDs and path lengths for children, subtract pathlengths
         // from parents
         if(length > 1.0e-6)
@@ -148,12 +148,12 @@ namespace solutio
           ray_object_ids.push_back((object_levels[m][n]));
           ray_materials.push_back(object_material_id[(object_levels[m][n])]);
           ray_intersect[(object_levels[m][n])] = true;
-          
+
           parent_id = 0;
           while(object_parent[(object_levels[m][n])] !=
               ray_object_ids[parent_id]) parent_id++;
           pathlengths[parent_id] -= length;
-          
+
         }
         else { ray_intersect[(object_levels[m][n])] = false; }
       }
@@ -175,17 +175,17 @@ namespace solutio
       }
       total_sum += (spectrum[e] * exp(-energy_sum));
     }
-  
+
     return total_sum;
   }
-  
+
   void ObjectModelXray::Print()
   {
     std::cout << "Materials\n";
     std::cout << "---------\n";
     for(int n = 0; n < MuData.size(); n++)
     {
-      std::cout << (n+1) << ") " << MuData[n].get_name() << '\n';
+      std::cout << (n+1) << ") " << MuData[n].GetName() << '\n';
     }
     std::cout << "\nObjects\n";
     std::cout << "-------\n";
