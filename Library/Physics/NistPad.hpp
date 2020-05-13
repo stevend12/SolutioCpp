@@ -48,10 +48,10 @@ namespace solutio
       NistPad(std::string folder);
       // Constructor that automatically loads element data based on atomic number
       NistPad(std::string folder, int atomic_number);
-      // Constructor that automatically loads element/compound data based on name 
+      // Constructor that automatically loads element/compound data based on name
       NistPad(std::string folder, std::string name);
       // Get and set functions
-      std::string get_name(){ return name; }
+      std::string GetName(){ return name; }
       // File loading functions (returns true if successful)
       bool SetDataFolder(std::string folder);
       bool ReadFile(std::string file_name);
@@ -78,7 +78,7 @@ namespace solutio
       void PrintData();
     private:
       std::string data_folder;
-      
+
       std::string name;
       unsigned int num_elements;
       bool is_element;
@@ -86,11 +86,11 @@ namespace solutio
       double z_to_a_ratio;
       double mean_exitation_energy;
       double density;
-      
+
       std::vector<double> energies;
       std::vector<double> mass_attenuation;
       std::vector<double> mass_energy_absorption;
-      
+
       std::vector<int> absorption_edges;
   };
 }
