@@ -35,6 +35,7 @@ set(SOURCE
   ${CMAKE_CURRENT_SOURCE_DIR}/Imaging/RayCT.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Imaging/Tasmip.cpp
   # Physics
+  ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistEstar.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.cpp
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.cpp
@@ -60,6 +61,7 @@ set(HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/Imaging/RayCT.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Imaging/Tasmip.hpp
   # Physics
+  ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistEstar.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.hpp
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/DataInterpolation.hpp

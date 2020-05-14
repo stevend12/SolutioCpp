@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/* Copyright 2016-2017 Steven Dolly                                           */
+/* Copyright 2016 Steven Dolly                                                */
 /*                                                                            */
 /* Licensed under the Apache License, Version 2.0 (the "License");            */
 /* you may not use this file except in compliance with the License.           */
@@ -41,25 +41,26 @@ namespace solutio
   class NistPad
   {
     public:
-      // Default constructor and destructor
-      NistPad();
-      ~NistPad();
       // Constructor that also sets data folder path
       NistPad(std::string folder);
       // Constructor that automatically loads element data based on atomic number
       NistPad(std::string folder, int atomic_number);
-      // Constructor that automatically loads element/compound data based on name 
+      // Constructor that automatically loads element/compound data based on name
       NistPad(std::string folder, std::string name);
       // Get and set functions
-      std::string get_name(){ return name; }
+      std::string GetName(){ return name; }
       // File loading functions (returns true if successful)
-      bool SetDataFolder(std::string folder);
       bool ReadFile(std::string file_name);
       bool Load(int atomic_number);
       bool Load(std::string name);
       // Material editing
       void Rename(std::string new_name);
       void ForceDensity(float new_density);
+      // Get table size and energies for a row entry
+      int GetNumRows(){ return energies.size(); }
+      double GetEnergy(int r){ return energies[r]; }
+      // Get absorption edge rows
+      std::vector<int> GetAbsorptionEdges(){ return absorption_edges; }
       // Get attenuation values from data using log interpolation
       double MassAttenuation(double energy);
       double LinearAttenuation(double energy);
@@ -73,12 +74,12 @@ namespace solutio
       {
         return atomic_composition;
       }
-      // Prints data to terminal screen
-      void PrintTable();
-      void PrintData();
+      // Prints data to vector of strings (each entry is a line of text, with
+      // no newline characters)
+      std::vector<std::string> Print();
     private:
       std::string data_folder;
-      
+
       std::string name;
       unsigned int num_elements;
       bool is_element;
@@ -86,11 +87,11 @@ namespace solutio
       double z_to_a_ratio;
       double mean_exitation_energy;
       double density;
-      
+
       std::vector<double> energies;
       std::vector<double> mass_attenuation;
       std::vector<double> mass_energy_absorption;
-      
+
       std::vector<int> absorption_edges;
   };
 }

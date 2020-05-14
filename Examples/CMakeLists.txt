@@ -4,5 +4,5 @@ if(COMMAND CMAKE_POLICY)
   cmake_policy(SET CMP0003 NEW)
 endif()
 
-add_subdirectory(PhotonDemo)
+add_subdirectory(PhysicsDemo)
 add_subdirectory(RayCtDemo)

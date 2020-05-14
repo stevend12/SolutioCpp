@@ -1,0 +1,180 @@
+1,2-Dichlorobenzene.estar
+1,2-Dichloroethane.estar
+A-150 Tissue-Equivalent Plastic.estar
+Acetone.estar
+Acetylene.estar
+Adenine.estar
+Adipose Tissue (ICRP).estar
+Air, Dry.estar
+Alanine.estar
+Aluminum Oxide.estar
+Amber.estar
+Ammonia.estar
+Aniline.estar
+Anthracene.estar
+B-100 Bone-Equivalent Plastic.estar
+Bakelite.estar
+Barium Fluoride.estar
+Barium Sulfate.estar
+Benzene.estar
+Beryllium Oxide.estar
+Bismuth Germanium Oxide.estar
+Blood (ICRP).estar
+Bone, Compact (ICRU).estar
+Bone, Cortical (ICRP).estar
+Boron Carbide.estar
+Boron Oxide.estar
+Brain (ICRP).estar
+Butane.estar
+C-552 Air-Equivalent Plastic.estar
+Cadmium Telluride.estar
+Cadmium Tungstate.estar
+Calcium Carbonate.estar
+Calcium Fluoride.estar
+Calcium Oxide.estar
+Calcium Sulfate.estar
+Calcium Tungstate.estar
+Carbon Dioxide.estar
+Carbon Tetrachloride.estar
+Cellulose Acetate Butyrate.estar
+Cellulose Acetate, Cellophane.estar
+Cellulose Nitrate.estar
+Ceric Sulfate Dosimeter Solution.estar
+Cesium Fluoride.estar
+Cesium Iodide.estar
+Chlorobenzene.estar
+Chloroform.estar
+Concrete, Portland.estar
+Cyclohexane.estar
+Dichlorodiethyl Ether.estar
+Diethyl Ether.estar
+Dimethyl Sulfoxide.estar
+Ethane.estar
+Ethyl Alcohol.estar
+Ethyl Cellulose.estar
+Ethylene.estar
+Eye Lens (ICRP).estar
+Ferric Oxide.estar
+Ferroboride.estar
+Ferrous Oxide.estar
+Ferrous Sulfate Dosimeter Solution.estar
+Freon-12.estar
+Freon-12B2.estar
+Freon-13.estar
+Freon-13B1.estar
+Freon-13I1.estar
+Gadolinium Oxysulfide.estar
+Gallium Arsenide.estar
+Gel In Photographic Emulsion.estar
+Glass, Lead.estar
+Glass, Plate.estar
+Glass, Pyrex.estar
+Glucose.estar
+Glutamine.estar
+Glycerol.estar
+Guanine.estar
+Gypsum, Plaster Of Paris.estar
+Kapton Polyimide Film.estar
+Lanthanum Oxybromide.estar
+Lanthanum Oxysulfide.estar
+Lead Oxide.estar
+Lithium Amide.estar
+Lithium Carbonate.estar
+Lithium Fluoride.estar
+Lithium Hydride.estar
+Lithium Iodide.estar
+Lithium Oxide.estar
+Lithium Tetraborate.estar
+Lung (ICRP).estar
+M3 Wax.estar
+MS20 Tissue Substitute.estar
+Magnesium Carbonate.estar
+Magnesium Fluoride.estar
+Magnesium Oxide.estar
+Magnesium Tetraborate.estar
+Mercuric Iodide.estar
+Methane.estar
+Methanol.estar
+Mix D Wax.estar
+Muscle, Skeletal (ICRP).estar
+Muscle, Striated (ICRU).estar
+Muscle-Equivalent Liquid, With Sucrose.estar
+Muscle-Equivalent Liquid, Without Sucrose.estar
+N,N-Dimethyl Formamide.estar
+N-Butyl Alcohol.estar
+N-Heptane.estar
+N-Hexane.estar
+N-Pentane.estar
+N-Propyl Alcohol.estar
+Naphthalene.estar
+Nitrobenzene.estar
+Nitrous Oxide.estar
+Nylon, Du Pont Elvamide 8062.estar
+Nylon, Type 11 (Rilsan).estar
+Nylon, Type 6 and Type 6-6.estar
+Nylon, Type 6-10.estar
+Octane, Liquid.estar
+Paraffin Wax.estar
+Photographic Emulsion.estar
+Plastic Scintillator (Vinyltoluene Based).estar
+Plutonium Dioxide.estar
+Polyacrylonitrile.estar
+Polycarbonate (Makrolon, Lexan).estar
+Polychlorostyrene.estar
+Polyethylene Terephthalate (Mylar).estar
+Polyethylene.estar
+Polymethyl Methacralate (Lucite, Perspex, Plexiglass).estar
+Polyoxymethylene.estar
+Polypropylene.estar
+Polystyrene.estar
+Polytetrafluoroethylene (Teflon).estar
+Polytrifluorochloroethylene.estar
+Polyvinyl Acetate.estar
+Polyvinyl Alcohol.estar
+Polyvinyl Butyral.estar
+Polyvinyl Chloride.estar
+Polyvinyl Pyrrolidone.estar
+Polyvinylidene Chloride, Saran.estar
+Polyvinylidene Fluoride.estar
+Potassium Iodide.estar
+Potassium Oxide.estar
+Propane, Liquid.estar
+Propane.estar
+Pyridine.estar
+Rubber, Butyl.estar
+Rubber, Natural.estar
+Rubber, Neoprene.estar
+Silicon Dioxide.estar
+Silver Bromide.estar
+Silver Chloride.estar
+Silver Halides In Photographic Emulsion.estar
+Silver Iodide.estar
+Skin (ICRP).estar
+Sodium Carbonate.estar
+Sodium Iodide.estar
+Sodium Monoxide.estar
+Sodium Nitrate.estar
+Stilbene.estar
+Sucrose.estar
+Terphenyl.estar
+Testes (ICRP).estar
+Tetrachloroethylene.estar
+Thallium Chloride.estar
+Tissue, Soft (ICRP).estar
+Tissue, Soft (ICRU Four-Component).estar
+Tissue-Equivalent Gas (Methane-Based).estar
+Tissue-Equivalent Gas (Propane-Based).estar
+Titanium Dioxide.estar
+Toluene.estar
+Trichloroethylene.estar
+Triethyl Phosphate.estar
+Tungsten Hexafluoride.estar
+Uranium Dicarbide.estar
+Uranium Monocarbide.estar
+Uranium Oxide.estar
+Urea.estar
+Valine.estar
+Viton Fluoroelastomer.estar
+Water Vapor.estar
+Water, Liquid.estar
+Xylene.estar

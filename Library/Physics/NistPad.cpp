@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/* Copyright 2016-2017 Steven Dolly                                           */
+/* Copyright 2016 Steven Dolly                                                */
 /*                                                                            */
 /* Licensed under the Apache License, Version 2.0 (the "License");            */
 /* you may not use this file except in compliance with the License.           */
@@ -44,31 +44,19 @@
 
 namespace solutio
 {
-  // Default constructor
-  NistPad::NistPad()
-  {
-    
-  }
-
-  // Default destructor
-  NistPad::~NistPad()
-  {
-    
-  }
-  
   NistPad::NistPad(std::string folder)
   {
     data_folder = folder;
   }
-  
+
   // Constructor that automatically loads element data based on atomic number
   NistPad::NistPad(std::string folder, int atomic_number)
   {
     data_folder = folder;
     Load(atomic_number);
   }
-  
-  // Constructor that automatically loads element/compound data based on name 
+
+  // Constructor that automatically loads element/compound data based on name
   NistPad::NistPad(std::string folder, std::string name)
   {
     data_folder = folder;
@@ -85,23 +73,23 @@ namespace solutio
     int z, counter;
     double input;
     std::pair<int,double> entry;
-    
+
     fin.open(file_path.c_str());
-    
+
     // Read in material information from header
     for(int n = 0; n < 5; n++) std::getline(fin, line);
     name = line;
-    
+
     for(int n = 0; n < 3; n++) std::getline(fin, line);
     std::stringstream(line) >> z_to_a_ratio;
-    
+
     for(int n = 0; n < 3; n++) std::getline(fin, line);
     std::stringstream(line) >> mean_exitation_energy;
-    
+
     for(int n = 0; n < 3; n++) std::getline(fin, line);
     line[5] = 'e';
     std::stringstream(line) >> density;
-    
+
     for(int n = 0; n < 2; n++) std::getline(fin, line);
     while(reading_elements)
     {
@@ -123,53 +111,53 @@ namespace solutio
     num_elements = atomic_composition.size();
     if(num_elements == 1) is_element = true;
     else is_element = false;
-    
+
     // Read in attenuation data
     counter = 0;
     for(int n = 0; n < 3; n++) std::getline(fin, line);
     while(std::getline(fin, line))
     {
       if(line[1] != '.') absorption_edges.push_back(counter);
-      
+
       pos = line.find('.'); pos--;
       line[(pos+7)] = line[(pos+18)] = line[(pos+29)] = 'e';
-      
+
       str = line.substr(pos, 12);
       std::stringstream(str) >> input;
       energies.push_back(input);
-      
+
       str = line.substr((pos+12), 11);
       std::stringstream(str) >> input;
       mass_attenuation.push_back(input);
-      
+
       str = line.substr(pos+23);
       std::stringstream(str) >> input;
       mass_energy_absorption.push_back(input);
-      
+
       counter++;
     }
-    
+
     fin.close();
-    
+
     return true;
   }
-  
+
   // Data loading function if element atomic number is given
   bool NistPad::Load(int atomic_number)
   {
     std::ifstream fin;
     std::string line;
-    
+
     // Load element data file names
     std::string element_list = data_folder + "/Elements/ElementList.txt";
     std::vector<std::string> elements;
-    
+
     fin.open(element_list.c_str());
     while(std::getline(fin, line)){ elements.push_back(line); }
     fin.close();
-    
+
     ReadFile(data_folder + "/Elements/" + elements[(atomic_number-1)]);
-    
+
     return true;
   }
 
@@ -181,7 +169,7 @@ namespace solutio
     bool found = false, element = false;
     size_t p1, p2;
     int id;
-    
+
     // Load element data file names; search elements first
     std::string element_list = data_folder + "/Elements/ElementList.txt";
     std::vector<std::string> element_names, element_files;
@@ -191,7 +179,6 @@ namespace solutio
       element_files.push_back(line);
       p1 = line.find('-')+1;
       p2 = line.find('.');
-      //std::cout << line.substr(p1, p2-p1) << '\n';
       element_names.push_back(line.substr(p1, p2-p1));
     }
     fin.close();
@@ -205,7 +192,7 @@ namespace solutio
         break;
       }
     }
-    
+
     // If not an element, search compounds
     std::string compound_list = data_folder + "/Compounds/CompoundList.txt";
     std::vector<std::string> compound_names, compound_files;
@@ -227,7 +214,7 @@ namespace solutio
         break;
       }
     }
-    
+
     if(found)
     {
       if(element)
@@ -244,10 +231,10 @@ namespace solutio
       std::cout << "Error: could not find specified element/material!\n";
       std::cout << "Attempted search: " << data_folder << '\n';
     }
-    
+
     return found;
   }
-  
+
   // Change material name if desired
   void NistPad::Rename(std::string new_name)
   {
@@ -256,13 +243,13 @@ namespace solutio
     std::cout << "Warning: material name changed from \"" << old_name <<
         "\" to \"" << new_name << "\".\n";
   }
-  
+
   // Force material to have new density if desired
   void NistPad::ForceDensity(float new_density)
   {
     float old = density;
     density = new_density;
-    std::cout << "Warning: material density for \"" << get_name() << 
+    std::cout << "Warning: material density for \"" << GetName() <<
         "\" changed from " << old << " to " << density << ".\n";
   }
 
@@ -284,48 +271,54 @@ namespace solutio
     return (density*LogInterpolation(energies, mass_energy_absorption, energy));
   }
 
-  // Print data to terminal screen
-  void NistPad::PrintTable()
+  // Prints data to vector of strings (each entry is a line of text, with
+  // no newline characters)
+  std::vector<std::string> NistPad::Print()
   {
-    for(int n = 0; n < energies.size(); n++)
-    {
-      std::cout << energies[n] << ' ' << mass_attenuation[n] << ' ' <<
-          mass_energy_absorption[n] << '\n';
-    }
-    std::cout << '\n';
-    if(absorption_edges.size() > 0)
-    {
-      for(int n = 0; n < absorption_edges.size(); n++)
-      {
-        std::cout << energies[(absorption_edges[n])] << ' ' <<
-            mass_attenuation[(absorption_edges[n])] << ' ' <<
-            mass_energy_absorption[(absorption_edges[n])] << '\n';
-      }
-    }
-  }
-  
-  // Print data to terminal screen
-  void NistPad::PrintData()
-  {
-    std::cout << name << '\n';
-    
-    if(is_element) std::cout << "This is an element.\n\n";
-    else  std::cout << "This is not an element.\n\n";
-  
-    std::cout << "Z/A = " << z_to_a_ratio << '\n';
-    std::cout << "I (eV) = " << mean_exitation_energy << '\n';
-    std::cout << "Density (g/cm^3) = " << density << "\n\n";
-    
-    std::cout << "Elements by Weight\n";
-    std::cout << "------------------\n";
+    std::vector<std::string> print_text;
+
+    print_text.push_back(name);
+
+    if(is_element) print_text.push_back("This is an element.");
+    else print_text.push_back("This is not an element.");
+
+    print_text.push_back("Z/A = "+std::to_string(z_to_a_ratio));
+    print_text.push_back("I (eV) = "+std::to_string(mean_exitation_energy));
+    print_text.push_back("Density (g/cm^3) = "+std::to_string(density));
+
+    print_text.push_back("Elements by Weight");
+    print_text.push_back("------------------");
     for(int n = 0; n < num_elements; n++)
     {
-      std::cout << atomic_composition[n].first << " : " << atomic_composition[n].second << '\n';
+      print_text.push_back(std::to_string(atomic_composition[n].first)+": "+
+        std::to_string(atomic_composition[n].second));
     }
-    std::cout << '\n';
-  
-    std::cout << "Attenuation Data\n";
-    std::cout << "------------------\n";
-    PrintTable();
+
+    print_text.push_back("Attenuation Data");
+    print_text.push_back("----------------");
+    for(int n = 0; n < energies.size(); n++)
+    {
+      std::stringstream ss;
+      ss << energies[n]; ss << ' ';
+      ss << mass_attenuation[n]; ss << ' ';
+      ss << mass_energy_absorption[n];
+      print_text.push_back(ss.str());
+    }
+
+    if(absorption_edges.size() > 0)
+    {
+      print_text.push_back("Absorption Edges");
+      print_text.push_back("----------------");
+      for(int n = 0; n < absorption_edges.size(); n++)
+      {
+        std::stringstream ss;
+        ss << energies[(absorption_edges[n])]; ss << ' ';
+        ss << mass_attenuation[(absorption_edges[n])]; ss << ' ';
+        ss << mass_energy_absorption[(absorption_edges[n])];
+        print_text.push_back(ss.str());
+      }
+    }
+
+    return print_text;
   }
 }
