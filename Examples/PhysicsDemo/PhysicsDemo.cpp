@@ -18,11 +18,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// PhotonDemo.cpp                                                             //
-// Demonstration of Photon Interaction Functions                              //
+// PhysicsDemo.cpp                                                            //
+// Demonstration of SolutioCpp Physics Features                               //
 // Created September 30, 2016 (Steven Dolly)                                  //
 //                                                                            //
-// This file demonstrates various uses of the Solutio C++ library for photon  //
+// This file demonstrates various uses of the Solutio C++ library for physics //
 // interaction simulations. Results can be viewed using Octave/MATLAB and the //
 // script PhysicsDemo.m (in same folder)                                      //
 //                                                                            //
@@ -31,6 +31,7 @@
 // C++ headers
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 // Solutio library headers
 #include "Physics/NistEstar.hpp"
@@ -39,7 +40,7 @@
 
 int main()
 {
-  std::cout << "This program tests physics aspects of the SolutioCpp library.\n";
+  std::cout << "This program tests physics aspects of the SolutioCpp library.\n\n";
   ////////////////////////
   // Test NistPad class //
   ////////////////////////
@@ -59,16 +60,20 @@ int main()
   solutio::NistPad Water(folder);
   Water.Load("Water");
   std::cout << "Water: " << Water.MassAttenuation(2.5) << '\n' << '\n';
-  Water.PrintData();
-  // Print data to be viewed in Octave/MATLAB using PhysicsDemo.m
-  // Compares attenuation for lead vs. water for 0.2 - 20 MeV
-  std::ofstream fout("photon_data.txt");
-  for(int n = 1; n < 1001; n++)
+  std::vector<std::string> water_data = Water.Print();
+  for(int n = 0; n < water_data.size(); n++)
   {
-    double en = 0.001+(10.0*double(n));
-    fout << en << '\t';
-    fout << Lead.MassAttenuation(en) << '\t';
-    fout << Water.MassAttenuation(en) << '\n';
+    std::cout << water_data[n] << '\n';
+  }
+  std::cout << '\n';
+  // Print data to be viewed in Octave/MATLAB using PhysicsDemo.m
+  // Compares attenuation for lead vs. water
+  std::ofstream fout("photon_data.txt");
+  for(int n = 0; n < Lead.GetNumRows(); n++)
+  {
+    fout << Lead.GetEnergy(n) << '\t';
+    fout << Lead.MassAttenuation(Lead.GetEnergy(n)) << '\t';
+    fout << Water.MassAttenuation(Lead.GetEnergy(n)) << '\n';
   }
   fout.close();
 
@@ -90,13 +95,18 @@ int main()
   solutio::NistEstar Water_e(folder_e);
   Water_e.Load("Water, Liquid");
   std::cout << "Water: " << Water_e.TotalStoppingPower(2.5) << '\n' << '\n';
-  Water_e.PrintData();
+  std::vector<std::string> water_e_data = Water_e.Print();
+  for(int n = 0; n < water_e_data.size(); n++)
+  {
+    std::cout << water_e_data[n] << '\n';
+  }
+  std::cout << '\n';
   // Print data to be viewed in Octave/MATLAB using PhysicsDemo.m
   // Compares stopping powers for lead vs. water for 0.2 - 20 MeV
   fout.open("electron_data.txt");
   for(int n = 1; n < 1001; n++)
   {
-    double en = 0.1*double(n);
+    double en = 0.01+0.1*double(n);
     fout << en << '\t';
     fout << Lead_e.ColStoppingPower(en) << '\t';
     fout << Lead_e.RadStoppingPower(en) << '\t';
