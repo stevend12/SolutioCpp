@@ -56,7 +56,10 @@ namespace solutio
       // Material editing
       void Rename(std::string new_name);
       void ForceDensity(float new_density);
-      // Get attenuation values from data using log interpolation
+      // Get table size and energies for a row entry
+      int GetNumRows(){ return energies.size(); }
+      double GetEnergy(int r){ return energies[r]; }
+      // Get electron data using log interpolation
       double ColStoppingPower(double energy);
       double RadStoppingPower(double energy);
       double TotalStoppingPower(double energy);
@@ -70,9 +73,9 @@ namespace solutio
       {
         return atomic_composition;
       }
-      // Prints data to terminal screen
-      void PrintTable();
-      void PrintData();
+      // Prints data to vector of strings (each entry is a line of text, with
+      // no newline characters)
+      std::vector<std::string> Print();
     private:
       std::string data_folder;
 

@@ -299,39 +299,43 @@ namespace solutio
     return (LogInterpolation(energies, d_effect_parameter, energy));
   }
 
-  // Print data table to terminal screen
-  void NistEstar::PrintTable()
+  // Prints data to vector of strings (each entry is a line of text, with
+  // no newline characters)
+  std::vector<std::string> NistEstar::Print()
   {
-    for(int n = 0; n < energies.size(); n++)
-    {
-      std::cout << energies[n] << ' ' << col_stopping_power[n] << ' ' <<
-          rad_stopping_power[n] << ' ' << total_stopping_power[n] << ' ' <<
-          csda_range[n] << ' ' << radiation_yield[n] << ' ' <<
-          d_effect_parameter[n] << '\n';
-    }
-  }
+    std::vector<std::string> print_text;
 
-  // Print data to terminal screen
-  void NistEstar::PrintData()
-  {
-    std::cout << name << '\n';
+    print_text.push_back(name);
 
-    if(is_element) std::cout << "This is an element.\n\n";
-    else  std::cout << "This is not an element.\n\n";
+    if(is_element) print_text.push_back("This is an element.");
+    else print_text.push_back("This is not an element.");
 
-    std::cout << "Density (g/cm^3) = " << density << "\n\n";
-    std::cout << "I (eV) = " << mean_exitation_energy << '\n';
+    print_text.push_back("Density (g/cm^3) = "+std::to_string(density));
+    print_text.push_back("I (eV) = "+std::to_string(mean_exitation_energy));
 
-    std::cout << "Elements by Weight\n";
-    std::cout << "------------------\n";
+    print_text.push_back("Elements by Weight");
+    print_text.push_back("------------------");
     for(int n = 0; n < num_elements; n++)
     {
-      std::cout << atomic_composition[n].first << " : " << atomic_composition[n].second << '\n';
+      print_text.push_back(std::to_string(atomic_composition[n].first)+": "+
+        std::to_string(atomic_composition[n].second));
     }
-    std::cout << '\n';
 
-    std::cout << "Electron Data\n";
-    std::cout << "------------------\n";
-    PrintTable();
+    print_text.push_back("Electron Data");
+    print_text.push_back("-------------");
+    for(int n = 0; n < energies.size(); n++)
+    {
+      std::stringstream ss;
+      ss << energies[n]; ss << ' ';
+      ss << col_stopping_power[n]; ss << ' ';
+      ss << rad_stopping_power[n]; ss << ' ';
+      ss << total_stopping_power[n]; ss << ' ';
+      ss << csda_range[n]; ss << ' ';
+      ss << radiation_yield[n]; ss << ' ';
+      ss << d_effect_parameter[n];
+      print_text.push_back(ss.str());
+    }
+
+    return print_text;
   }
 }

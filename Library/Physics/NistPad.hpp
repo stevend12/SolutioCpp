@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/* Copyright 2016-2017 Steven Dolly                                           */
+/* Copyright 2016 Steven Dolly                                                */
 /*                                                                            */
 /* Licensed under the Apache License, Version 2.0 (the "License");            */
 /* you may not use this file except in compliance with the License.           */
@@ -56,6 +56,11 @@ namespace solutio
       // Material editing
       void Rename(std::string new_name);
       void ForceDensity(float new_density);
+      // Get table size and energies for a row entry
+      int GetNumRows(){ return energies.size(); }
+      double GetEnergy(int r){ return energies[r]; }
+      // Get absorption edge rows
+      std::vector<int> GetAbsorptionEdges(){ return absorption_edges; }
       // Get attenuation values from data using log interpolation
       double MassAttenuation(double energy);
       double LinearAttenuation(double energy);
@@ -69,9 +74,9 @@ namespace solutio
       {
         return atomic_composition;
       }
-      // Prints data to terminal screen
-      void PrintTable();
-      void PrintData();
+      // Prints data to vector of strings (each entry is a line of text, with
+      // no newline characters)
+      std::vector<std::string> Print();
     private:
       std::string data_folder;
 

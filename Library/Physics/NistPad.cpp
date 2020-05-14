@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/* Copyright 2016-2017 Steven Dolly                                           */
+/* Copyright 2016 Steven Dolly                                                */
 /*                                                                            */
 /* Licensed under the Apache License, Version 2.0 (the "License");            */
 /* you may not use this file except in compliance with the License.           */
@@ -271,48 +271,54 @@ namespace solutio
     return (density*LogInterpolation(energies, mass_energy_absorption, energy));
   }
 
-  // Print data table to terminal screen
-  void NistPad::PrintTable()
+  // Prints data to vector of strings (each entry is a line of text, with
+  // no newline characters)
+  std::vector<std::string> NistPad::Print()
   {
-    for(int n = 0; n < energies.size(); n++)
-    {
-      std::cout << energies[n] << ' ' << mass_attenuation[n] << ' ' <<
-          mass_energy_absorption[n] << '\n';
-    }
-    std::cout << '\n';
-    if(absorption_edges.size() > 0)
-    {
-      for(int n = 0; n < absorption_edges.size(); n++)
-      {
-        std::cout << energies[(absorption_edges[n])] << ' ' <<
-            mass_attenuation[(absorption_edges[n])] << ' ' <<
-            mass_energy_absorption[(absorption_edges[n])] << '\n';
-      }
-    }
-  }
+    std::vector<std::string> print_text;
 
-  // Print data to terminal screen
-  void NistPad::PrintData()
-  {
-    std::cout << name << '\n';
+    print_text.push_back(name);
 
-    if(is_element) std::cout << "This is an element.\n\n";
-    else  std::cout << "This is not an element.\n\n";
+    if(is_element) print_text.push_back("This is an element.");
+    else print_text.push_back("This is not an element.");
 
-    std::cout << "Z/A = " << z_to_a_ratio << '\n';
-    std::cout << "I (eV) = " << mean_exitation_energy << '\n';
-    std::cout << "Density (g/cm^3) = " << density << "\n\n";
+    print_text.push_back("Z/A = "+std::to_string(z_to_a_ratio));
+    print_text.push_back("I (eV) = "+std::to_string(mean_exitation_energy));
+    print_text.push_back("Density (g/cm^3) = "+std::to_string(density));
 
-    std::cout << "Elements by Weight\n";
-    std::cout << "------------------\n";
+    print_text.push_back("Elements by Weight");
+    print_text.push_back("------------------");
     for(int n = 0; n < num_elements; n++)
     {
-      std::cout << atomic_composition[n].first << " : " << atomic_composition[n].second << '\n';
+      print_text.push_back(std::to_string(atomic_composition[n].first)+": "+
+        std::to_string(atomic_composition[n].second));
     }
-    std::cout << '\n';
 
-    std::cout << "Attenuation Data\n";
-    std::cout << "------------------\n";
-    PrintTable();
+    print_text.push_back("Attenuation Data");
+    print_text.push_back("----------------");
+    for(int n = 0; n < energies.size(); n++)
+    {
+      std::stringstream ss;
+      ss << energies[n]; ss << ' ';
+      ss << mass_attenuation[n]; ss << ' ';
+      ss << mass_energy_absorption[n];
+      print_text.push_back(ss.str());
+    }
+
+    if(absorption_edges.size() > 0)
+    {
+      print_text.push_back("Absorption Edges");
+      print_text.push_back("----------------");
+      for(int n = 0; n < absorption_edges.size(); n++)
+      {
+        std::stringstream ss;
+        ss << energies[(absorption_edges[n])]; ss << ' ';
+        ss << mass_attenuation[(absorption_edges[n])]; ss << ' ';
+        ss << mass_energy_absorption[(absorption_edges[n])];
+        print_text.push_back(ss.str());
+      }
+    }
+
+    return print_text;
   }
 }
