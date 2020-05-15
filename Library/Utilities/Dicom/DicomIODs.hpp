@@ -33,6 +33,7 @@
 #define DICOMIODS_HPP
 
 #include "DicomModules.hpp"
+#include "Utilities/GenericImage.hpp"
 
 namespace solutio {
   // List of supported modalities
@@ -55,6 +56,7 @@ namespace solutio {
   {
     public:
       BaseImageIOD();
+      GenericImageHeader GetGenericImageHeader();
       GeneralStudyModule GeneralStudy;
       GeneralSeriesModule GeneralSeries;
       FrameOfReferenceModule FrameOfReference;

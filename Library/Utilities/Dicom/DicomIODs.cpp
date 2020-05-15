@@ -137,6 +137,36 @@ namespace solutio {
     Modules.push_back(&ImagePixel);
   }
 
+  GenericImageHeader BaseImageIOD::GetGenericImageHeader()
+  {
+    GenericImageHeader header;
+    // In future, check for multiframe before determining slices
+    header.SetImageSize(
+      ImagePixel.Rows.GetValue(),
+      ImagePixel.Columns.GetValue(),
+      1,1
+    );
+    header.SetPixelDimensions(
+      ImagePlane.PixelSpacing.GetValue(0),
+      ImagePlane.PixelSpacing.GetValue(1),
+      ImagePlane.SliceThickness.GetValue()
+    );
+    header.SetPixelOrigin(
+      ImagePlane.ImagePosition.GetValue(0),
+      ImagePlane.ImagePosition.GetValue(1),
+      ImagePlane.ImagePosition.GetValue(2)
+    );
+    header.SetDirectionCosines(
+      ImagePlane.ImageOrientation.GetValue(0),
+      ImagePlane.ImageOrientation.GetValue(1),
+      ImagePlane.ImageOrientation.GetValue(2),
+      ImagePlane.ImageOrientation.GetValue(3),
+      ImagePlane.ImageOrientation.GetValue(4),
+      ImagePlane.ImageOrientation.GetValue(5)
+    );
+    return header;
+  }
+
   CTImageIOD::CTImageIOD()
   {
     // Set SOP Common class to CT Image IOD
