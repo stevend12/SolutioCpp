@@ -39,6 +39,7 @@ set(SOURCE
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.cpp
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/GenericImage.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomDatabase.cpp
