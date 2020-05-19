@@ -33,11 +33,13 @@
 #define DICOMIODS_HPP
 
 #include "DicomModules.hpp"
-#include "Utilities/GenericImage.hpp"
+#include "../GenericImage.hpp"
 
 namespace solutio {
   // List of supported modalities
   extern std::vector< std::tuple<std::string, std::string, std::string> > SupportedIODList;
+  // Function to load/convert pixel data attribute
+  std::vector<float> ConvertPixelBuffer(ImagePixelModule &ipm);
   // Base class for all IODs
   class BaseIOD
   {
@@ -47,6 +49,7 @@ namespace solutio {
       std::string GetFilePrefix(std::string sop_class);
       bool Read(std::string file_name);
       bool Write(std::string file_name);
+      std::vector< std::pair<std::string, std::string> > Print();
       PatientModule Patient;
       SOPCommonModule SOPCommon;
       std::vector<DicomModule *> Modules;
@@ -57,6 +60,7 @@ namespace solutio {
     public:
       BaseImageIOD();
       GenericImageHeader GetGenericImageHeader();
+      GenericImage<float> GetGenericImage();
       GeneralStudyModule GeneralStudy;
       GeneralSeriesModule GeneralSeries;
       FrameOfReferenceModule FrameOfReference;
@@ -80,6 +84,8 @@ namespace solutio {
   {
     public:
       RTImageIOD();
+      GenericImageHeader GetGenericImageHeader();
+      GenericImage<float> GetGenericImage();
       GeneralStudyModule GeneralStudy;
       RTSeriesModule RTSeries;
       FrameOfReferenceModule FrameOfReference;

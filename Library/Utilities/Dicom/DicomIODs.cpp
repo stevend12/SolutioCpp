@@ -43,6 +43,47 @@ namespace solutio {
       std::make_tuple("1.2.840.10008.5.1.4.1.1.481.3","RTSTRUCT","RS")
   };
 
+  std::vector<float> ConvertPixelBuffer(ImagePixelModule &ipm)
+  {
+    std::vector<char> byte_buffer = ipm.PixelData.GetValue();
+    std::vector<float> image_buffer;
+    int p_bytes = ipm.BitsAllocated.GetValue() / 8;
+    if(p_bytes < 1 || p_bytes == 3 || p_bytes > 4)
+    {
+      std::cout << "Image with " << p_bytes << " bytes/pixel is not supported\n";
+      return image_buffer;
+    }
+
+    for(unsigned long int n = 0; n < byte_buffer.size(); n += p_bytes)
+    {
+      if(p_bytes == 1)
+      {
+        uint8_t raw8 = byte_buffer[n];
+        image_buffer.push_back(float(raw8));
+      }
+      if(p_bytes == 2)
+      {
+        uint16_t raw16;
+        for(int b = 0; b < p_bytes; b++)
+        {
+          *((char*)(&raw16) + b) = byte_buffer[(n+b)];
+        }
+        image_buffer.push_back(float(raw16));
+      }
+      else
+      {
+        uint32_t raw32;
+        for(int b = 0; b < p_bytes; b++)
+        {
+          *((char*)(&raw32) + b) = byte_buffer[(n+b)];
+        }
+        image_buffer.push_back(float(raw32));
+      }
+    }
+
+    return image_buffer;
+  }
+
   BaseIOD::BaseIOD()
   {
     Modules.push_back(&Patient);
@@ -126,6 +167,18 @@ namespace solutio {
     return true;
   }
 
+  std::vector< std::pair<std::string, std::string> > BaseIOD::Print()
+  {
+    std::vector< std::pair<std::string, std::string> > iod_list;
+    for(int n = 0; n < Modules.size(); n++)
+    {
+      std::vector< std::pair<std::string, std::string> > m =
+        Modules[n]->Print();
+      iod_list.insert(iod_list.end(), m.begin(), m.end());
+    }
+    return iod_list;
+  }
+
   BaseImageIOD::BaseImageIOD()
   {
     Modules.push_back(&GeneralStudy);
@@ -165,6 +218,14 @@ namespace solutio {
       ImagePlane.ImageOrientation.GetValue(5)
     );
     return header;
+  }
+
+  GenericImage<float> BaseImageIOD::GetGenericImage()
+  {
+    GenericImage<float> generic_image;
+    generic_image.SetHeader(GetGenericImageHeader());
+    generic_image.SetImage(ConvertPixelBuffer(ImagePixel));
+    return generic_image;
   }
 
   CTImageIOD::CTImageIOD()
@@ -249,6 +310,44 @@ namespace solutio {
     Modules.push_back(&ImagePixel);
     //Modules.push_back(&Multiframe);
     Modules.push_back(&RTImage);
+  }
+
+  GenericImageHeader RTImageIOD::GetGenericImageHeader()
+  {
+    GenericImageHeader header;
+    // In future, check for multiframe before determining slices
+    header.SetImageSize(
+      ImagePixel.Rows.GetValue(),
+      ImagePixel.Columns.GetValue(),
+      1,1
+    );
+    header.SetPixelDimensions(
+      RTImage.ImagePlanePixelSpacing.GetValue(0),
+      RTImage.ImagePlanePixelSpacing.GetValue(1),
+      0.0
+    );
+    header.SetPixelOrigin(
+      RTImage.RTImagePosition.GetValue(0),
+      RTImage.RTImagePosition.GetValue(1),
+      0.0
+    );
+    header.SetDirectionCosines(
+      RTImage.RTImageOrientation.GetValue(0),
+      RTImage.RTImageOrientation.GetValue(1),
+      RTImage.RTImageOrientation.GetValue(2),
+      RTImage.RTImageOrientation.GetValue(3),
+      RTImage.RTImageOrientation.GetValue(4),
+      RTImage.RTImageOrientation.GetValue(5)
+    );
+    return header;
+  }
+
+  GenericImage<float> RTImageIOD::GetGenericImage()
+  {
+    GenericImage<float> generic_image;
+    generic_image.SetHeader(GetGenericImageHeader());
+    generic_image.SetImage(ConvertPixelBuffer(ImagePixel));
+    return generic_image;
   }
 
   RTDoseIOD::RTDoseIOD()

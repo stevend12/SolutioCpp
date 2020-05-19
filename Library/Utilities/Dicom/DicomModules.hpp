@@ -43,7 +43,9 @@ namespace solutio {
       {
         ie_name = name = "";
       }
-      void Read(const gdcm::DataSet& data) // removed virtual
+      std::string GetIE(){ return ie_name; }
+      std::string GetName(){ return name; }
+      void Read(const gdcm::DataSet& data)
       {
         for(int n = 0; n < attribute_list.size(); n++)
         {
@@ -57,8 +59,16 @@ namespace solutio {
           attribute_list[n]->InsertAttribute(data);
         }
       }
-      std::string GetIE(){ return ie_name; }
-      std::string GetName(){ return name; }
+      std::vector< std::pair<std::string, std::string> > Print()
+      {
+        std::vector< std::pair<std::string, std::string> > mod_list;
+        for(int n = 0; n < attribute_list.size(); n++)
+        {
+          std::pair<std::string, std::string> a = attribute_list[n]->Print();
+          mod_list.push_back(a);
+        }
+        return mod_list;
+      }
     protected:
       std::string ie_name;
       std::string name;
@@ -82,7 +92,7 @@ namespace solutio {
           PatientBirthDate = pm.PatientBirthDate;
           PatientSex = pm.PatientSex;
       }
-      // Patient's name (0010,0010)
+      // Patient's Name (0010,0010)
       SingleValueAttribute<std::string,0x0010,0x0010> PatientName;
       // Patient ID (0010,0020)
       SingleValueAttribute<std::string,0x0010,0x0020> PatientID;
