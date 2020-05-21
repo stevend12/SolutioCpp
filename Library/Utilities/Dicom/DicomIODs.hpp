@@ -60,7 +60,7 @@ namespace solutio {
     public:
       BaseImageIOD();
       GenericImageHeader GetGenericImageHeader();
-      GenericImage<float> GetGenericImage();
+      GenericImage<float> GetGenericImage(float slope = 1.0, float intercept = 0.0);
       GeneralStudyModule GeneralStudy;
       GeneralSeriesModule GeneralSeries;
       FrameOfReferenceModule FrameOfReference;
@@ -77,7 +77,7 @@ namespace solutio {
       bool WriteSeriesFromSingle(std::string folder, std::string sopi_base,
         int sopi_start, int num_slices, std::vector<char> volume_pixel_data);
       CTImageModule CTImage;
-      std::vector<int16_t> GetHUImage();
+      GenericImage<float> GetHUImage();
   };
 
   class RTImageIOD : public BaseIOD

@@ -220,11 +220,17 @@ namespace solutio {
     return header;
   }
 
-  GenericImage<float> BaseImageIOD::GetGenericImage()
+  GenericImage<float> BaseImageIOD::GetGenericImage(float slope,
+    float intercept)
   {
     GenericImage<float> generic_image;
     generic_image.SetHeader(GetGenericImageHeader());
-    generic_image.SetImage(ConvertPixelBuffer(ImagePixel));
+    std::vector<float> image_buffer = ConvertPixelBuffer(ImagePixel);
+    for(unsigned long int n = 0; n < image_buffer.size(); n++)
+    {
+      image_buffer[n] = slope*image_buffer[n] + intercept;
+    }
+    generic_image.SetImage(image_buffer);
     return generic_image;
   }
 
@@ -279,20 +285,12 @@ namespace solutio {
     return true;
   }
 
-  std::vector<int16_t> CTImageIOD::GetHUImage()
+  GenericImage<float> CTImageIOD::GetHUImage()
   {
-    double slope = CTImage.RescaleSlope.GetValue();
-    double intercept = CTImage.RescaleIntercept.GetValue();
-    std::vector<char> image_buffer = ImagePixel.PixelData.GetValue();
-    std::vector<int16_t> hu_buffer;
-    for(unsigned long int n = 0; n < image_buffer.size(); n+=2)
-    {
-      uint16_t raw;
-      *((char*)(&raw) + 1) = image_buffer[(n+1)];
-      *((char*)(&raw) + 0) = image_buffer[n];
-      hu_buffer.push_back(round(slope*double(raw) + intercept));
-    }
-    return hu_buffer;
+    float sl = CTImage.RescaleSlope.GetValue();
+    float in = CTImage.RescaleIntercept.GetValue();
+    GenericImage<float> generic_image = GetGenericImage(sl, in);
+    return generic_image;
   }
 
   RTImageIOD::RTImageIOD()

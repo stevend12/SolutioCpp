@@ -46,16 +46,22 @@ namespace solutio
       void SetPixelOrigin(double ox, double oy, double oz);
       void SetDirectionCosines(double rx, double ry, double rz, double cx,
         double cy, double cz);
+      void SetRescaleSlope(double rs){ rescale_slope = rs; }
+      void SetRescaleIntercept(double ri){ rescale_intercept = ri; }
       // Get functions
       unsigned int * GetImageSize(){ return image_size; }
       double * GetPixelDimensions(){ return pixel_dimensions; }
       double * GetPixelOrigin(){ return pixel_origin; }
       double * GetDirectionCosines(){ return direction_cosines; }
+      double GetRescaleSlope(){ return rescale_slope; }
+      double GetRescaleIntercept(){ return rescale_intercept; }
     private:
       unsigned int image_size[4];
       double pixel_dimensions[3];
       double pixel_origin[3];
       double direction_cosines[6];
+      double rescale_slope;
+      double rescale_intercept;
   };
 
   template <class T>

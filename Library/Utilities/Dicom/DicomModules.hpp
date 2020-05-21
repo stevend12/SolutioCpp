@@ -301,8 +301,8 @@ namespace solutio {
         name = "CT Image";
 
         ImageType.SetValue("ORIGINAL\\PRIMARY\\AXIAL");
-        RescaleIntercept.SetValue(-1000);
-        RescaleSlope.SetValue(1);
+        RescaleIntercept.SetValue(-1000.0);
+        RescaleSlope.SetValue(1.0);
 
         BaseAttribute * a[4] = { &ImageType, &RescaleIntercept, &RescaleSlope,
           &KVP };

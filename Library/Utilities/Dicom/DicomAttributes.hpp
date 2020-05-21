@@ -132,7 +132,7 @@ namespace solutio {
       std::string value;
   };
 
-  // Muiti-value attribute; so far only double type is allowed, may extend in
+  // Multi-value attribute; so far only double type is allowed, may extend in
   // the future
   template <uint16_t G, uint16_t E>
   class MultiNumberAttribute : public BaseAttribute

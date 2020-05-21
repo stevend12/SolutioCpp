@@ -48,9 +48,10 @@ namespace solutio {
       GeneralSeriesModule Series;
       SOPCommonModule SOPCommon;
       std::string modality_name;
-      std::string file_path;
       bool ReadDicomFile(std::string file_name);
+      std::string GetPath(){ return file_path; }
     private:
+      std::string file_path;
       //bool is_dicom;
   };
   // Struct that contains a DICOM series (i.e. a group of DICOM files)
@@ -60,7 +61,8 @@ namespace solutio {
       void SetInfo(std::string psuid, std::string suid, std::string mn);
       void AddFileID(int id){ file_ids.push_back(id); }
       bool CheckStudy(std::string uid){ return (uid == parent_study_uid); }
-      int GetNumFiles(){ return file_ids.size(); }
+      unsigned int GetNumFiles(){ return file_ids.size(); }
+      unsigned int GetFileID(unsigned int n){ return file_ids[n]; }
       std::string GetStudyUID(){ return parent_study_uid; }
       std::string GetSeriesUID(){ return series_uid; }
       std::string GetModalityName(){ return modality_name; }
@@ -68,7 +70,7 @@ namespace solutio {
       std::string parent_study_uid;
       std::string series_uid;
       std::string modality_name;
-      std::vector<int> file_ids;
+      std::vector<unsigned int> file_ids;
   };
 
   // Class to organize the database files hierarchically into a nested list of DICOM objects
@@ -76,11 +78,14 @@ namespace solutio {
   {
     public:
       void MakeDatabase(std::string database_path);
-      std::vector<std::string> GetSeriesFileNames();
+      DicomDatabaseFile GetFile(unsigned int id){ return dicom_files[id]; }
+      DicomDatabaseSeries GetSeries(unsigned int id){ return series_list[id]; }
+      std::vector<std::string> GetSeriesFileNames(unsigned int series_id);
+      std::vector<std::string> PrintTree();
     private:
       std::vector<DicomDatabaseFile> dicom_files;
       std::vector<std::string> patient_list;
-      std::vector< std::pair<std::string, int> > study_list;
+      std::vector< std::pair<std::string, std::string> > study_list;
       std::vector<DicomDatabaseSeries> series_list;
   };
 }
