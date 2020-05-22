@@ -45,6 +45,11 @@ namespace solutio {
   {
     public:
       BaseIOD();
+      BaseIOD(const BaseIOD &biod) : BaseIOD()
+      {
+        Patient = biod.Patient;
+        SOPCommon = biod.SOPCommon;
+      };
       bool IsIODSupported(std::string sop_class);
       std::string GetFilePrefix(std::string sop_class);
       bool Read(std::string file_name);
@@ -52,13 +57,30 @@ namespace solutio {
       std::vector< std::pair<std::string, std::string> > Print();
       PatientModule Patient;
       SOPCommonModule SOPCommon;
-      std::vector<DicomModule *> Modules;
+      std::vector<DicomModule> Modules;
   };
   // Base class for all image-based IODs (excluding RT IODs)
   class BaseImageIOD : public BaseIOD
   {
     public:
       BaseImageIOD();
+      BaseImageIOD(const BaseImageIOD &biiod) : BaseIOD(biiod)
+      {
+        GeneralStudy = biiod.GeneralStudy;
+        GeneralSeries = biiod.GeneralSeries;
+        FrameOfReference = biiod.FrameOfReference;
+        GeneralEquipment = biiod.GeneralEquipment;
+        GeneralImage = biiod.GeneralImage;
+        ImagePlane = biiod.ImagePlane;
+        ImagePixel = biiod.ImagePixel;
+        Modules.push_back(GeneralStudy);
+        Modules.push_back(GeneralSeries);
+        Modules.push_back(FrameOfReference);
+        Modules.push_back(GeneralEquipment);
+        Modules.push_back(GeneralImage);
+        Modules.push_back(ImagePlane);
+        Modules.push_back(ImagePixel);
+      }
       GenericImageHeader GetGenericImageHeader();
       GenericImage<float> GetGenericImage(float slope = 1.0, float intercept = 0.0);
       GeneralStudyModule GeneralStudy;
@@ -74,6 +96,11 @@ namespace solutio {
   {
     public:
       CTImageIOD();
+      CTImageIOD(const CTImageIOD &ciod) : BaseImageIOD(ciod)
+      {
+        CTImage = ciod.CTImage;
+        Modules.push_back(CTImage);
+      }
       bool WriteSeriesFromSingle(std::string folder, std::string sopi_base,
         int sopi_start, int num_slices, std::vector<char> volume_pixel_data);
       CTImageModule CTImage;
@@ -84,6 +111,7 @@ namespace solutio {
   {
     public:
       RTImageIOD();
+      //RTImageIOD(const RTImageIOD &riiod){ BaseIOD(); RTImageIOD(); }
       GenericImageHeader GetGenericImageHeader();
       GenericImage<float> GetGenericImage();
       GeneralStudyModule GeneralStudy;
@@ -100,6 +128,7 @@ namespace solutio {
   {
     public:
       RTDoseIOD();
+      //RTDoseIOD(const RTDoseIOD &rdiod){ BaseIOD(); RTDoseIOD(); }
       GeneralStudyModule GeneralStudy;
       RTSeriesModule RTSeries;
       FrameOfReferenceModule FrameOfReference;
@@ -115,6 +144,7 @@ namespace solutio {
   {
     public:
       RTStructureSetIOD();
+      //RTStructureSetIOD(const RTStructureSetIOD &rssiod){ BaseIOD(); RTStructureSetIOD(); }
       GeneralStudyModule GeneralStudy;
       RTSeriesModule RTSeries;
       GeneralEquipmentModule GeneralEquipment;

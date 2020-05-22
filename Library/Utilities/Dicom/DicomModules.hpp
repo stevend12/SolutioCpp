@@ -81,9 +81,14 @@ namespace solutio {
       PatientModule()
       {
         ie_name = name = "Patient";
+        attribute_list.clear();
         BaseAttribute * a[4] = {&PatientName, &PatientID, &PatientBirthDate,
             &PatientSex};
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      PatientModule(const PatientModule &pm) : PatientModule()
+      {
+        (*this) = pm;
       }
       void operator=(const PatientModule &pm)
       {
@@ -109,9 +114,14 @@ namespace solutio {
       {
         ie_name = "Study";
         name = "General Study";
+        attribute_list.clear();
         BaseAttribute * a[4] = {&StudyInstanceUID, &StudyDate, &StudyTime,
             &StudyDescription};
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      GeneralStudyModule(const GeneralStudyModule &gsm) : GeneralStudyModule()
+      {
+        (*this) = gsm;
       }
       void operator=(const GeneralStudyModule &gsm)
       {
@@ -139,10 +149,14 @@ namespace solutio {
         name = "General Series";
 
         PatientPosition.SetValue("HFS");
-
+        attribute_list.clear();
         BaseAttribute * a[5] = {&Modality, &SeriesInstanceUID, &SeriesNumber,
             &SeriesDescription, &PatientPosition};
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      GeneralSeriesModule(const GeneralSeriesModule &gsm) : GeneralSeriesModule()
+      {
+        (*this) = gsm;
       }
       void operator=(const GeneralSeriesModule &gsm)
       {
@@ -171,8 +185,18 @@ namespace solutio {
       {
         ie_name = "Frame Of Reference";
         name = "Frame Of Reference";
+        attribute_list.clear();
         BaseAttribute * a[2] = {&FrameOfReferenceUID, &PositionReferenceIndicator};
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      FrameOfReferenceModule(const FrameOfReferenceModule &form) : FrameOfReferenceModule()
+      {
+        (*this) = form;
+      }
+      void operator=(const FrameOfReferenceModule &form)
+      {
+        FrameOfReferenceUID = form.FrameOfReferenceUID;
+        PositionReferenceIndicator = form.PositionReferenceIndicator;
       }
       // Frame of Reference UID (0020,0052)
       SingleValueAttribute<std::string,0x0020,0x0052> FrameOfReferenceUID;
@@ -188,9 +212,20 @@ namespace solutio {
       {
         ie_name = "Equipment";
         name = "General Equipment";
+        attribute_list.clear();
         BaseAttribute * a[3] = {&Manufacturer, &ManufacturersModelName,
             &SoftwareVersions};
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      GeneralEquipmentModule(const GeneralEquipmentModule &gem) : GeneralEquipmentModule()
+      {
+        *this = gem;
+      }
+      void operator=(const GeneralEquipmentModule &gem)
+      {
+        Manufacturer = gem.Manufacturer;
+        ManufacturersModelName = gem.ManufacturersModelName;
+        SoftwareVersions = gem.SoftwareVersions;
       }
       // Manufacturer (0008,0070)
       SingleValueAttribute<std::string,0x0008,0x0070> Manufacturer;
@@ -208,8 +243,18 @@ namespace solutio {
       {
         ie_name = "Image";
         name = "General Image";
+        attribute_list.clear();
         BaseAttribute * a[2] = {&InstanceNumber, &PatientOrientation};
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      GeneralImageModule(const GeneralImageModule &gim) : GeneralImageModule()
+      {
+        *this = gim;
+      }
+      void operator=(const GeneralImageModule &gem)
+      {
+        InstanceNumber = gem.InstanceNumber;
+        PatientOrientation = gem.PatientOrientation;
       }
       // Instance Number (0020,0013)
       SingleValueAttribute<unsigned int,0x0020,0x0013> InstanceNumber;
@@ -234,9 +279,26 @@ namespace solutio {
         ImageOrientation.SetValue(1.0, 4);
         ImageOrientation.SetValue(0.0, 5);
 
+        attribute_list.clear();
         BaseAttribute * a[5] = {&PixelSpacing, &ImageOrientation, &ImagePosition,
             &SliceThickness, &SliceLocation};
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      ImagePlaneModule(const ImagePlaneModule &ipm)
+      {
+        *this = ipm;
+        attribute_list.clear();
+        BaseAttribute * a[5] = {&PixelSpacing, &ImageOrientation, &ImagePosition,
+            &SliceThickness, &SliceLocation};
+        attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      void operator=(const ImagePlaneModule &ipm)
+      {
+        PixelSpacing = ipm.PixelSpacing;
+        ImageOrientation = ipm.ImageOrientation;
+        ImagePosition = ipm.ImagePosition;
+        SliceThickness = ipm.SliceThickness;
+        SliceLocation = ipm.SliceLocation;
       }
       // Pixel Spacing (0028,0030)
       MultiNumberAttribute<0x0028,0x0030> PixelSpacing;
@@ -266,10 +328,32 @@ namespace solutio {
         HighBit.SetValue(15);
         PixelRepresentation.SetValue("0000H");
 
+        attribute_list.clear();
         BaseAttribute * a[9] = { &SamplesPerPixel, &PhotometricInterpretation,
           &Rows, &Columns, &BitsAllocated, &BitsStored, &HighBit,
           &PixelRepresentation, &PixelData };
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      ImagePixelModule(const ImagePixelModule &ipm)
+      {
+        *this = ipm;
+        attribute_list.clear();
+        BaseAttribute * a[9] = { &SamplesPerPixel, &PhotometricInterpretation,
+          &Rows, &Columns, &BitsAllocated, &BitsStored, &HighBit,
+          &PixelRepresentation, &PixelData };
+        attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      void operator=(const ImagePixelModule &ipm)
+      {
+        SamplesPerPixel = ipm.SamplesPerPixel;
+        PhotometricInterpretation = ipm.PhotometricInterpretation;
+        Rows = ipm.Rows;
+        Columns = ipm.Columns;
+        BitsAllocated = ipm.BitsAllocated;
+        BitsStored = ipm.BitsStored;
+        HighBit = ipm.HighBit;
+        PixelRepresentation = ipm.PixelRepresentation;
+        PixelData = ipm.PixelData;
       }
       // Samples per Pixel (0028,0002)
       SingleValueAttribute<unsigned int,0x0028,0x0002> SamplesPerPixel;
@@ -304,9 +388,21 @@ namespace solutio {
         RescaleIntercept.SetValue(-1000.0);
         RescaleSlope.SetValue(1.0);
 
+        attribute_list.clear();
         BaseAttribute * a[4] = { &ImageType, &RescaleIntercept, &RescaleSlope,
           &KVP };
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      CTImageModule(const CTImageModule &cim) : CTImageModule()
+      {
+        *this = cim;
+      }
+      void operator=(const CTImageModule &cim)
+      {
+        ImageType = cim.ImageType;
+        RescaleIntercept = cim.RescaleIntercept;
+        RescaleSlope = cim.RescaleSlope;
+        KVP = cim.KVP;
       }
       // Image Type (0008,0008)
       SingleValueAttribute<std::string,0x0008,0x0008> ImageType;
@@ -326,8 +422,18 @@ namespace solutio {
       {
         ie_name = "Image";
         name = "SOP Common";
+        attribute_list.clear();
         BaseAttribute * a[2] = {&SOPClassUID, &SOPInstanceUID};
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      SOPCommonModule(const SOPCommonModule &scm) : SOPCommonModule()
+      {
+        *this = scm;
+      }
+      void operator=(const SOPCommonModule &scm)
+      {
+        SOPClassUID = scm.SOPClassUID;
+        SOPInstanceUID = scm.SOPInstanceUID;
       }
       // SOP Class UID (0008,0016)
       SingleValueAttribute<std::string,0x0008,0x0016> SOPClassUID;
@@ -343,9 +449,14 @@ namespace solutio {
       {
         ie_name = "Series";
         name = "RT Series";
+        attribute_list.clear();
         BaseAttribute * a[4] = {&Modality, &SeriesInstanceUID, &SeriesNumber,
             &SeriesDescription};
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      RTSeriesModule(const RTSeriesModule &rsm)
+      {
+        RTSeriesModule();
       }
       // Modality (0008,0060)
       SingleValueAttribute<std::string,0x0008,0x0060> Modality;
@@ -364,10 +475,15 @@ namespace solutio {
       StructureSetModule()
       {
         ie_name = name = "Structure Set";
+        attribute_list.clear();
         BaseAttribute * a[6] = {&StructureSetLabel, &StructureSetName,
             &StructureSetDate, &StructureSetTime,
             &ReferencedFrameOfReferenceSequence, &StructureSetROISequence};
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      StructureSetModule(const StructureSetModule &ssm)
+      {
+        StructureSetModule();
       }
       // Structure Set Label (3006,0002)
       SingleValueAttribute<std::string,0x3006,0x0002> StructureSetLabel;
@@ -391,7 +507,12 @@ namespace solutio {
       {
         ie_name = "Structure Set";
         name = "ROI Contour";
+        attribute_list.clear();
         attribute_list.push_back(&ROIContourSequence);
+      }
+      ROIContourModule(const ROIContourModule &rcm)
+      {
+        ROIContourModule();
       }
       ROIContourSequenceAttribute ROIContourSequence;
   };
@@ -404,7 +525,12 @@ namespace solutio {
       {
         ie_name = "Structure Set";
         name = "RT ROI Observations";
+        attribute_list.clear();
         attribute_list.push_back(&RTROIObservationsSequence);
+      }
+      RTROIObservationsModule(const RTROIObservationsModule &rrom)
+      {
+        RTROIObservationsModule();
       }
       RTROIObservationsSequenceAttribute RTROIObservationsSequence;
   };
@@ -417,8 +543,13 @@ namespace solutio {
       {
         ie_name = "Dose";
         name = "Multi-frame";
+        attribute_list.clear();
         BaseAttribute * a[2] = { &NumberOfFrames, &FrameIncrementPointer };
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      MultiframeModule(const MultiframeModule &mm)
+      {
+        MultiframeModule();
       }
       // Number of Frames (0028,0008)
       SingleValueAttribute<unsigned int,0x0028,0x0008> NumberOfFrames;
@@ -439,9 +570,14 @@ namespace solutio {
         DoseType.SetValue("PHYSICAL");
         DoseSummationType.SetValue("PLAN");
 
+        attribute_list.clear();
         BaseAttribute * a[6] = { &DoseUnits, &DoseType, &DoseSummationType,
           &ReferencedRTPlanSequence, &GridFrameOffsetVector, &DoseGridScaling };
         attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      RTDoseModule(const RTDoseModule &rdm)
+      {
+        RTDoseModule();
       }
       // Dose Units (3004,0002)
       SingleValueAttribute<std::string,0x3004,0x0002> DoseUnits;
@@ -470,6 +606,27 @@ namespace solutio {
 
         ImageType.SetValue("ORIGINAL\\PRIMARY\\BLANK");
 
+        attribute_list.clear();
+        BaseAttribute * a[40] = { &RTImageLabel, &RTImageName, &RTImageDescription,
+          &ImageType, &ConversionType, &ReportedValuesOrigin, &RTImagePlane,
+          &XRayImageReceptorTranslation, &XRayImageReceptorAngle, &RTImageOrientation,
+          &ImagePlanePixelSpacing, &RTImagePosition, &RadiationMachineName,
+          &PrimaryDosimeterUnit, &RadiationMachineSAD, &RadiationMachineSSD,
+          &RTImageSID, &SourceToReferenceObjectDistance, &ReferencedRTPlanSequence,
+          &ReferencedBeamNumber, &ReferencedFractionGroupNumber, &FractionNumber,
+          &StartCumulativeMetersetWeight, &EndCumulativeMetersetWeight,
+          /* Exposure Sequence, */ &GantryAngle, &GantryPitchAngle,
+          &BeamLimitingDeviceAngle, &PatientSupportAngle,
+          &TableTopEccentricAxisDistance, &TableTopEccentricAngle,
+          &TableTopPitchAngle, &TableTopRollAngle, &TableTopVerticalPosition,
+          &TableTopLongitudinalPosition, &TableTopLateralPosition, &IsocenterPosition,
+          &PatientPosition, &ExposureTime, &ExposureTimeInMs, &MetersetExposure
+        };
+        attribute_list.insert(attribute_list.end(), std::begin(a), std::end(a));
+      }
+      RTImageModule(const RTImageModule &rim)
+      {
+        attribute_list.clear();
         BaseAttribute * a[40] = { &RTImageLabel, &RTImageName, &RTImageDescription,
           &ImageType, &ConversionType, &ReportedValuesOrigin, &RTImagePlane,
           &XRayImageReceptorTranslation, &XRayImageReceptorAngle, &RTImageOrientation,

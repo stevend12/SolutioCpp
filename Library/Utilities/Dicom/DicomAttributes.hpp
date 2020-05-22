@@ -87,6 +87,7 @@ namespace solutio {
       }
       void ReadAttribute(const gdcm::DataSet &data)
       {
+        gdcm::Attribute<G,E> att;
         if(data.FindDataElement(att.GetTag()))
         {
           att.Set(data);
@@ -98,6 +99,7 @@ namespace solutio {
       }
       void InsertAttribute(gdcm::DataSet &data)
       {
+        gdcm::Attribute<G,E> att;
         if(value != "")
         {
           gdcm::DataElement de = att.GetAsDataElement();
@@ -121,6 +123,7 @@ namespace solutio {
       }
       std::pair<std::string, std::string> Print()
       {
+        gdcm::Attribute<G,E> att;
         std::pair<std::string, std::string> att_print;
         std::string tag = '('+att.GetTag().PrintAsPipeSeparatedString()+')';
         att_print.first = tag.replace(5, 1, ", ");
@@ -128,7 +131,6 @@ namespace solutio {
         return att_print;
       }
     private:
-      gdcm::Attribute<G,E> att;
       std::string value;
   };
 
@@ -161,6 +163,7 @@ namespace solutio {
       }
       void ReadAttribute(const gdcm::DataSet &data)
       {
+        gdcm::Attribute<G,E> att;
         values.clear();
         length = 0;
         if(data.FindDataElement(att.GetTag()))
@@ -175,6 +178,7 @@ namespace solutio {
       }
       void InsertAttribute(gdcm::DataSet &data)
       {
+        gdcm::Attribute<G,E> att;
         std::stringstream ss;
         for(int n = 0; n < values.size(); n++)
         {
@@ -189,6 +193,7 @@ namespace solutio {
       }
       std::pair<std::string, std::string> Print()
       {
+        gdcm::Attribute<G,E> att;
         std::pair<std::string, std::string> att_print;
         std::string tag = '('+att.GetTag().PrintAsPipeSeparatedString()+')';
         att_print.first = tag.replace(5, 1, ", ");
@@ -205,7 +210,6 @@ namespace solutio {
         return att_print;
       }
     private:
-      gdcm::Attribute<G,E> att;
       std::vector<double> values;
       int length;
   };

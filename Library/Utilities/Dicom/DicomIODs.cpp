@@ -86,8 +86,9 @@ namespace solutio {
 
   BaseIOD::BaseIOD()
   {
-    Modules.push_back(&Patient);
-    Modules.push_back(&SOPCommon);
+    //Modules.clear();
+    Modules.push_back(Patient);
+    Modules.push_back(SOPCommon);
   }
 
   bool BaseIOD::IsIODSupported(std::string sop_class)
@@ -129,8 +130,8 @@ namespace solutio {
       return false;
     }
     // Read all modules
-    std::vector<DicomModule *>::iterator it;
-    for(it = Modules.begin(); it != Modules.end(); it++) (*it)->Read(ds);
+    std::vector<DicomModule>::iterator it;
+    for(it = Modules.begin(); it != Modules.end(); it++) it->Read(ds);
     // Return true for success
     return true;
   }
@@ -154,8 +155,8 @@ namespace solutio {
     gdcm::FileMetaInformation &header = file.GetHeader();
     header.SetDataSetTransferSyntax(gdcm::TransferSyntax::ImplicitVRLittleEndian);
     // Insert all modules
-    std::vector<DicomModule *>::iterator it;
-    for(it = Modules.begin(); it != Modules.end(); it++) (*it)->Insert(ds);
+    std::vector<DicomModule>::iterator it;
+    for(it = Modules.begin(); it != Modules.end(); it++) it->Insert(ds);
     // Write file
     writer.SetFileName(file_name.c_str());
     if(!writer.Write())
@@ -173,7 +174,7 @@ namespace solutio {
     for(int n = 0; n < Modules.size(); n++)
     {
       std::vector< std::pair<std::string, std::string> > m =
-        Modules[n]->Print();
+        Modules[n].Print();
       iod_list.insert(iod_list.end(), m.begin(), m.end());
     }
     return iod_list;
@@ -181,13 +182,13 @@ namespace solutio {
 
   BaseImageIOD::BaseImageIOD()
   {
-    Modules.push_back(&GeneralStudy);
-    Modules.push_back(&GeneralSeries);
-    Modules.push_back(&FrameOfReference);
-    Modules.push_back(&GeneralEquipment);
-    Modules.push_back(&GeneralImage);
-    Modules.push_back(&ImagePlane);
-    Modules.push_back(&ImagePixel);
+    Modules.push_back(GeneralStudy);
+    Modules.push_back(GeneralSeries);
+    Modules.push_back(FrameOfReference);
+    Modules.push_back(GeneralEquipment);
+    Modules.push_back(GeneralImage);
+    Modules.push_back(ImagePlane);
+    Modules.push_back(ImagePixel);
   }
 
   GenericImageHeader BaseImageIOD::GetGenericImageHeader()
@@ -241,7 +242,7 @@ namespace solutio {
     // Set modality to CT
     GeneralSeries.Modality.SetValue("CT");
     // Add CT-specific modules
-    Modules.push_back(&CTImage);
+    Modules.push_back(CTImage);
   }
 
   bool CTImageIOD::WriteSeriesFromSingle(std::string folder, std::string sopi_base,
@@ -300,14 +301,14 @@ namespace solutio {
     // Set modality to RTSTRUCT
     RTSeries.Modality.SetValue("RTIMAGE");
     // Add RT-image specific modules
-    Modules.push_back(&GeneralStudy);
-    Modules.push_back(&RTSeries);
-    Modules.push_back(&FrameOfReference);
-    Modules.push_back(&GeneralEquipment);
-    Modules.push_back(&GeneralImage);
-    Modules.push_back(&ImagePixel);
+    Modules.push_back(GeneralStudy);
+    Modules.push_back(RTSeries);
+    Modules.push_back(FrameOfReference);
+    Modules.push_back(GeneralEquipment);
+    Modules.push_back(GeneralImage);
+    Modules.push_back(ImagePixel);
     //Modules.push_back(&Multiframe);
-    Modules.push_back(&RTImage);
+    Modules.push_back(RTImage);
   }
 
   GenericImageHeader RTImageIOD::GetGenericImageHeader()
@@ -355,15 +356,15 @@ namespace solutio {
     // Set modality to RTSTRUCT
     RTSeries.Modality.SetValue("RTDOSE");
     // Add RT-dose specific modules
-    Modules.push_back(&GeneralStudy);
-    Modules.push_back(&RTSeries);
-    Modules.push_back(&FrameOfReference);
-    Modules.push_back(&GeneralEquipment);
-    Modules.push_back(&GeneralImage);
-    Modules.push_back(&ImagePlane);
-    Modules.push_back(&ImagePixel);
-    Modules.push_back(&Multiframe);
-    Modules.push_back(&RTDose);
+    Modules.push_back(GeneralStudy);
+    Modules.push_back(RTSeries);
+    Modules.push_back(FrameOfReference);
+    Modules.push_back(GeneralEquipment);
+    Modules.push_back(GeneralImage);
+    Modules.push_back(ImagePlane);
+    Modules.push_back(ImagePixel);
+    Modules.push_back(Multiframe);
+    Modules.push_back(RTDose);
   }
 
   RTStructureSetIOD::RTStructureSetIOD()
@@ -373,11 +374,11 @@ namespace solutio {
     // Set modality to RTSTRUCT
     RTSeries.Modality.SetValue("RTSTRUCT");
     // Add RT-structure set specific modules
-    Modules.push_back(&GeneralStudy);
-    Modules.push_back(&RTSeries);
-    Modules.push_back(&GeneralEquipment);
-    Modules.push_back(&StructureSet);
-    Modules.push_back(&ROIContour);
-    Modules.push_back(&RTROIObservations);
+    Modules.push_back(GeneralStudy);
+    Modules.push_back(RTSeries);
+    Modules.push_back(GeneralEquipment);
+    Modules.push_back(StructureSet);
+    Modules.push_back(ROIContour);
+    Modules.push_back(RTROIObservations);
   }
 }
