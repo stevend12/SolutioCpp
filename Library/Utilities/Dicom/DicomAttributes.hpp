@@ -57,6 +57,13 @@ namespace solutio {
       {
         std::cout << "Warning: BaseAttribute InsertAttribute not defined\n";
       }
+      virtual std::pair<std::string, std::string> Print()
+      {
+        std::pair<std::string, std::string> att_print;
+        std::cout << "Warning: BaseAttribute Print not defined\n";
+        att_print.first = "NA"; att_print.second = "NA";
+        return att_print;
+      }
   };
 
   // Simple single value attribute; class T determines Get/Set value type for
@@ -66,10 +73,6 @@ namespace solutio {
   {
     public:
       SingleValueAttribute(){ value = ""; }
-      void operator=(const SingleValueAttribute &sva)
-      {
-        value = sva.value;
-      }
       T GetValue()
       {
         T output;
@@ -84,6 +87,7 @@ namespace solutio {
       }
       void ReadAttribute(const gdcm::DataSet &data)
       {
+        gdcm::Attribute<G,E> att;
         if(data.FindDataElement(att.GetTag()))
         {
           att.Set(data);
@@ -95,6 +99,7 @@ namespace solutio {
       }
       void InsertAttribute(gdcm::DataSet &data)
       {
+        gdcm::Attribute<G,E> att;
         if(value != "")
         {
           gdcm::DataElement de = att.GetAsDataElement();
@@ -116,12 +121,20 @@ namespace solutio {
           data.Insert(de);
         }
       }
+      std::pair<std::string, std::string> Print()
+      {
+        gdcm::Attribute<G,E> att;
+        std::pair<std::string, std::string> att_print;
+        std::string tag = '('+att.GetTag().PrintAsPipeSeparatedString()+')';
+        att_print.first = tag.replace(5, 1, ", ");
+        att_print.second = value;
+        return att_print;
+      }
     private:
-      gdcm::Attribute<G,E> att;
       std::string value;
   };
 
-  // Muiti-value attribute; so far only double type is allowed, may extend in
+  // Multi-value attribute; so far only double type is allowed, may extend in
   // the future
   template <uint16_t G, uint16_t E>
   class MultiNumberAttribute : public BaseAttribute
@@ -137,20 +150,35 @@ namespace solutio {
         length = l;
         for(int n = 0; n < length; n++) values.push_back(val);
       }
-      double GetValue(int n){ return values[n]; }
-      void SetValue(double val, int n){ values[n] = val; }
-      void SetValue(std::vector<double> vals){ values = vals; }
+      double GetValue(int n)
+      {
+        if(n >= length) return 0.0;
+        return values[n];
+      }
+      void SetValue(double val, int n){ if(n < length) values[n] = val; }
+      void SetValue(std::vector<double> vals)
+      {
+        values = vals;
+        length = vals.size();
+      }
       void ReadAttribute(const gdcm::DataSet &data)
       {
+        gdcm::Attribute<G,E> att;
         values.clear();
-        att.Set(data);
-        for(unsigned int n = 0; n < att.GetNumberOfValues(); n++)
+        length = 0;
+        if(data.FindDataElement(att.GetTag()))
         {
-          values.push_back(att.GetValue(n));
+          att.Set(data);
+          for(unsigned int n = 0; n < att.GetNumberOfValues(); n++)
+          {
+            values.push_back(att.GetValue(n));
+          }
+          length = values.size();
         }
       }
       void InsertAttribute(gdcm::DataSet &data)
       {
+        gdcm::Attribute<G,E> att;
         std::stringstream ss;
         for(int n = 0; n < values.size(); n++)
         {
@@ -163,8 +191,25 @@ namespace solutio {
         de.SetByteValue(output.c_str(), output.length());
         data.Insert(de);
       }
+      std::pair<std::string, std::string> Print()
+      {
+        gdcm::Attribute<G,E> att;
+        std::pair<std::string, std::string> att_print;
+        std::string tag = '('+att.GetTag().PrintAsPipeSeparatedString()+')';
+        att_print.first = tag.replace(5, 1, ", ");
+        std::stringstream ss;
+        ss << "(";
+        if(values.size() == 0) ss << "None)";
+        for(int v = 0; v < values.size(); v++)
+        {
+          ss << values[v];
+          if(v == values.size()-1) ss << ")";
+          else ss << ", ";
+        }
+        att_print.second = ss.str();
+        return att_print;
+      }
     private:
-      gdcm::Attribute<G,E> att;
       std::vector<double> values;
       int length;
   };
@@ -182,13 +227,34 @@ namespace solutio {
       }
       void ReadAttribute(const gdcm::DataSet &data)
       {
-
+        if(data.FindDataElement(att.GetTag()))
+        {
+          att.Set(data);
+          const gdcm::DataElement de = att.GetAsDataElement();
+          const gdcm::ByteValue *bv = de.GetByteValue();
+          const char * temp_buffer = bv->GetPointer();
+          for(int n = 0; n < 2; n++)
+          {
+            uint16_t raw16;
+            *((char*)(&raw16)) = temp_buffer[(2*n)];
+            *((char*)(&raw16) + 1) = temp_buffer[(2*n+1)];
+            tag[n] = raw16;
+          }
+        }
       }
       void InsertAttribute(gdcm::DataSet &data)
       {
         gdcm::DataElement de = att.GetAsDataElement();
         de.SetByteValue(reinterpret_cast<char*>(tag), 4);
         data.Insert(de);
+      }
+      std::pair<std::string, std::string> Print()
+      {
+        std::pair<std::string, std::string> att_print;
+        std::string tag = '('+att.GetTag().PrintAsPipeSeparatedString()+')';
+        att_print.first = tag.replace(5, 1, ", ");
+        att_print.second = "Not defined";
+        return att_print;
       }
     private:
       gdcm::Attribute<G,E> att;
@@ -218,6 +284,13 @@ namespace solutio {
         gdcm::DataElement de(gdcm::Tag(0x7fe0,0x0010));
         de.SetByteValue(&pixel_data[0], pixel_data.size());
         data.Insert(de);
+      }
+      std::pair<std::string, std::string> Print()
+      {
+        std::pair<std::string, std::string> att_print;
+        att_print.first = "(7FE0, 0010)";
+        att_print.second = "Pixel data: "+std::to_string(pixel_data.size())+" bytes";
+        return att_print;
       }
     private:
       std::vector<char> pixel_data;
@@ -570,7 +643,10 @@ namespace solutio {
       void SetValue(std::string p_uid){ plan_uid = p_uid; }
       void ReadAttribute(const gdcm::DataSet &data)
       {
-
+        if(data.FindDataElement(gdcm::Tag(0x300c,0x0002)))
+        {
+          gdcm::DataElement de = data.GetDataElement(gdcm::Tag(0x300c,0x0002));
+        }
       }
       void InsertAttribute(gdcm::DataSet &data)
       {
@@ -596,6 +672,13 @@ namespace solutio {
           subds.Insert(at.GetAsDataElement());
         }
         sqi->AddItem(item);
+      }
+      std::pair<std::string, std::string> Print()
+      {
+        std::pair<std::string, std::string> att_print;
+        att_print.first = "(300C, 0002)";
+        att_print.second = "Not defined";
+        return att_print;
       }
     private:
       std::string plan_uid;

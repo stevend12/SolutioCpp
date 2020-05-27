@@ -134,12 +134,12 @@ namespace solutio {
       }
       // Check study
       auto study_it = std::find_if(study_list.begin(), study_list.end(),
-        [&temp_file](const std::pair<std::string, int>& el){
+        [&temp_file](const std::pair<std::string, std::string>& el){
           return el.first == temp_file.Study.StudyInstanceUID.GetValue();} );
       if(study_it == study_list.end())
       {
-        std::pair<std::string, int> stp(temp_file.Study.StudyInstanceUID.GetValue(),
-          std::distance(study_list.begin(), study_it));
+        std::pair<std::string, std::string> stp(temp_file.Study.StudyInstanceUID.GetValue(),
+          temp_file.Patient.PatientName.GetValue());
         study_list.push_back(stp);
       }
       // Check series and assign file
@@ -160,5 +160,49 @@ namespace solutio {
           std::distance(file_list.begin(), file_it));
       }
     }
+  }
+
+  std::vector<std::string> DicomDatabase::GetSeriesFileNames(unsigned int series_id)
+  {
+    std::vector<std::string> file_list;
+    if(series_id >= series_list.size())
+    {
+      std::cout << "Warning: series could not be accessed\n";
+      return file_list;
+    }
+
+    DicomDatabaseSeries dds = GetSeries(series_id);
+    for(unsigned int n = 0; n < dds.GetNumFiles(); n++)
+    {
+      DicomDatabaseFile ddf = GetFile(dds.GetFileID(n));
+      file_list.push_back(ddf.GetPath());
+    }
+    return file_list;
+  }
+
+  std::vector<std::string> DicomDatabase::PrintTree()
+  {
+    std::vector<std::string> print_text;
+    for(unsigned int p = 0; p < patient_list.size(); p++)
+    {
+      print_text.push_back(patient_list[p]);
+      for(unsigned int st = 0; st < study_list.size(); st++)
+      {
+        if(study_list[st].second == patient_list[p])
+        {
+          print_text.push_back("  "+study_list[st].first);
+          for(unsigned int se = 0; se < series_list.size(); se++)
+          {
+            if(series_list[se].CheckStudy(study_list[st].first))
+            {
+              print_text.push_back("    "+series_list[se].GetModalityName()+
+                " ("+std::to_string(series_list[se].GetNumFiles())+" files)");
+            }
+          }
+        }
+      }
+    }
+
+    return print_text;
   }
 }

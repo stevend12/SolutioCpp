@@ -43,10 +43,52 @@ namespace solutio {
       std::make_tuple("1.2.840.10008.5.1.4.1.1.481.3","RTSTRUCT","RS")
   };
 
+  std::vector<float> ConvertPixelBuffer(ImagePixelModule &ipm)
+  {
+    std::vector<char> byte_buffer = ipm.PixelData.GetValue();
+    std::vector<float> image_buffer;
+    int p_bytes = ipm.BitsAllocated.GetValue() / 8;
+    if(p_bytes < 1 || p_bytes == 3 || p_bytes > 4)
+    {
+      std::cout << "Image with " << p_bytes << " bytes/pixel is not supported\n";
+      return image_buffer;
+    }
+
+    for(unsigned long int n = 0; n < byte_buffer.size(); n += p_bytes)
+    {
+      if(p_bytes == 1)
+      {
+        uint8_t raw8 = byte_buffer[n];
+        image_buffer.push_back(float(raw8));
+      }
+      if(p_bytes == 2)
+      {
+        uint16_t raw16;
+        for(int b = 0; b < p_bytes; b++)
+        {
+          *((char*)(&raw16) + b) = byte_buffer[(n+b)];
+        }
+        image_buffer.push_back(float(raw16));
+      }
+      else
+      {
+        uint32_t raw32;
+        for(int b = 0; b < p_bytes; b++)
+        {
+          *((char*)(&raw32) + b) = byte_buffer[(n+b)];
+        }
+        image_buffer.push_back(float(raw32));
+      }
+    }
+
+    return image_buffer;
+  }
+
   BaseIOD::BaseIOD()
   {
-    Modules.push_back(&Patient);
-    Modules.push_back(&SOPCommon);
+    //Modules.clear();
+    Modules.push_back(Patient);
+    Modules.push_back(SOPCommon);
   }
 
   bool BaseIOD::IsIODSupported(std::string sop_class)
@@ -88,8 +130,8 @@ namespace solutio {
       return false;
     }
     // Read all modules
-    std::vector<DicomModule *>::iterator it;
-    for(it = Modules.begin(); it != Modules.end(); it++) (*it)->Read(ds);
+    std::vector<DicomModule>::iterator it;
+    for(it = Modules.begin(); it != Modules.end(); it++) it->Read(ds);
     // Return true for success
     return true;
   }
@@ -113,8 +155,8 @@ namespace solutio {
     gdcm::FileMetaInformation &header = file.GetHeader();
     header.SetDataSetTransferSyntax(gdcm::TransferSyntax::ImplicitVRLittleEndian);
     // Insert all modules
-    std::vector<DicomModule *>::iterator it;
-    for(it = Modules.begin(); it != Modules.end(); it++) (*it)->Insert(ds);
+    std::vector<DicomModule>::iterator it;
+    for(it = Modules.begin(); it != Modules.end(); it++) it->Insert(ds);
     // Write file
     writer.SetFileName(file_name.c_str());
     if(!writer.Write())
@@ -126,15 +168,71 @@ namespace solutio {
     return true;
   }
 
+  std::vector< std::pair<std::string, std::string> > BaseIOD::Print()
+  {
+    std::vector< std::pair<std::string, std::string> > iod_list;
+    for(int n = 0; n < Modules.size(); n++)
+    {
+      std::vector< std::pair<std::string, std::string> > m =
+        Modules[n].Print();
+      iod_list.insert(iod_list.end(), m.begin(), m.end());
+    }
+    return iod_list;
+  }
+
   BaseImageIOD::BaseImageIOD()
   {
-    Modules.push_back(&GeneralStudy);
-    Modules.push_back(&GeneralSeries);
-    Modules.push_back(&FrameOfReference);
-    Modules.push_back(&GeneralEquipment);
-    Modules.push_back(&GeneralImage);
-    Modules.push_back(&ImagePlane);
-    Modules.push_back(&ImagePixel);
+    Modules.push_back(GeneralStudy);
+    Modules.push_back(GeneralSeries);
+    Modules.push_back(FrameOfReference);
+    Modules.push_back(GeneralEquipment);
+    Modules.push_back(GeneralImage);
+    Modules.push_back(ImagePlane);
+    Modules.push_back(ImagePixel);
+  }
+
+  GenericImageHeader BaseImageIOD::GetGenericImageHeader()
+  {
+    GenericImageHeader header;
+    // In future, check for multiframe before determining slices
+    header.SetImageSize(
+      ImagePixel.Rows.GetValue(),
+      ImagePixel.Columns.GetValue(),
+      1,1
+    );
+    header.SetPixelDimensions(
+      ImagePlane.PixelSpacing.GetValue(0),
+      ImagePlane.PixelSpacing.GetValue(1),
+      ImagePlane.SliceThickness.GetValue()
+    );
+    header.SetPixelOrigin(
+      ImagePlane.ImagePosition.GetValue(0),
+      ImagePlane.ImagePosition.GetValue(1),
+      ImagePlane.ImagePosition.GetValue(2)
+    );
+    header.SetDirectionCosines(
+      ImagePlane.ImageOrientation.GetValue(0),
+      ImagePlane.ImageOrientation.GetValue(1),
+      ImagePlane.ImageOrientation.GetValue(2),
+      ImagePlane.ImageOrientation.GetValue(3),
+      ImagePlane.ImageOrientation.GetValue(4),
+      ImagePlane.ImageOrientation.GetValue(5)
+    );
+    return header;
+  }
+
+  GenericImage<float> BaseImageIOD::GetGenericImage(float slope,
+    float intercept)
+  {
+    GenericImage<float> generic_image;
+    generic_image.SetHeader(GetGenericImageHeader());
+    std::vector<float> image_buffer = ConvertPixelBuffer(ImagePixel);
+    for(unsigned long int n = 0; n < image_buffer.size(); n++)
+    {
+      image_buffer[n] = slope*image_buffer[n] + intercept;
+    }
+    generic_image.SetImage(image_buffer);
+    return generic_image;
   }
 
   CTImageIOD::CTImageIOD()
@@ -144,7 +242,7 @@ namespace solutio {
     // Set modality to CT
     GeneralSeries.Modality.SetValue("CT");
     // Add CT-specific modules
-    Modules.push_back(&CTImage);
+    Modules.push_back(CTImage);
   }
 
   bool CTImageIOD::WriteSeriesFromSingle(std::string folder, std::string sopi_base,
@@ -188,20 +286,12 @@ namespace solutio {
     return true;
   }
 
-  std::vector<int16_t> CTImageIOD::GetHUImage()
+  GenericImage<float> CTImageIOD::GetHUImage()
   {
-    double slope = CTImage.RescaleSlope.GetValue();
-    double intercept = CTImage.RescaleIntercept.GetValue();
-    std::vector<char> image_buffer = ImagePixel.PixelData.GetValue();
-    std::vector<int16_t> hu_buffer;
-    for(unsigned long int n = 0; n < image_buffer.size(); n+=2)
-    {
-      uint16_t raw;
-      *((char*)(&raw) + 1) = image_buffer[(n+1)];
-      *((char*)(&raw) + 0) = image_buffer[n];
-      hu_buffer.push_back(round(slope*double(raw) + intercept));
-    }
-    return hu_buffer;
+    float sl = CTImage.RescaleSlope.GetValue();
+    float in = CTImage.RescaleIntercept.GetValue();
+    GenericImage<float> generic_image = GetGenericImage(sl, in);
+    return generic_image;
   }
 
   RTImageIOD::RTImageIOD()
@@ -211,14 +301,52 @@ namespace solutio {
     // Set modality to RTSTRUCT
     RTSeries.Modality.SetValue("RTIMAGE");
     // Add RT-image specific modules
-    Modules.push_back(&GeneralStudy);
-    Modules.push_back(&RTSeries);
-    Modules.push_back(&FrameOfReference);
-    Modules.push_back(&GeneralEquipment);
-    Modules.push_back(&GeneralImage);
-    Modules.push_back(&ImagePixel);
+    Modules.push_back(GeneralStudy);
+    Modules.push_back(RTSeries);
+    Modules.push_back(FrameOfReference);
+    Modules.push_back(GeneralEquipment);
+    Modules.push_back(GeneralImage);
+    Modules.push_back(ImagePixel);
     //Modules.push_back(&Multiframe);
-    Modules.push_back(&RTImage);
+    Modules.push_back(RTImage);
+  }
+
+  GenericImageHeader RTImageIOD::GetGenericImageHeader()
+  {
+    GenericImageHeader header;
+    // In future, check for multiframe before determining slices
+    header.SetImageSize(
+      ImagePixel.Rows.GetValue(),
+      ImagePixel.Columns.GetValue(),
+      1,1
+    );
+    header.SetPixelDimensions(
+      RTImage.ImagePlanePixelSpacing.GetValue(0),
+      RTImage.ImagePlanePixelSpacing.GetValue(1),
+      0.0
+    );
+    header.SetPixelOrigin(
+      RTImage.RTImagePosition.GetValue(0),
+      RTImage.RTImagePosition.GetValue(1),
+      0.0
+    );
+    header.SetDirectionCosines(
+      RTImage.RTImageOrientation.GetValue(0),
+      RTImage.RTImageOrientation.GetValue(1),
+      RTImage.RTImageOrientation.GetValue(2),
+      RTImage.RTImageOrientation.GetValue(3),
+      RTImage.RTImageOrientation.GetValue(4),
+      RTImage.RTImageOrientation.GetValue(5)
+    );
+    return header;
+  }
+
+  GenericImage<float> RTImageIOD::GetGenericImage()
+  {
+    GenericImage<float> generic_image;
+    generic_image.SetHeader(GetGenericImageHeader());
+    generic_image.SetImage(ConvertPixelBuffer(ImagePixel));
+    return generic_image;
   }
 
   RTDoseIOD::RTDoseIOD()
@@ -228,15 +356,15 @@ namespace solutio {
     // Set modality to RTSTRUCT
     RTSeries.Modality.SetValue("RTDOSE");
     // Add RT-dose specific modules
-    Modules.push_back(&GeneralStudy);
-    Modules.push_back(&RTSeries);
-    Modules.push_back(&FrameOfReference);
-    Modules.push_back(&GeneralEquipment);
-    Modules.push_back(&GeneralImage);
-    Modules.push_back(&ImagePlane);
-    Modules.push_back(&ImagePixel);
-    Modules.push_back(&Multiframe);
-    Modules.push_back(&RTDose);
+    Modules.push_back(GeneralStudy);
+    Modules.push_back(RTSeries);
+    Modules.push_back(FrameOfReference);
+    Modules.push_back(GeneralEquipment);
+    Modules.push_back(GeneralImage);
+    Modules.push_back(ImagePlane);
+    Modules.push_back(ImagePixel);
+    Modules.push_back(Multiframe);
+    Modules.push_back(RTDose);
   }
 
   RTStructureSetIOD::RTStructureSetIOD()
@@ -246,11 +374,11 @@ namespace solutio {
     // Set modality to RTSTRUCT
     RTSeries.Modality.SetValue("RTSTRUCT");
     // Add RT-structure set specific modules
-    Modules.push_back(&GeneralStudy);
-    Modules.push_back(&RTSeries);
-    Modules.push_back(&GeneralEquipment);
-    Modules.push_back(&StructureSet);
-    Modules.push_back(&ROIContour);
-    Modules.push_back(&RTROIObservations);
+    Modules.push_back(GeneralStudy);
+    Modules.push_back(RTSeries);
+    Modules.push_back(GeneralEquipment);
+    Modules.push_back(StructureSet);
+    Modules.push_back(ROIContour);
+    Modules.push_back(RTROIObservations);
   }
 }
