@@ -34,7 +34,9 @@
 
 #include <string>
 
-#include "DicomModules.hpp"
+#include <dcmtk/config/osconfig.h>
+#include <dcmtk/dcmdata/dctk.h>
+#include <dcmtk/dcmiod/iodcommn.h>
 
 namespace solutio {
   // Struct that contains just enough information from the DICOM file header to properly
@@ -43,10 +45,10 @@ namespace solutio {
   {
     public:
       DicomDatabaseFile();
-      PatientModule Patient;
-      GeneralStudyModule Study;
-      GeneralSeriesModule Series;
-      SOPCommonModule SOPCommon;
+      IODPatientModule Patient;
+      IODGeneralStudyModule Study;
+      IODGeneralSeriesModule Series;
+      IODSOPCommonModule SOPCommon;
       std::string modality_name;
       bool ReadDicomFile(std::string file_name);
       std::string GetPath(){ return file_path; }
