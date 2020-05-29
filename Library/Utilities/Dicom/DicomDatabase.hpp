@@ -38,7 +38,34 @@
 #include <dcmtk/dcmdata/dctk.h>
 #include <dcmtk/dcmiod/iodcommn.h>
 
+#include "../GenericImage.hpp"
+
 namespace solutio {
+  // List of supported modalities
+  extern std::vector< std::tuple<std::string, std::string, std::string> > SupportedIODList;
+  // DCMTK helper functions
+  template<class T>
+  T GetDicomValue(DcmDataset * data, DcmTagKey key)
+  {
+    T output;
+    OFString v;
+    if(data->findAndGetOFString(key, v).good()) std::stringstream(v.c_str()) >> output;
+    return output;
+  }
+  template<class T>
+  std::vector<T> GetDicomArray(DcmDataset * data, DcmTagKey key, int length)
+  {
+    std::vector<T> output;
+    for(int l = 0; l < length; l++)
+    {
+      T val;
+      OFString s_val;
+      data->findAndGetOFString(key, s_val, l);
+      std::stringstream(s_val.c_str()) >> val;
+      output.push_back(val);
+    }
+    return output;
+  }
   // Struct that contains just enough information from the DICOM file header to properly
   // organize the files hierarchically (patient, study, series, etc.)
   class DicomDatabaseFile
@@ -50,7 +77,7 @@ namespace solutio {
       IODGeneralSeriesModule Series;
       IODSOPCommonModule SOPCommon;
       std::string modality_name;
-      bool ReadDicomFile(std::string file_name);
+      bool ReadDicomInfo(std::string file_name);
       std::string GetPath(){ return file_path; }
     private:
       std::string file_path;
@@ -83,6 +110,7 @@ namespace solutio {
       DicomDatabaseFile GetFile(unsigned int id){ return dicom_files[id]; }
       DicomDatabaseSeries GetSeries(unsigned int id){ return series_list[id]; }
       std::vector<std::string> GetSeriesFileNames(unsigned int series_id);
+      std::vector< GenericImage<float> > GetImageSeries(unsigned int series_id);
       std::vector<std::string> PrintTree();
     private:
       std::vector<DicomDatabaseFile> dicom_files;

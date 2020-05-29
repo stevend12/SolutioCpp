@@ -36,16 +36,24 @@
 #include <vector>
 #include <iterator>
 
-#include <dcmtk/config/osconfig.h>
-#include <dcmtk/dcmdata/dctk.h>
+#include <dcmtk/dcmiod/iodimage.h>
+#include <dcmtk/dcmimgle/dcmimage.h>
 
 namespace solutio {
+  std::vector< std::tuple<std::string, std::string, std::string> >
+    SupportedIODList {
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.2","CT","CT"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.1","RTIMAGE","RI"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.2","RTDOSE","RD"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.3","RTSTRUCT","RS")
+  };
+
   DicomDatabaseFile::DicomDatabaseFile()
   {
     modality_name = file_path = "";
   }
 
-  bool DicomDatabaseFile::ReadDicomFile(std::string file_name)
+  bool DicomDatabaseFile::ReadDicomInfo(std::string file_name)
   {
     // Load DICOM file using DCMTK
     DcmFileFormat fileformat;
@@ -58,12 +66,19 @@ namespace solutio {
       Study.read(data);
       Series.read(data);
       SOPCommon.read(data);
-      // Assign modality label based on SOP class UID; match to list
+      // Assign modality label based on SOP class UID; match to supported list
       // (DO NOT USE SWITCH!)
       OFString cuid;
       SOPCommon.getSOPClassUID(cuid);
       std::string class_uid(cuid.c_str());
       if(class_uid[(class_uid.length()-1)] == '\0') class_uid.erase(class_uid.length()-1);
+
+      auto it = std::find_if(SupportedIODList.begin(), SupportedIODList.end(),
+        [&class_uid](const std::tuple<std::string, std::string, std::string>& e)
+          {return std::get<0>(e) == class_uid;});
+      if (it != SupportedIODList.end()) modality_name = std::get<2>(*it);
+      else modality_name = "Not Supported";
+      /*
       // Single and multi-frame CT
       if(class_uid == "1.2.840.10008.5.1.4.1.1.2") modality_name = "CT";
       else if(class_uid == "1.2.840.10008.5.1.4.1.1.2.1") modality_name = "CT";
@@ -83,13 +98,7 @@ namespace solutio {
       else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.4") modality_name = "RT Beams Treatment Record";
       else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.5") modality_name = "RT Plan";
       else modality_name = "Not Supported";
-      // Get patient name
-      //OFString patientName;
-      //if(data.findAndGetOFString(DCM_PatientName, patientName).good())
-      //{
-      //  std::cout << "Patient's Name: " << patientName << '\n';
-      //}
-      //else std::cerr << "Error: cannot access Patient's Name!" << '\n';
+      */
     }
     else
     {
@@ -127,7 +136,7 @@ namespace solutio {
     {
       // Attempt to read file
       DicomDatabaseFile temp_file;
-      if(!temp_file.ReadDicomFile(*file_it)) continue;
+      if(!temp_file.ReadDicomInfo(*file_it)) continue;
       dicom_files.push_back(temp_file);
       OFString text;
       // Check patient
@@ -175,7 +184,7 @@ namespace solutio {
     std::vector<std::string> file_list;
     if(series_id >= series_list.size())
     {
-      std::cout << "Warning: series could not be accessed\n";
+      std::cerr << "Warning: series number " << series_id << " is not available\n";
       return file_list;
     }
 
@@ -186,6 +195,114 @@ namespace solutio {
       file_list.push_back(ddf.GetPath());
     }
     return file_list;
+  }
+
+  std::vector< GenericImage<float> > DicomDatabase::GetImageSeries(unsigned int series_id)
+  {
+    std::vector< GenericImage<float> > output_image;
+
+    std::vector<std::string> file_list = GetSeriesFileNames(series_id);
+    for(int n = 0; n < 1 /*file_list.size()*/; n++)
+    {
+      // Read in DICOM image modules using DCMTK
+      DcmFileFormat fileformat;
+      OFCondition status = fileformat.loadFile(file_list[n].c_str());
+      if (status.good())
+      {
+        // Read DICOM modules
+        DcmDataset * data = fileformat.getDataset();
+        DicomImage Im(data, EXS_Unknown);
+        // Assign/check image properties
+        GenericImageHeader header;
+        // In future, check for multiframe before determining slices
+        header.SetImageSize(
+          Im.getHeight(),
+          Im.getWidth(),
+          1,1
+        );
+
+        std::vector<float> vals;
+        float val;
+
+        vals = GetDicomArray<float>(data, DCM_PixelSpacing, 2);
+        val = GetDicomValue<float>(data, DCM_SliceThickness);
+        header.SetPixelDimensions(vals[0], vals[1], val);
+        std::cout << "Dimensions: (" << vals[0] << ", " << vals[1] << ", " <<
+          val << ")\n";
+        vals.clear();
+
+        vals = GetDicomArray<float>(data, DCM_ImagePositionPatient, 3);
+        header.SetPixelOrigin(vals[0], vals[1], vals[2]);
+        std::cout << "Origin: (" << vals[0] << ", " << vals[1] << ", " <<
+          vals[2] << ")\n";
+        vals.clear();
+
+        vals = GetDicomArray<float>(data, DCM_ImageOrientationPatient, 6);
+        header.SetDirectionCosines(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]);
+        std::cout << "Dimensions: (" << vals[0] << ", " << vals[1] << ", " <<
+          vals[2] << ", " << vals[3] << ", " << vals[4] << ", " <<
+          vals[5] << ")\n";
+        vals.clear();
+        // Assign pixel data
+        /*
+        GenericImage<float> temp_image;
+        temp_image.SetHeader(header);
+        if(Im->isMonochrome())
+        {
+          Im->setMinMaxWindow();
+          Uint8 * pixel_data = (Uint8 *)(Im->getOutputData(8));
+          if(pixelData != NULL)
+          {
+            for(int v = 0; v < )
+          }
+        }
+        std::vector<char> byte_buffer;// = ipm.PixelData.GetValue();
+        std::vector<float> image_buffer;
+        int p_bytes = 0;//ipm.BitsAllocated.GetValue() / 8;
+        if(p_bytes < 1 || p_bytes == 3 || p_bytes > 4)
+        {
+          std::cerr << "Image with " << p_bytes << " bytes/pixel is not supported\n";
+          return output_image;
+        }
+
+        for(unsigned long int n = 0; n < byte_buffer.size(); n += p_bytes)
+        {
+          if(p_bytes == 1)
+          {
+            uint8_t raw8 = byte_buffer[n];
+            image_buffer.push_back(float(raw8));
+          }
+          if(p_bytes == 2)
+          {
+            uint16_t raw16;
+            for(int b = 0; b < p_bytes; b++)
+            {
+              *((char*)(&raw16) + b) = byte_buffer[(n+b)];
+            }
+            image_buffer.push_back(float(raw16));
+          }
+          else
+          {
+            uint32_t raw32;
+            for(int b = 0; b < p_bytes; b++)
+            {
+              *((char*)(&raw32) + b) = byte_buffer[(n+b)];
+            }
+            image_buffer.push_back(float(raw32));
+          }
+        }
+        */
+      }
+      else
+      {
+        std::cerr << "Image " << n << " from file " << file_list[n] <<
+          " could not be read, returning " << (n-1) << '/' << file_list.size() <<
+          " images\n";
+        return output_image;
+      }
+    }
+
+    return output_image;
   }
 
   std::vector<std::string> DicomDatabase::PrintTree()
