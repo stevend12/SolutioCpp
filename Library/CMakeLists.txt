@@ -88,7 +88,12 @@ add_library(solutio STATIC ${SOURCE} ${HEADERS})
 target_link_libraries(solutio ${FFTW_LIBRARIES} ${DCMTK_LIBRARIES})
 
 # Install library
-install(TARGETS solutio)
+install(
+  TARGETS solutio
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  COMPONENT library
+)
 # Install headers
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Geometry DESTINATION "include/SolutioCpp" FILES_MATCHING PATTERN "*.hpp")
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Imaging DESTINATION "include/SolutioCpp" FILES_MATCHING PATTERN "*.hpp")

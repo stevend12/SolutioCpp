@@ -8,4 +8,4 @@ project(RayCtDemo)
 
 include_directories(${LIB_INCLUDE_DIR})
 add_executable(RayCtDemo RayCtDemo.cpp)
-target_link_libraries(RayCtDemo solutio -fopenmp fftw3)
+target_link_libraries(RayCtDemo solutio -fopenmp fftw3 fftw3_threads)

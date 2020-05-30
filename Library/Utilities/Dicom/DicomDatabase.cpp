@@ -61,16 +61,18 @@ namespace solutio {
     if (status.good())
     {
       // Read DICOM modules
-      DcmDataset data = *(fileformat.getDataset());
-      Patient.read(data);
-      Study.read(data);
-      Series.read(data);
-      SOPCommon.read(data);
+      DcmDataset * data = fileformat.getDataset();
+      std::string class_uid = GetDicomValue<std::string>(data, DCM_SOPClassUID);
+      if(class_uid == "1.2.840.10008.1.3.10" || class_uid == "")
+      {
+        std::cout << "Skipping DICOMDIR for now...\n";
+        return false;
+      }
+      patient_name = GetDicomValue<std::string>(data, DCM_PatientName);
+      study_uid = GetDicomValue<std::string>(data, DCM_StudyInstanceUID);
+      series_uid = GetDicomValue<std::string>(data, DCM_SeriesInstanceUID);
       // Assign modality label based on SOP class UID; match to supported list
       // (DO NOT USE SWITCH!)
-      OFString cuid;
-      SOPCommon.getSOPClassUID(cuid);
-      std::string class_uid(cuid.c_str());
       if(class_uid[(class_uid.length()-1)] == '\0') class_uid.erase(class_uid.length()-1);
 
       auto it = std::find_if(SupportedIODList.begin(), SupportedIODList.end(),
@@ -121,6 +123,7 @@ namespace solutio {
 
   void DicomDatabase::MakeDatabase(std::string database_path)
   {
+    OFCondition result;
     // Make list of files in directory and sub-directories
     std::vector<std::string> file_list;
     for(const auto & entry : std::filesystem::recursive_directory_iterator(database_path))
@@ -138,18 +141,15 @@ namespace solutio {
       DicomDatabaseFile temp_file;
       if(!temp_file.ReadDicomInfo(*file_it)) continue;
       dicom_files.push_back(temp_file);
-      OFString text;
       // Check patient
-      temp_file.Patient.getPatientName(text);
-      std::string pt_text(text.c_str());
+      std::string pt_text = temp_file.GetPatientName();
       if(std::find(patient_list.begin(), patient_list.end(),
         pt_text) == patient_list.end())
       {
         patient_list.push_back(pt_text);
       }
       // Check study
-      temp_file.Study.getStudyInstanceUID(text);
-      std::string st_text(text.c_str());
+      std::string st_text = temp_file.GetStudyUID();
       auto study_it = std::find_if(study_list.begin(), study_list.end(),
         [&temp_file,st_text](const std::pair<std::string, std::string>& el){
           return el.first == st_text;} );
@@ -159,8 +159,7 @@ namespace solutio {
         study_list.push_back(stp);
       }
       // Check series and assign file
-      temp_file.Series.getSeriesInstanceUID(text);
-      std::string se_text(text.c_str());
+      std::string se_text = temp_file.GetSeriesUID();
       auto series_it = std::find_if(series_list.begin(), series_list.end(),
         [&temp_file,se_text](DicomDatabaseSeries& el){
           return el.GetSeriesUID() == se_text;} );

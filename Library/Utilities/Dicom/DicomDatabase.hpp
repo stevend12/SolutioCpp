@@ -72,16 +72,17 @@ namespace solutio {
   {
     public:
       DicomDatabaseFile();
-      IODPatientModule Patient;
-      IODGeneralStudyModule Study;
-      IODGeneralSeriesModule Series;
-      IODSOPCommonModule SOPCommon;
+      std::string GetPatientName(){ return patient_name; }
+      std::string GetStudyUID(){ return study_uid; }
+      std::string GetSeriesUID(){ return series_uid; }
       std::string modality_name;
       bool ReadDicomInfo(std::string file_name);
       std::string GetPath(){ return file_path; }
     private:
       std::string file_path;
-      //bool is_dicom;
+      std::string patient_name;
+      std::string study_uid;
+      std::string series_uid;
   };
   // Struct that contains a DICOM series (i.e. a group of DICOM files)
   class DicomDatabaseSeries
