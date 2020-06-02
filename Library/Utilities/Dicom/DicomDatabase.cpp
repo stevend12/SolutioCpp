@@ -45,7 +45,28 @@ namespace solutio {
       std::make_tuple("1.2.840.10008.5.1.4.1.1.2","CT","CT"),
       std::make_tuple("1.2.840.10008.5.1.4.1.1.481.1","RTIMAGE","RI"),
       std::make_tuple("1.2.840.10008.5.1.4.1.1.481.2","RTDOSE","RD"),
-      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.3","RTSTRUCT","RS")
+      //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.3","RTSTRUCT","RS")
+      /*
+      // Single and multi-frame CT
+      if(class_uid == "1.2.840.10008.5.1.4.1.1.2") modality_name = "CT";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.2.1") modality_name = "CT";
+      // MRI
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.4") modality_name = "MR";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.4.1") modality_name = "MR";
+      // PET
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.128") modality_name = "PET";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.130") modality_name = "PET";
+      // US
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.6.1") modality_name = "US";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.3.1") modality_name = "US";
+      // Radiation therapy data files
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.1") modality_name = "RT Image";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.2") modality_name = "RT Dose";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.3") modality_name = "RT Structure Set";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.4") modality_name = "RT Beams Treatment Record";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.5") modality_name = "RT Plan";
+      else modality_name = "Not Supported";
+      */
   };
 
   DicomDatabaseFile::DicomDatabaseFile()
@@ -72,7 +93,6 @@ namespace solutio {
       study_uid = GetDicomValue<std::string>(data, DCM_StudyInstanceUID);
       series_uid = GetDicomValue<std::string>(data, DCM_SeriesInstanceUID);
       // Assign modality label based on SOP class UID; match to supported list
-      // (DO NOT USE SWITCH!)
       if(class_uid[(class_uid.length()-1)] == '\0') class_uid.erase(class_uid.length()-1);
 
       auto it = std::find_if(SupportedIODList.begin(), SupportedIODList.end(),
@@ -80,27 +100,6 @@ namespace solutio {
           {return std::get<0>(e) == class_uid;});
       if (it != SupportedIODList.end()) modality_name = std::get<2>(*it);
       else modality_name = "Not Supported";
-      /*
-      // Single and multi-frame CT
-      if(class_uid == "1.2.840.10008.5.1.4.1.1.2") modality_name = "CT";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.2.1") modality_name = "CT";
-      // MRI
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.4") modality_name = "MR";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.4.1") modality_name = "MR";
-      // PET
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.128") modality_name = "PET";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.130") modality_name = "PET";
-      // US
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.6.1") modality_name = "US";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.3.1") modality_name = "US";
-      // Radiation therapy data files
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.1") modality_name = "RT Image";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.2") modality_name = "RT Dose";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.3") modality_name = "RT Structure Set";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.4") modality_name = "RT Beams Treatment Record";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.5") modality_name = "RT Plan";
-      else modality_name = "Not Supported";
-      */
     }
     else
     {
@@ -196,110 +195,173 @@ namespace solutio {
     return file_list;
   }
 
-  std::vector< GenericImage<float> > DicomDatabase::GetImageSeries(unsigned int series_id)
+  GenericImage<float> DicomDatabase::GetImageSeries(unsigned int series_id)
   {
-    std::vector< GenericImage<float> > output_image;
+    // Output image
+    GenericImage<float> output_image;
+
+    // Global variables
+    GenericImageHeader header;
+    std::vector< std::pair<float,int> > image_z;
+    std::vector<float> vals;
+    float val;
+    std::vector<float> temp_buffer;
 
     std::vector<std::string> file_list = GetSeriesFileNames(series_id);
-    for(int n = 0; n < 1 /*file_list.size()*/; n++)
+    for(int n = 0; n < file_list.size(); n++)
     {
       // Read in DICOM image modules using DCMTK
       DcmFileFormat fileformat;
       OFCondition status = fileformat.loadFile(file_list[n].c_str());
       if (status.good())
       {
-        // Read DICOM modules
+        // Read DICOM image and data
         DcmDataset * data = fileformat.getDataset();
         DicomImage Im(data, EXS_Unknown);
         // Assign/check image properties
-        GenericImageHeader header;
+
         // In future, check for multiframe before determining slices
-        header.SetImageSize(
-          Im.getHeight(),
-          Im.getWidth(),
-          1,1
-        );
 
-        std::vector<float> vals;
-        float val;
+        if(n == 0)
+        {
+          header.SetImageSize(Im.getHeight(), Im.getWidth(), file_list.size(), 1);
 
-        vals = GetDicomArray<float>(data, DCM_PixelSpacing, 2);
-        val = GetDicomValue<float>(data, DCM_SliceThickness);
-        header.SetPixelDimensions(vals[0], vals[1], val);
-        std::cout << "Dimensions: (" << vals[0] << ", " << vals[1] << ", " <<
-          val << ")\n";
-        vals.clear();
+          vals = GetDicomArray<float>(data, DCM_PixelSpacing, 2);
+          val = GetDicomValue<float>(data, DCM_SliceThickness);
+          header.SetPixelDimensions(vals[0], vals[1], val);
+          vals.clear();
 
-        vals = GetDicomArray<float>(data, DCM_ImagePositionPatient, 3);
-        header.SetPixelOrigin(vals[0], vals[1], vals[2]);
-        std::cout << "Origin: (" << vals[0] << ", " << vals[1] << ", " <<
-          vals[2] << ")\n";
-        vals.clear();
+          vals = GetDicomArray<float>(data, DCM_ImagePositionPatient, 3);
+          header.SetPixelOrigin(vals[0], vals[1], vals[2]);
+          std::pair<float,int> zp(vals[2], n);
+          image_z.push_back(zp);
+          vals.clear();
 
-        vals = GetDicomArray<float>(data, DCM_ImageOrientationPatient, 6);
-        header.SetDirectionCosines(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]);
-        std::cout << "Dimensions: (" << vals[0] << ", " << vals[1] << ", " <<
-          vals[2] << ", " << vals[3] << ", " << vals[4] << ", " <<
-          vals[5] << ")\n";
-        vals.clear();
+          vals = GetDicomArray<float>(data, DCM_ImageOrientationPatient, 6);
+          header.SetDirectionCosines(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]);
+          vals.clear();
+        }
+        else
+        {
+          unsigned int * ims = header.GetImageSize();
+          if(Im.getHeight() != ims[0] || Im.getWidth() != ims[1])
+          {
+            std::cerr << "Error: Image " << n << " size does not match "
+              << "initial values\n";
+            return output_image;
+          }
+          /* Other checks (implement later)
+          double * pd = header.GetPixelDimensions();
+          if(Im.getHeight() != ims[0] || Im.getWidth() != ims[1])
+          {
+            std::cerr << "Error: Image " << n << " size does not match "
+              << "initial values\n";
+            return output_image;
+          }
+
+          double * po = header.GetPixelOrigin();
+
+          double * dc = GetDirectionCosines();
+          */
+          vals = GetDicomArray<float>(data, DCM_ImagePositionPatient, 3);
+          std::pair<float,int> zp(vals[2], n);
+          image_z.push_back(zp);
+          vals.clear();
+        }
+
         // Assign pixel data
-        /*
-        GenericImage<float> temp_image;
-        temp_image.SetHeader(header);
-        if(Im->isMonochrome())
+        unsigned long np;
+        if(Im.isMonochrome())
         {
-          Im->setMinMaxWindow();
-          Uint8 * pixel_data = (Uint8 *)(Im->getOutputData(8));
-          if(pixelData != NULL)
+          const DiPixel * pixel_obj = Im.getInterData();
+          if(pixel_obj != NULL)
           {
-            for(int v = 0; v < )
-          }
-        }
-        std::vector<char> byte_buffer;// = ipm.PixelData.GetValue();
-        std::vector<float> image_buffer;
-        int p_bytes = 0;//ipm.BitsAllocated.GetValue() / 8;
-        if(p_bytes < 1 || p_bytes == 3 || p_bytes > 4)
-        {
-          std::cerr << "Image with " << p_bytes << " bytes/pixel is not supported\n";
-          return output_image;
-        }
-
-        for(unsigned long int n = 0; n < byte_buffer.size(); n += p_bytes)
-        {
-          if(p_bytes == 1)
-          {
-            uint8_t raw8 = byte_buffer[n];
-            image_buffer.push_back(float(raw8));
-          }
-          if(p_bytes == 2)
-          {
-            uint16_t raw16;
-            for(int b = 0; b < p_bytes; b++)
+            np = pixel_obj->getCount();
+            EP_Representation rep = pixel_obj->getRepresentation();
+            if(rep == EPR_Uint8)
             {
-              *((char*)(&raw16) + b) = byte_buffer[(n+b)];
+              Uint8 * pixel_data = (Uint8 *)pixel_obj->getData();
+              for(unsigned long p = 0; p < np; p++)
+              {
+                temp_buffer.push_back(float(pixel_data[p]));
+              }
             }
-            image_buffer.push_back(float(raw16));
-          }
-          else
-          {
-            uint32_t raw32;
-            for(int b = 0; b < p_bytes; b++)
+            if(rep == EPR_Sint8)
             {
-              *((char*)(&raw32) + b) = byte_buffer[(n+b)];
+              Sint8 * pixel_data = (Sint8 *)pixel_obj->getData();
+              for(unsigned long p = 0; p < np; p++)
+              {
+                temp_buffer.push_back(float(pixel_data[p]));
+              }
             }
-            image_buffer.push_back(float(raw32));
+            if(rep == EPR_Uint16)
+            {
+              Uint16 * pixel_data = (Uint16 *)pixel_obj->getData();
+              for(unsigned long p = 0; p < np; p++)
+              {
+                temp_buffer.push_back(float(pixel_data[p]));
+              }
+            }
+            if(rep == EPR_Sint16)
+            {
+              Sint16 * pixel_data = (Sint16 *)pixel_obj->getData();
+              for(unsigned long p = 0; p < np; p++)
+              {
+                temp_buffer.push_back(float(pixel_data[p]));
+              }
+            }
+            if(rep == EPR_Uint32)
+            {
+              Uint32 * pixel_data = (Uint32 *)pixel_obj->getData();
+              for(unsigned long p = 0; p < np; p++)
+              {
+                temp_buffer.push_back(float(pixel_data[p]));
+              }
+            }
+            if(rep == EPR_Sint32)
+            {
+              Sint32 * pixel_data = (Sint32 *)pixel_obj->getData();
+              for(unsigned long p = 0; p < np; p++)
+              {
+                temp_buffer.push_back(float(pixel_data[p]));
+              }
+            }
           }
         }
-        */
       }
       else
       {
         std::cerr << "Image " << n << " from file " << file_list[n] <<
-          " could not be read, returning " << (n-1) << '/' << file_list.size() <<
-          " images\n";
+          " could not be read, returning blank image\n";
         return output_image;
       }
     }
+    // Sort and reorder
+    std::vector<float> image_buffer;
+
+    std::sort(image_z.begin(), image_z.end(), [&image_z](
+      std::pair<float,int>& l, std::pair<float,int>& r)
+        { return l.first < r.first; });
+
+    double * po = header.GetPixelOrigin();
+    header.SetPixelOrigin(po[0], po[1], image_z[0].first);
+
+    unsigned int * im_size = header.GetImageSize();
+    for(int n = 0; n < image_z.size(); n++)
+    {
+      unsigned long int p_start =
+        im_size[0]*im_size[1]*im_size[3]*image_z[n].second;
+      unsigned long int p_end =
+        im_size[0]*im_size[1]*im_size[3]*(image_z[n].second+1);
+      for(unsigned long int p = p_start; p < p_end; p++)
+      {
+        image_buffer.push_back(temp_buffer[p]);
+      }
+    }
+
+    // Assign image and return
+    output_image.SetHeader(header);
+    output_image.SetImage(image_buffer);
 
     return output_image;
   }

@@ -32,6 +32,7 @@
 #ifndef GENERICIMAGE_HPP
 #define GENERICIMAGE_HPP
 
+#include <iostream>
 #include <vector>
 
 namespace solutio
@@ -55,7 +56,7 @@ namespace solutio
       double * GetDirectionCosines(){ return direction_cosines; }
       double GetRescaleSlope(){ return rescale_slope; }
       double GetRescaleIntercept(){ return rescale_intercept; }
-    private:
+    protected:
       unsigned int image_size[4];
       double pixel_dimensions[3];
       double pixel_origin[3];
@@ -85,25 +86,30 @@ namespace solutio
       }
       void SetImage(std::vector<T> input_data){ pixel_data = input_data; }
       std::vector<T> GetImage(){ return pixel_data; }
-      std::vector<T> GetImageSlice(unsigned int slice);
+      std::vector<T> GetImageFrame(unsigned int f);
     private:
       std::vector<T> pixel_data;
   };
 
   template <class T>
-  std::vector<T> GenericImage<T>::GetImageSlice(unsigned int slice)
+  std::vector<T> GenericImage<T>::GetImageFrame(unsigned int frame)
   {
-    std::vector<T> image_slice;
+    std::vector<T> image_frame;
 
-    if(slice > image_size[2]) return image_slice;
+    if(frame > image_size[2])
+    {
+      std::cerr << "Warning: image frame " << frame << " exceeds image size (" <<
+        image_size[2] << ")\n";
+      return image_frame;
+    }
 
-    unsigned long int p_start = image_size[0]*image_size[1]*image_size[3]*slice;
-    unsigned long int p_end = image_size[0]*image_size[1]*image_size[3]*(slice+1);
+    unsigned long int p_start = image_size[0]*image_size[1]*image_size[3]*frame;
+    unsigned long int p_end = image_size[0]*image_size[1]*image_size[3]*(frame+1);
     for(unsigned long int n = p_start; n < p_end; n++)
     {
-      image_slice.push_back(pixel_data(n));
+      image_frame.push_back(pixel_data[n]);
     }
-    return image_slice;
+    return image_frame;
   }
 }
 

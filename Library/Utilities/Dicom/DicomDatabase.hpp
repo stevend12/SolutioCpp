@@ -111,7 +111,7 @@ namespace solutio {
       DicomDatabaseFile GetFile(unsigned int id){ return dicom_files[id]; }
       DicomDatabaseSeries GetSeries(unsigned int id){ return series_list[id]; }
       std::vector<std::string> GetSeriesFileNames(unsigned int series_id);
-      std::vector< GenericImage<float> > GetImageSeries(unsigned int series_id);
+      GenericImage<float> GetImageSeries(unsigned int series_id);
       std::vector<std::string> PrintTree();
     private:
       std::vector<DicomDatabaseFile> dicom_files;
