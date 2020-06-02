@@ -201,7 +201,6 @@ namespace solutio {
     GenericImage<float> output_image;
 
     // Global variables
-    GenericImageHeader header;
     std::vector< std::pair<float,int> > image_z;
     std::vector<float> vals;
     float val;
@@ -224,26 +223,26 @@ namespace solutio {
 
         if(n == 0)
         {
-          header.SetImageSize(Im.getHeight(), Im.getWidth(), file_list.size(), 1);
+          output_image.SetImageSize(Im.getHeight(), Im.getWidth(), file_list.size(), 1);
 
           vals = GetDicomArray<float>(data, DCM_PixelSpacing, 2);
           val = GetDicomValue<float>(data, DCM_SliceThickness);
-          header.SetPixelDimensions(vals[0], vals[1], val);
+          output_image.SetPixelDimensions(vals[0], vals[1], val);
           vals.clear();
 
           vals = GetDicomArray<float>(data, DCM_ImagePositionPatient, 3);
-          header.SetPixelOrigin(vals[0], vals[1], vals[2]);
+          output_image.SetPixelOrigin(vals[0], vals[1], vals[2]);
           std::pair<float,int> zp(vals[2], n);
           image_z.push_back(zp);
           vals.clear();
 
           vals = GetDicomArray<float>(data, DCM_ImageOrientationPatient, 6);
-          header.SetDirectionCosines(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]);
+          output_image.SetDirectionCosines(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]);
           vals.clear();
         }
         else
         {
-          unsigned int * ims = header.GetImageSize();
+          unsigned int * ims = output_image.GetImageSize();
           if(Im.getHeight() != ims[0] || Im.getWidth() != ims[1])
           {
             std::cerr << "Error: Image " << n << " size does not match "
@@ -343,10 +342,10 @@ namespace solutio {
       std::pair<float,int>& l, std::pair<float,int>& r)
         { return l.first < r.first; });
 
-    double * po = header.GetPixelOrigin();
-    header.SetPixelOrigin(po[0], po[1], image_z[0].first);
+    double * po = output_image.GetPixelOrigin();
+    output_image.SetPixelOrigin(po[0], po[1], image_z[0].first);
 
-    unsigned int * im_size = header.GetImageSize();
+    unsigned int * im_size = output_image.GetImageSize();
     for(int n = 0; n < image_z.size(); n++)
     {
       unsigned long int p_start =
@@ -358,9 +357,6 @@ namespace solutio {
         image_buffer.push_back(temp_buffer[p]);
       }
     }
-
-    // Assign image and return
-    output_image.SetHeader(header);
     output_image.SetImage(image_buffer);
 
     return output_image;
@@ -390,5 +386,37 @@ namespace solutio {
     }
 
     return print_text;
+  }
+
+  std::vector< std::pair<std::string,int> > DicomDatabase::GetTree()
+  {
+    std::vector< std::pair<std::string,int> > tree;
+    std::pair<std::string,int> temp;
+    for(unsigned int p = 0; p < patient_list.size(); p++)
+    {
+      temp.first = patient_list[p];
+      temp.second = 0;
+      tree.push_back(temp);
+      for(unsigned int st = 0; st < study_list.size(); st++)
+      {
+        if(study_list[st].second == patient_list[p])
+        {
+          temp.first = study_list[st].first;
+          temp.second = 1;
+          tree.push_back(temp);
+          for(unsigned int se = 0; se < series_list.size(); se++)
+          {
+            if(series_list[se].CheckStudy(study_list[st].first))
+            {
+              temp.first = series_list[se].GetModalityName()+
+                " ("+std::to_string(series_list[se].GetNumFiles())+" files)";
+              temp.second = 2;
+              tree.push_back(temp);
+            }
+          }
+        }
+      }
+    }
+    return tree;
   }
 }

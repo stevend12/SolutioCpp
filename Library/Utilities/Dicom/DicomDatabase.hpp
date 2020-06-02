@@ -113,6 +113,7 @@ namespace solutio {
       std::vector<std::string> GetSeriesFileNames(unsigned int series_id);
       GenericImage<float> GetImageSeries(unsigned int series_id);
       std::vector<std::string> PrintTree();
+      std::vector< std::pair<std::string,int> > GetTree();
     private:
       std::vector<DicomDatabaseFile> dicom_files;
       std::vector<std::string> patient_list;

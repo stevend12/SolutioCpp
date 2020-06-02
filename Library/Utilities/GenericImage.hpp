@@ -37,7 +37,8 @@
 
 namespace solutio
 {
-  class GenericImageHeader
+  template <class T>
+  class GenericImage
   {
     public:
       // Set functions
@@ -56,40 +57,56 @@ namespace solutio
       double * GetDirectionCosines(){ return direction_cosines; }
       double GetRescaleSlope(){ return rescale_slope; }
       double GetRescaleIntercept(){ return rescale_intercept; }
-    protected:
+      void SetImage(std::vector<T> input_data){ pixel_data = input_data; }
+      std::vector<T> GetImage(){ return pixel_data; }
+      std::vector<T> GetImageFrame(unsigned int f);
+    private:
       unsigned int image_size[4];
       double pixel_dimensions[3];
       double pixel_origin[3];
       double direction_cosines[6];
       double rescale_slope;
       double rescale_intercept;
+      std::vector<T> pixel_data;
   };
 
   template <class T>
-  class GenericImage : GenericImageHeader
+  void GenericImage<T>::SetImageSize(unsigned int r, unsigned int c,
+    unsigned int ns, unsigned int np)
   {
-    public:
-      void SetHeader(GenericImageHeader header)
-      {
-        unsigned int * im_size = header.GetImageSize();
-        SetImageSize(im_size[0], im_size[1], im_size[2], im_size[3]);
+    image_size[0] = r;
+    image_size[1] = c;
+    image_size[2] = ns;
+    image_size[3] = np;
+  }
 
-        double * pixel_dim = header.GetPixelDimensions();
-        SetPixelDimensions(pixel_dim[0], pixel_dim[1], pixel_dim[2]);
+  template <class T>
+  void GenericImage<T>::SetPixelDimensions(double dx, double dy, double dz)
+  {
+    pixel_dimensions[0] = dx;
+    pixel_dimensions[1] = dy;
+    pixel_dimensions[2] = dz;
+  }
 
-        double * pixel_o = header.GetPixelOrigin();
-        SetPixelOrigin(pixel_o[0], pixel_o[1], pixel_o[2]);
+  template <class T>
+  void GenericImage<T>::SetPixelOrigin(double ox, double oy, double oz)
+  {
+    pixel_origin[0] = ox;
+    pixel_origin[1] = oy;
+    pixel_origin[2] = oz;
+  }
 
-        double * dir_cos = header.GetDirectionCosines();
-        SetDirectionCosines(dir_cos[0], dir_cos[1], dir_cos[2], dir_cos[3],
-          dir_cos[4], dir_cos[5]);
-      }
-      void SetImage(std::vector<T> input_data){ pixel_data = input_data; }
-      std::vector<T> GetImage(){ return pixel_data; }
-      std::vector<T> GetImageFrame(unsigned int f);
-    private:
-      std::vector<T> pixel_data;
-  };
+  template <class T>
+  void GenericImage<T>::SetDirectionCosines(double rx, double ry, double rz,
+    double cx, double cy, double cz)
+  {
+    direction_cosines[0] = rx;
+    direction_cosines[1] = ry;
+    direction_cosines[2] = rz;
+    direction_cosines[3] = cx;
+    direction_cosines[4] = cy;
+    direction_cosines[5] = cz;
+  }
 
   template <class T>
   std::vector<T> GenericImage<T>::GetImageFrame(unsigned int frame)
