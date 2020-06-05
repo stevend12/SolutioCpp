@@ -34,6 +34,7 @@
 
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 namespace solutio
 {
@@ -60,6 +61,8 @@ namespace solutio
       void SetImage(std::vector<T> input_data){ pixel_data = input_data; }
       std::vector<T> GetImage(){ return pixel_data; }
       std::vector<T> GetImageFrame(unsigned int f);
+      T GetMaxValue();
+      T GetMinValue();
     private:
       unsigned int image_size[4];
       double pixel_dimensions[3];
@@ -127,6 +130,18 @@ namespace solutio
       image_frame.push_back(pixel_data[n]);
     }
     return image_frame;
+  }
+
+  template <class T>
+  T GenericImage<T>::GetMaxValue()
+  {
+    return *std::max_element(pixel_data.begin(), pixel_data.end());
+  }
+
+  template <class T>
+  T GenericImage<T>::GetMinValue()
+  {
+    return *std::min_element(pixel_data.begin(), pixel_data.end());
   }
 }
 
