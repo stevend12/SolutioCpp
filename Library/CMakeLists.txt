@@ -73,6 +73,7 @@ set(HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/GenericImage.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DcmtkRead.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomDatabase.hpp
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.hpp
