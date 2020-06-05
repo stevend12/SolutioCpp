@@ -33,39 +33,25 @@
 
 #include <iostream>
 #include <filesystem>
-#include <vector>
 #include <iterator>
-
-#include <dcmtk/dcmiod/iodimage.h>
-#include <dcmtk/dcmimgle/dcmimage.h>
 
 namespace solutio {
   std::vector< std::tuple<std::string, std::string, std::string> >
     SupportedIODList {
       std::make_tuple("1.2.840.10008.5.1.4.1.1.2","CT","CT"),
-      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.1","RTIMAGE","RI"),
-      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.2","RTDOSE","RD"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.4","MR","MR"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.128","PET","PET"),
+      //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.1","RTIMAGE","RI"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.2","RTDOSE","RD")
       //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.3","RTSTRUCT","RS")
+      //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.4","RTBEAMS","RT")
+      //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.5","RTPLAN","RP")
       /*
-      // Single and multi-frame CT
-      if(class_uid == "1.2.840.10008.5.1.4.1.1.2") modality_name = "CT";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.2.1") modality_name = "CT";
-      // MRI
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.4") modality_name = "MR";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.4.1") modality_name = "MR";
-      // PET
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.128") modality_name = "PET";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.130") modality_name = "PET";
-      // US
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.2.1") modality_name = "eCT";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.4.1") modality_name = "eMR";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.130") modality_name = "ePET";
       else if(class_uid == "1.2.840.10008.5.1.4.1.1.6.1") modality_name = "US";
       else if(class_uid == "1.2.840.10008.5.1.4.1.1.3.1") modality_name = "US";
-      // Radiation therapy data files
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.1") modality_name = "RT Image";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.2") modality_name = "RT Dose";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.3") modality_name = "RT Structure Set";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.4") modality_name = "RT Beams Treatment Record";
-      else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.5") modality_name = "RT Plan";
-      else modality_name = "Not Supported";
       */
   };
 
@@ -103,7 +89,8 @@ namespace solutio {
     }
     else
     {
-      std::cerr << "Error: cannot read DICOM file (" << status.text() << ")" << '\n';
+      std::cerr << "Error: cannot read DICOM file (" << file_name << "): " <<
+        status.text() << '\n';
       return false;
     }
     // Get absolute file path
@@ -134,11 +121,16 @@ namespace solutio {
     }
     // Read and organize each file
     std::vector<std::string>::iterator file_it;
+    unsigned long skipped_files = 0;
     for(file_it = file_list.begin(); file_it != file_list.end(); file_it++)
     {
       // Attempt to read file
       DicomDatabaseFile temp_file;
-      if(!temp_file.ReadDicomInfo(*file_it)) continue;
+      if(!temp_file.ReadDicomInfo(*file_it))
+      {
+        skipped_files++;
+        continue;
+      }
       dicom_files.push_back(temp_file);
       // Check patient
       std::string pt_text = temp_file.GetPatientName();
@@ -157,7 +149,7 @@ namespace solutio {
         std::pair<std::string, std::string> stp(st_text, pt_text);
         study_list.push_back(stp);
       }
-      // Check series and assign file
+      // Check series and assign file(s)
       std::string se_text = temp_file.GetSeriesUID();
       auto series_it = std::find_if(series_list.begin(), series_list.end(),
         [&temp_file,se_text](DicomDatabaseSeries& el){
@@ -166,13 +158,15 @@ namespace solutio {
       {
         DicomDatabaseSeries temp_series;
         temp_series.SetInfo(st_text, se_text, temp_file.modality_name);
-        temp_series.AddFileID(std::distance(file_list.begin(), file_it));
+        temp_series.AddFileID(
+          std::distance(file_list.begin(), file_it) - skipped_files
+        );
         series_list.push_back(temp_series);
       }
       else
       {
         series_list[(std::distance(series_list.begin(), series_it))].AddFileID(
-          std::distance(file_list.begin(), file_it));
+          std::distance(file_list.begin(), file_it) - skipped_files);
       }
     }
   }

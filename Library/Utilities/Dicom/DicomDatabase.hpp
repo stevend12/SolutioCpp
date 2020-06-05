@@ -33,39 +33,14 @@
 #define DICOMDATABASE_HPP
 
 #include <string>
-
-#include <dcmtk/config/osconfig.h>
-#include <dcmtk/dcmdata/dctk.h>
-#include <dcmtk/dcmiod/iodcommn.h>
+#include <vector>
 
 #include "../GenericImage.hpp"
+#include "DcmtkRead.hpp"
 
 namespace solutio {
   // List of supported modalities
   extern std::vector< std::tuple<std::string, std::string, std::string> > SupportedIODList;
-  // DCMTK helper functions
-  template<class T>
-  T GetDicomValue(DcmDataset * data, DcmTagKey key)
-  {
-    T output;
-    OFString v;
-    if(data->findAndGetOFString(key, v).good()) std::stringstream(v.c_str()) >> output;
-    return output;
-  }
-  template<class T>
-  std::vector<T> GetDicomArray(DcmDataset * data, DcmTagKey key, int length)
-  {
-    std::vector<T> output;
-    for(int l = 0; l < length; l++)
-    {
-      T val;
-      OFString s_val;
-      data->findAndGetOFString(key, s_val, l);
-      std::stringstream(s_val.c_str()) >> val;
-      output.push_back(val);
-    }
-    return output;
-  }
   // Struct that contains just enough information from the DICOM file header to properly
   // organize the files hierarchically (patient, study, series, etc.)
   class DicomDatabaseFile
@@ -112,6 +87,8 @@ namespace solutio {
       DicomDatabaseSeries GetSeries(unsigned int id){ return series_list[id]; }
       std::vector<std::string> GetSeriesFileNames(unsigned int series_id);
       GenericImage<float> GetImageSeries(unsigned int series_id);
+      template<typename T>
+        GenericImage<T> GetRTDose(unsigned int series_id);
       std::vector<std::string> PrintTree();
       std::vector< std::pair<std::string,int> > GetTree();
     private:
@@ -120,6 +97,13 @@ namespace solutio {
       std::vector< std::pair<std::string, std::string> > study_list;
       std::vector<DicomDatabaseSeries> series_list;
   };
+
+  template<typename T>
+  GenericImage<T> DicomDatabase::GetRTDose(unsigned int series_id)
+  {
+    std::vector<std::string> file_list = GetSeriesFileNames(series_id);
+    return ReadRTDose<T>(file_list[0]);
+  }
 }
 
 #endif
