@@ -189,10 +189,11 @@ namespace solutio {
     return file_list;
   }
 
-  GenericImage<float> DicomDatabase::GetImageSeries(unsigned int series_id)
+  GenericImage<float> DicomDatabase::GetImageSeries(unsigned int series_id,
+    std::function<void(float)> progress_function)
   {
     std::vector<std::string> file_list = GetSeriesFileNames(series_id);
-    return ReadImageSeries<float>(file_list);
+    return ReadImageSeries<float>(file_list, progress_function);
   }
 
   std::vector<std::string> DicomDatabase::PrintTree()

@@ -86,7 +86,9 @@ namespace solutio {
       DicomDatabaseFile GetFile(unsigned int id){ return dicom_files[id]; }
       DicomDatabaseSeries GetSeries(unsigned int id){ return series_list[id]; }
       std::vector<std::string> GetSeriesFileNames(unsigned int series_id);
-      GenericImage<float> GetImageSeries(unsigned int series_id);
+      GenericImage<float> GetImageSeries(unsigned int series_id,
+        std::function<void(float)> progress_function =
+          [](float p){ std::cout << 100.0*p << "%\n"; });
       template<typename T>
         GenericImage<T> GetRTDose(unsigned int series_id);
       std::vector<std::string> PrintTree();
