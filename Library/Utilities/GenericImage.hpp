@@ -51,6 +51,8 @@ namespace solutio
         double cy, double cz);
       void SetRescaleSlope(double rs){ rescale_slope = rs; }
       void SetRescaleIntercept(double ri){ rescale_intercept = ri; }
+      void SetMaxValue(T v){ max_pixel_value = v; };
+      void SetMinValue(T v){ min_pixel_value = v; };
       // Get functions
       unsigned int * GetImageSize(){ return image_size; }
       double * GetPixelDimensions(){ return pixel_dimensions; }
@@ -61,8 +63,11 @@ namespace solutio
       void SetImage(std::vector<T> input_data){ pixel_data = input_data; }
       std::vector<T> GetImage(){ return pixel_data; }
       std::vector<T> GetImageFrame(unsigned int f);
-      T GetMaxValue();
-      T GetMinValue();
+      T GetMaxValue(){ return max_pixel_value; }
+      T GetMinValue(){ return min_pixel_value; }
+      // Misc
+      void CalcMaxValue();
+      void CalcMinValue();
     private:
       unsigned int image_size[4];
       double pixel_dimensions[3];
@@ -71,6 +76,8 @@ namespace solutio
       double rescale_slope;
       double rescale_intercept;
       std::vector<T> pixel_data;
+      T max_pixel_value;
+      T min_pixel_value;
   };
 
   template <class T>
@@ -133,16 +140,17 @@ namespace solutio
   }
 
   template <class T>
-  T GenericImage<T>::GetMaxValue()
+  void GenericImage<T>::CalcMaxValue()
   {
-    return *std::max_element(pixel_data.begin(), pixel_data.end());
+    max_pixel_value = *std::max_element(pixel_data.begin(), pixel_data.end());
   }
 
   template <class T>
-  T GenericImage<T>::GetMinValue()
+  void GenericImage<T>::CalcMinValue()
   {
-    return *std::min_element(pixel_data.begin(), pixel_data.end());
+    min_pixel_value = *std::min_element(pixel_data.begin(), pixel_data.end());
   }
+
 }
 
 #endif

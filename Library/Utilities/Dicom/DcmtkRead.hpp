@@ -70,24 +70,25 @@ namespace solutio
 
   template<class T>
   GenericImage<T> ReadImageSeries(std::vector<std::string> file_list,
-    void (*progress_function)(float) =
+    std::function<void(float)> progress_function =
       [](float p){ std::cout << 100.0*p << "%\n"; })
   {
     // Output image
     GenericImage<T> output_image;
+    T min_val, max_val;
 
     // Global variables
     std::vector< std::pair<float,int> > image_z;
     std::vector<float> vals;
     float val;
-    std::vector<float> temp_buffer;
 
+    // Pass 1: Get image info and slice ordering
     for(int n = 0; n < file_list.size(); n++)
     {
       // Read in DICOM image modules using DCMTK
       DcmFileFormat fileformat;
       OFCondition status = fileformat.loadFile(file_list[n].c_str());
-      if (status.good())
+      if(status.good())
       {
         // Read DICOM image and data
         DcmDataset * data = fileformat.getDataset();
@@ -142,9 +143,43 @@ namespace solutio
           image_z.push_back(zp);
           vals.clear();
         }
+        progress_function(float(n+1) / float(2*file_list.size()));
+      }
+      else
+      {
+        std::cerr << "Image " << n << " from file " << file_list[n] <<
+          " could not be read, returning blank image\n";
+        return output_image;
+      }
+    }
 
+    // Sort and reorder
+    std::vector<T> image_buffer;
+
+    std::sort(image_z.begin(), image_z.end(), [&image_z](
+      std::pair<float,int>& l, std::pair<float,int>& r)
+        { return l.first < r.first; });
+
+    double * po = output_image.GetPixelOrigin();
+    output_image.SetPixelOrigin(po[0], po[1], image_z[0].first);
+
+    unsigned int * im_size = output_image.GetImageSize();
+    image_buffer.resize(im_size[0]*im_size[1]*im_size[2]);
+
+    // Pass 2: Read pixel data and place in buffer
+    for(int n = 0; n < file_list.size(); n++)
+    {
+      // Read in DICOM image modules using DCMTK
+      DcmFileFormat fileformat;
+      OFCondition status = fileformat.loadFile(file_list[n].c_str());
+      if(status.good())
+      {
+        // Read DICOM image and data
+        DcmDataset * data = fileformat.getDataset();
+        DicomImage Im(data, EXS_Unknown);
         // Assign pixel data
         unsigned long np;
+        std::vector<T> temp_buffer;
         if(Im.isMonochrome())
         {
           const DiPixel * pixel_obj = Im.getInterData();
@@ -202,48 +237,44 @@ namespace solutio
             }
           }
         }
-        progress_function(float(n) / float(2*file_list.size()));
-      }
-      else
-      {
-        std::cerr << "Image " << n << " from file " << file_list[n] <<
-          " could not be read, returning blank image\n";
-        return output_image;
+
+        if(n == 0) min_val = max_val = temp_buffer[0];
+
+        unsigned int n_slice = 0;
+        while(image_z[n_slice].second != n) n_slice++;
+
+        unsigned long int p_start =
+          im_size[0]*im_size[1]*im_size[3]*n_slice;
+        unsigned long int p_end =
+          im_size[0]*im_size[1]*im_size[3]*(n_slice+1);
+        for(unsigned long int p = p_start; p < p_end; p++)
+        {
+          image_buffer[p] = temp_buffer[(p-p_start)];
+          if(min_val > temp_buffer[(p-p_start)]) min_val = temp_buffer[(p-p_start)];
+          if(max_val < temp_buffer[(p-p_start)]) max_val = temp_buffer[(p-p_start)];
+        }
+
+        temp_buffer.clear();
+
+        progress_function(float(n+file_list.size()+1) / float(2*file_list.size()));
       }
     }
-    // Sort and reorder
-    std::vector<float> image_buffer;
 
-    std::sort(image_z.begin(), image_z.end(), [&image_z](
-      std::pair<float,int>& l, std::pair<float,int>& r)
-        { return l.first < r.first; });
-
-    double * po = output_image.GetPixelOrigin();
-    output_image.SetPixelOrigin(po[0], po[1], image_z[0].first);
-
-    unsigned int * im_size = output_image.GetImageSize();
-    for(int n = 0; n < image_z.size(); n++)
-    {
-      unsigned long int p_start =
-        im_size[0]*im_size[1]*im_size[3]*image_z[n].second;
-      unsigned long int p_end =
-        im_size[0]*im_size[1]*im_size[3]*(image_z[n].second+1);
-      for(unsigned long int p = p_start; p < p_end; p++)
-      {
-        image_buffer.push_back(temp_buffer[p]);
-      }
-      progress_function(float(n+file_list.size()) / float(2*file_list.size()));
-    }
     output_image.SetImage(image_buffer);
+    output_image.SetMinValue(min_val);
+    output_image.SetMaxValue(max_val);
 
     return output_image;
   }
 
   template<class T>
-  GenericImage<T> ReadRTDose(std::string file_name)
+  GenericImage<T> ReadRTDose(std::string file_name,
+    std::function<void(float)> progress_function =
+      [](float p){ std::cout << 100.0*p << "%\n"; })
   {
     // Output image
     GenericImage<T> output_image;
+    T min_val, max_val;
 
     std::vector<float> vals;
     float val;
@@ -286,12 +317,21 @@ namespace solutio
           std::vector<T> buffer;
           for(int a = 0; a < of_buffer.size(); a++)
           {
+            progress_function(float(a) / float(of_buffer.size()));
             for(int b = 0; b < of_buffer[a].size(); b++)
             {
               buffer.push_back(of_buffer[a][b]);
+              if(a == 0 && b == 0) min_val = max_val = of_buffer[a][b];
+              else
+              {
+                if(min_val > of_buffer[a][b]) min_val = of_buffer[a][b];
+                if(max_val < of_buffer[a][b]) max_val = of_buffer[a][b];
+              }
             }
           }
           output_image.SetImage(buffer);
+          output_image.SetMaxValue(max_val);
+          output_image.SetMinValue(min_val);
         }
         else
         {
