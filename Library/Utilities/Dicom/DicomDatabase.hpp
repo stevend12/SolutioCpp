@@ -33,26 +33,31 @@
 #define DICOMDATABASE_HPP
 
 #include <string>
+#include <vector>
 
-#include "DicomModules.hpp"
+#include "../GenericImage.hpp"
+#include "DcmtkRead.hpp"
 
 namespace solutio {
+  // List of supported modalities
+  extern std::vector< std::tuple<std::string, std::string, std::string> > SupportedIODList;
   // Struct that contains just enough information from the DICOM file header to properly
   // organize the files hierarchically (patient, study, series, etc.)
   class DicomDatabaseFile
   {
     public:
       DicomDatabaseFile();
-      PatientModule Patient;
-      GeneralStudyModule Study;
-      GeneralSeriesModule Series;
-      SOPCommonModule SOPCommon;
+      std::string GetPatientName(){ return patient_name; }
+      std::string GetStudyUID(){ return study_uid; }
+      std::string GetSeriesUID(){ return series_uid; }
       std::string modality_name;
-      bool ReadDicomFile(std::string file_name);
+      bool ReadDicomInfo(std::string file_name);
       std::string GetPath(){ return file_path; }
     private:
       std::string file_path;
-      //bool is_dicom;
+      std::string patient_name;
+      std::string study_uid;
+      std::string series_uid;
   };
   // Struct that contains a DICOM series (i.e. a group of DICOM files)
   class DicomDatabaseSeries
@@ -81,13 +86,26 @@ namespace solutio {
       DicomDatabaseFile GetFile(unsigned int id){ return dicom_files[id]; }
       DicomDatabaseSeries GetSeries(unsigned int id){ return series_list[id]; }
       std::vector<std::string> GetSeriesFileNames(unsigned int series_id);
+      GenericImage<float> GetImageSeries(unsigned int series_id,
+        std::function<void(float)> progress_function =
+          [](float p){ std::cout << 100.0*p << "%\n"; });
+      template<typename T>
+        GenericImage<T> GetRTDose(unsigned int series_id);
       std::vector<std::string> PrintTree();
+      std::vector< std::pair<std::string,int> > GetTree();
     private:
       std::vector<DicomDatabaseFile> dicom_files;
       std::vector<std::string> patient_list;
       std::vector< std::pair<std::string, std::string> > study_list;
       std::vector<DicomDatabaseSeries> series_list;
   };
+
+  template<typename T>
+  GenericImage<T> DicomDatabase::GetRTDose(unsigned int series_id)
+  {
+    std::vector<std::string> file_list = GetSeriesFileNames(series_id);
+    return ReadRTDose<T>(file_list[0]);
+  }
 }
 
 #endif

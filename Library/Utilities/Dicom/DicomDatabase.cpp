@@ -33,66 +33,66 @@
 
 #include <iostream>
 #include <filesystem>
-#include <vector>
 #include <iterator>
 
-#include <gdcmReader.h>
-
 namespace solutio {
+  std::vector< std::tuple<std::string, std::string, std::string> >
+    SupportedIODList {
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.2","CT","CT"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.4","MR","MR"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.128","PET","PET"),
+      //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.1","RTIMAGE","RI"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.2","RTDOSE","RD")
+      //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.3","RTSTRUCT","RS")
+      //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.4","RTBEAMS","RT")
+      //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.5","RTPLAN","RP")
+      /*
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.2.1") modality_name = "eCT";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.4.1") modality_name = "eMR";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.130") modality_name = "ePET";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.6.1") modality_name = "US";
+      else if(class_uid == "1.2.840.10008.5.1.4.1.1.3.1") modality_name = "US";
+      */
+  };
+
   DicomDatabaseFile::DicomDatabaseFile()
   {
     modality_name = file_path = "";
   }
 
-  bool DicomDatabaseFile::ReadDicomFile(std::string file_name)
+  bool DicomDatabaseFile::ReadDicomInfo(std::string file_name)
   {
-    // Load DICOM file using GDCM
-    gdcm::Reader reader;
-    reader.SetFileName(file_name.c_str());
-    if(!reader.Read())
+    // Load DICOM file using DCMTK
+    DcmFileFormat fileformat;
+    OFCondition status = fileformat.loadFile(file_name.c_str());
+    if (status.good())
     {
-      std::cout << "Could not read: " << file_name << std::endl;
+      // Read DICOM modules
+      DcmDataset * data = fileformat.getDataset();
+      std::string class_uid = GetDicomValue<std::string>(data, DCM_SOPClassUID);
+      if(class_uid == "1.2.840.10008.1.3.10" || class_uid == "")
+      {
+        std::cout << "Skipping DICOMDIR for now...\n";
+        return false;
+      }
+      patient_name = GetDicomValue<std::string>(data, DCM_PatientName);
+      study_uid = GetDicomValue<std::string>(data, DCM_StudyInstanceUID);
+      series_uid = GetDicomValue<std::string>(data, DCM_SeriesInstanceUID);
+      // Assign modality label based on SOP class UID; match to supported list
+      if(class_uid[(class_uid.length()-1)] == '\0') class_uid.erase(class_uid.length()-1);
+
+      auto it = std::find_if(SupportedIODList.begin(), SupportedIODList.end(),
+        [&class_uid](const std::tuple<std::string, std::string, std::string>& e)
+          {return std::get<0>(e) == class_uid;});
+      if (it != SupportedIODList.end()) modality_name = std::get<2>(*it);
+      else modality_name = "Not Supported";
+    }
+    else
+    {
+      std::cerr << "Error: cannot read DICOM file (" << file_name << "): " <<
+        status.text() << '\n';
       return false;
     }
-    gdcm::File &file = reader.GetFile();
-    gdcm::DataSet &ds = file.GetDataSet();
-    if(ds.IsEmpty())
-    {
-      std::cout << "DICOM data file " << file_name << " is empty.\n";
-      return false;
-    }
-    // Read DICOM modules
-    Patient.Read(ds);
-    //std::cout << "Patient Name: " << Patient.PatientName.GetValue() << '\n';
-    Study.Read(ds);
-    //std::cout << "Study UID: " << Study.StudyInstanceUID.GetValue() << '\n';
-    Series.Read(ds);
-    //std::cout << "Series UID: " << Series.SeriesInstanceUID.GetValue() << '\n';
-    SOPCommon.Read(ds);
-    //std::cout << "SOP Class UID: " << SOPCommon.SOPClassUID.GetValue() << '\n';
-    // Assign modality label based on SOP class UID; match to list
-    // (DO NOT USE SWITCH!)
-    // Single and multi-frame CT
-    std::string class_uid = SOPCommon.SOPClassUID.GetValue();
-    if(class_uid[(class_uid.length()-1)] == '\0') class_uid.erase(class_uid.length()-1);
-    if(class_uid == "1.2.840.10008.5.1.4.1.1.2") modality_name = "CT";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.2.1") modality_name = "CT";
-    // MRI
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.4") modality_name = "MR";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.4.1") modality_name = "MR";
-    // PET
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.128") modality_name = "PET";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.130") modality_name = "PET";
-    // US
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.6.1") modality_name = "US";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.3.1") modality_name = "US";
-    // Radiation therapy data files
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.1") modality_name = "RT Image";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.2") modality_name = "RT Dose";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.3") modality_name = "RT Structure Set";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.4") modality_name = "RT Beams Treatment Record";
-    else if(class_uid == "1.2.840.10008.5.1.4.1.1.481.5") modality_name = "RT Plan";
-    else modality_name = "Not Supported";
     // Get absolute file path
     std::filesystem::path p = file_name;
     file_path = std::filesystem::absolute(p).u8string();
@@ -109,6 +109,7 @@ namespace solutio {
 
   void DicomDatabase::MakeDatabase(std::string database_path)
   {
+    OFCondition result;
     // Make list of files in directory and sub-directories
     std::vector<std::string> file_list;
     for(const auto & entry : std::filesystem::recursive_directory_iterator(database_path))
@@ -120,44 +121,52 @@ namespace solutio {
     }
     // Read and organize each file
     std::vector<std::string>::iterator file_it;
+    unsigned long skipped_files = 0;
     for(file_it = file_list.begin(); file_it != file_list.end(); file_it++)
     {
       // Attempt to read file
       DicomDatabaseFile temp_file;
-      if(!temp_file.ReadDicomFile(*file_it)) continue;
+      if(!temp_file.ReadDicomInfo(*file_it))
+      {
+        skipped_files++;
+        continue;
+      }
       dicom_files.push_back(temp_file);
       // Check patient
+      std::string pt_text = temp_file.GetPatientName();
       if(std::find(patient_list.begin(), patient_list.end(),
-        temp_file.Patient.PatientName.GetValue()) == patient_list.end())
+        pt_text) == patient_list.end())
       {
-        patient_list.push_back(temp_file.Patient.PatientName.GetValue());
+        patient_list.push_back(pt_text);
       }
       // Check study
+      std::string st_text = temp_file.GetStudyUID();
       auto study_it = std::find_if(study_list.begin(), study_list.end(),
-        [&temp_file](const std::pair<std::string, std::string>& el){
-          return el.first == temp_file.Study.StudyInstanceUID.GetValue();} );
+        [&temp_file,st_text](const std::pair<std::string, std::string>& el){
+          return el.first == st_text;} );
       if(study_it == study_list.end())
       {
-        std::pair<std::string, std::string> stp(temp_file.Study.StudyInstanceUID.GetValue(),
-          temp_file.Patient.PatientName.GetValue());
+        std::pair<std::string, std::string> stp(st_text, pt_text);
         study_list.push_back(stp);
       }
-      // Check series and assign file
+      // Check series and assign file(s)
+      std::string se_text = temp_file.GetSeriesUID();
       auto series_it = std::find_if(series_list.begin(), series_list.end(),
-        [&temp_file](DicomDatabaseSeries& el){
-          return el.GetSeriesUID() == temp_file.Series.SeriesInstanceUID.GetValue();} );
+        [&temp_file,se_text](DicomDatabaseSeries& el){
+          return el.GetSeriesUID() == se_text;} );
       if(series_it == series_list.end())
       {
         DicomDatabaseSeries temp_series;
-        temp_series.SetInfo(temp_file.Study.StudyInstanceUID.GetValue(),
-          temp_file.Series.SeriesInstanceUID.GetValue(), temp_file.modality_name);
-        temp_series.AddFileID(std::distance(file_list.begin(), file_it));
+        temp_series.SetInfo(st_text, se_text, temp_file.modality_name);
+        temp_series.AddFileID(
+          std::distance(file_list.begin(), file_it) - skipped_files
+        );
         series_list.push_back(temp_series);
       }
       else
       {
         series_list[(std::distance(series_list.begin(), series_it))].AddFileID(
-          std::distance(file_list.begin(), file_it));
+          std::distance(file_list.begin(), file_it) - skipped_files);
       }
     }
   }
@@ -167,7 +176,7 @@ namespace solutio {
     std::vector<std::string> file_list;
     if(series_id >= series_list.size())
     {
-      std::cout << "Warning: series could not be accessed\n";
+      std::cerr << "Warning: series number " << series_id << " is not available\n";
       return file_list;
     }
 
@@ -178,6 +187,13 @@ namespace solutio {
       file_list.push_back(ddf.GetPath());
     }
     return file_list;
+  }
+
+  GenericImage<float> DicomDatabase::GetImageSeries(unsigned int series_id,
+    std::function<void(float)> progress_function)
+  {
+    std::vector<std::string> file_list = GetSeriesFileNames(series_id);
+    return ReadImageSeries<float>(file_list, progress_function);
   }
 
   std::vector<std::string> DicomDatabase::PrintTree()
@@ -204,5 +220,37 @@ namespace solutio {
     }
 
     return print_text;
+  }
+
+  std::vector< std::pair<std::string,int> > DicomDatabase::GetTree()
+  {
+    std::vector< std::pair<std::string,int> > tree;
+    std::pair<std::string,int> temp;
+    for(unsigned int p = 0; p < patient_list.size(); p++)
+    {
+      temp.first = patient_list[p];
+      temp.second = 0;
+      tree.push_back(temp);
+      for(unsigned int st = 0; st < study_list.size(); st++)
+      {
+        if(study_list[st].second == patient_list[p])
+        {
+          temp.first = study_list[st].first;
+          temp.second = 1;
+          tree.push_back(temp);
+          for(unsigned int se = 0; se < series_list.size(); se++)
+          {
+            if(series_list[se].CheckStudy(study_list[st].first))
+            {
+              temp.first = series_list[se].GetModalityName()+
+                " ("+std::to_string(series_list[se].GetNumFiles())+" files)";
+              temp.second = 2;
+              tree.push_back(temp);
+            }
+          }
+        }
+      }
+    }
+    return tree;
   }
 }
