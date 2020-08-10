@@ -50,6 +50,7 @@ set(SOURCE
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/GammaIndex.cpp
 )
 
 set(HEADERS
@@ -78,6 +79,7 @@ set(HEADERS
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/GammaIndex.hpp
 )
 
 add_library(solutio STATIC ${SOURCE} ${HEADERS})
