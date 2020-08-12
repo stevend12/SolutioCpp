@@ -34,6 +34,8 @@
 
 #include <vector>
 
+#include "../Utilities/GenericImage.hpp"
+
 namespace solutio
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -71,6 +73,13 @@ namespace solutio
   using DoublePairVec = std::vector< std::pair<double,double> >;
   std::vector<double> CalcGammaIndex(DoublePairVec test_dose,
     DoublePairVec ref_dose, GammaIndexSettings settings, double &pass_rate);
+
+  // Gamma index calculation for two 2D profiles
+  solutio::GenericImage<double> CalcGammaIndex2D(
+    solutio::GenericImage<double> test_dose,
+    solutio::GenericImage<double> ref_dose,
+    GammaIndexSettings settings, double &pass_rate
+  );
 }
 
 #endif

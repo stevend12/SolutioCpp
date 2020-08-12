@@ -108,4 +108,60 @@ namespace solutio
 
     return gamma_values;
   }
+
+  // Gamma index calculation for two 2D profiles
+  solutio::GenericImage<double> CalcGammaIndex2D(
+    solutio::GenericImage<double> test_dose,
+    solutio::GenericImage<double> ref_dose,
+    GammaIndexSettings settings, double &pass_rate)
+  {
+    solutio::GenericImage<double> gamma_image;
+
+    // Check for 2D, monochrome images
+    bool checks_out = true;
+    unsigned int * test_im_size = test_dose.GetImageSize();
+    unsigned int * ref_im_size = ref_dose.GetImageSize();
+    checks_out = (test_im_size[2] == 1) && (test_im_size[3] == 1) &&
+      (ref_im_size[2] == 1) && (ref_im_size[3] == 1);
+    if(!checks_out)
+    {
+      std::cout << "Test or reference dose image not monochrome 2D\n";
+      return gamma_image;
+    }
+
+    // Preliminary calculations
+    double max_dose = ref_dose.GetMaxValue();
+    double * ref_im_dim = ref_dose.GetPixelDimensions();
+    double * test_im_dim = test_dose.GetPixelDimensions();
+    double * ref_im_o = ref_dose.GetPixelOrigin();
+    double * test_im_o = test_dose.GetPixelOrigin();
+
+    // Calculate gamma index image
+    std::vector<double> gamma_vector;
+    std::vector<double> test_vector = test_dose.GetImage();
+    std::vector<double> ref_vector = ref_dose.GetImage();
+    double norm_dose, gamma, g, dose, tx, ty, rx, ry, dist;
+    for(auto it = test_vector.begin(); it != test_vector.end(); ++it)
+    {
+      if(*it < settings.Threshold*max_dose) gamma_vector.push_back(0.0);
+      else
+      {
+        tx = 0.0;
+        ty = 0.0;
+        for(auto itr = ref_vector.begin(); itr != ref_vector.end(); ++itr)
+        {
+          if(settings.GlobalMax) norm_dose = max_dose;
+          else norm_dose = *itr;
+          dose = ((*it - *itr) / norm_dose) / settings.DoseCriteria;
+          rx = 0.0;
+          ry = 0.0;
+          dist = sqrt(((tx-rx)*(tx-rx)) + ((ty-ry)*(ty-ry))) / settings.DistCriteria;
+          g = sqrt(dose*dose + dist*dist);
+          if(it == ref_vector.begin() || g < gamma) gamma = g;
+        }
+      }
+    }
+
+    return gamma_image;
+  }
 }
