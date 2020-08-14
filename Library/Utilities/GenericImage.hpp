@@ -68,8 +68,6 @@ namespace solutio
       // Calculation functions
       void CalcMaxValue();
       void CalcMinValue();
-      Vec3<double> CalcPixelCoordinate(unsigned int r, unsigned int c,
-        unsigned int s = 0);
     private:
       unsigned int image_size[4];
       double pixel_dimensions[3];
@@ -151,14 +149,6 @@ namespace solutio
   void GenericImage<T>::CalcMinValue()
   {
     min_pixel_value = *std::min_element(pixel_data.begin(), pixel_data.end());
-  }
-
-  Vec3<double> CalcPixelCoordinate(unsigned int r, unsigned int c,
-    unsigned int s = 0)
-  {
-    Vec3<double> position;
-    position.x = pixel_origin[0] +
-    return position;
   }
 }
 

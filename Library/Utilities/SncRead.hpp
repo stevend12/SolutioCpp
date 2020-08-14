@@ -34,11 +34,11 @@
 
 #include <string>
 
-#include "GenericImage.hpp"
+#include "itkImage.h"
 
 namespace solutio
 {
-  GenericImage<double> SncRead(std::string file_name);
+  itk::Image<double, 3>::Pointer SncRead(std::string file_name);
 }
 
 #endif

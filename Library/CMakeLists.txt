@@ -6,6 +6,10 @@ endif()
 
 project(solutio)
 
+# ITK
+find_package(ITK REQUIRED)
+include(${ITK_USE_FILE})
+
 # FFTW
 #find_library(FFTW_LIBRARY NAMES fftw3 fftw fftw3_omp)
 find_library(FFTW_LIBRARY NAMES fftw3)
@@ -85,7 +89,7 @@ set(HEADERS
 )
 
 add_library(solutio STATIC ${SOURCE} ${HEADERS})
-target_link_libraries(solutio ${FFTW_LIBRARIES} ${DCMTK_LIBRARIES})
+target_link_libraries(solutio ${ITK_LIBRARIES} ${FFTW_LIBRARIES} ${DCMTK_LIBRARIES})
 
 # Install library
 install(
