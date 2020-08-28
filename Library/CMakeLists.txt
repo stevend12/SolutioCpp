@@ -6,6 +6,10 @@ endif()
 
 project(solutio)
 
+# ITK
+find_package(ITK REQUIRED)
+include(${ITK_USE_FILE})
+
 # FFTW
 #find_library(FFTW_LIBRARY NAMES fftw3 fftw fftw3_omp)
 find_library(FFTW_LIBRARY NAMES fftw3)
@@ -44,12 +48,15 @@ set(SOURCE
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.cpp
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SncRead.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DcmtkRead.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomDatabase.cpp
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/GammaIndex.cpp
 )
 
 set(HEADERS
@@ -70,7 +77,8 @@ set(HEADERS
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/DataInterpolation.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/GenericImage.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SncRead.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SolutioItk.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.h
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DcmtkRead.hpp
@@ -78,10 +86,11 @@ set(HEADERS
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/GammaIndex.hpp
 )
 
 add_library(solutio STATIC ${SOURCE} ${HEADERS})
-target_link_libraries(solutio ${FFTW_LIBRARIES} ${DCMTK_LIBRARIES})
+target_link_libraries(solutio ${ITK_LIBRARIES} ${FFTW_LIBRARIES} ${DCMTK_LIBRARIES})
 
 # Install library
 install(

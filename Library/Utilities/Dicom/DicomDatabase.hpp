@@ -35,7 +35,9 @@
 #include <string>
 #include <vector>
 
-#include "../GenericImage.hpp"
+#include <itkImage.h>
+
+#include "../SolutioItk.hpp"
 #include "DcmtkRead.hpp"
 
 namespace solutio {
@@ -86,11 +88,10 @@ namespace solutio {
       DicomDatabaseFile GetFile(unsigned int id){ return dicom_files[id]; }
       DicomDatabaseSeries GetSeries(unsigned int id){ return series_list[id]; }
       std::vector<std::string> GetSeriesFileNames(unsigned int series_id);
-      GenericImage<float> GetImageSeries(unsigned int series_id,
+      ItkImageF3::Pointer GetImageSeries(unsigned int series_id,
         std::function<void(float)> progress_function =
           [](float p){ std::cout << 100.0*p << "%\n"; });
-      template<typename T>
-        GenericImage<T> GetRTDose(unsigned int series_id);
+      ItkImageF3::Pointer GetRTDose(unsigned int series_id);
       std::vector<std::string> PrintTree();
       std::vector< std::pair<std::string,int> > GetTree();
     private:
@@ -99,13 +100,6 @@ namespace solutio {
       std::vector< std::pair<std::string, std::string> > study_list;
       std::vector<DicomDatabaseSeries> series_list;
   };
-
-  template<typename T>
-  GenericImage<T> DicomDatabase::GetRTDose(unsigned int series_id)
-  {
-    std::vector<std::string> file_list = GetSeriesFileNames(series_id);
-    return ReadRTDose<T>(file_list[0]);
-  }
 }
 
 #endif

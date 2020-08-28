@@ -18,60 +18,25 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// DCMTK Read Functions                                                       //
-// (DcmtkRead.hpp)                                                            //
+// ITK Utilities                                                              //
+// (SolutioItk.hpp)                                                           //
 //                                                                            //
 // Steven Dolly                                                               //
-// June 4, 2020                                                               //
+// August 18, 2020                                                            //
 //                                                                            //
-// This file contains utility functions to read DICOM files using DCMTK.      //
+// This file contains utilities to extend ITK for the SolutioCpp library.     //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef DCMTKREAD_HPP
-#define DCMTKREAD_HPP
+#ifndef SOLUTIOITK_HPP
+#define SOLUTIOITK_HPP
 
-#include <string>
-
-#include <dcmtk/config/osconfig.h>
-#include <dcmtk/dcmdata/dctk.h>
-
-#include "../SolutioItk.hpp"
+#include <itkImage.h>
 
 namespace solutio
 {
-  // DCMTK helper functions
-  template<class T>
-  T GetDicomValue(DcmDataset * data, DcmTagKey key)
-  {
-    T output;
-    OFString v;
-    if(data->findAndGetOFString(key, v).good()) std::stringstream(v.c_str()) >> output;
-    return output;
-  }
-
-  template<class T>
-  std::vector<T> GetDicomArray(DcmDataset * data, DcmTagKey key, int length)
-  {
-    std::vector<T> output;
-    for(int l = 0; l < length; l++)
-    {
-      T val;
-      OFString s_val;
-      data->findAndGetOFString(key, s_val, l);
-      std::stringstream(s_val.c_str()) >> val;
-      output.push_back(val);
-    }
-    return output;
-  }
-
-  ItkImageF3::Pointer ReadImageSeries(std::vector<std::string> file_list,
-    std::function<void(float)> progress_function =
-      [](float p){ std::cout << 100.0*p << "%\n"; });
-
-  ItkImageF3::Pointer ReadRTDose(std::string file_name,
-    std::function<void(float)> progress_function =
-      [](float p){ std::cout << "Loading RT Dose: " << 100.0*p << "%\n"; });
+  typedef itk::Image<float, 3> ItkImageF3;
+  typedef itk::Image<double, 3> ItkImageD3;
 }
 
 #endif
