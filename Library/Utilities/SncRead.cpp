@@ -41,76 +41,16 @@
 
 namespace solutio
 {
-  /*
-  GenericImage<double> SncRead(std::string file_name)
-  {
-    GenericImage<double> dose_image;
-    std::vector<double> pixel_data;
-
-    unsigned int n_rows = 0, n_cols = 0;
-    double x0, y0, x1, y1, dx, dy, dose, v_max, v_min;
-
-    std::string txt = "";
-    std::ifstream fin(file_name.c_str());
-    while(txt != "Dose Interpolated") std::getline(fin, txt);
-    std::getline(fin, txt); std::getline(fin, txt);
-    do
-    {
-      n_rows++;
-      std::vector<std::string> elems = solutio::LineRead(txt, '\t');
-
-      if(n_rows == 1)
-      {
-        std::stringstream(elems[0]) >> y0;
-        std::stringstream(elems[2]) >> dose;
-        v_min = v_max = dose;
-        n_cols = elems.size() - 2;
-      }
-      if(n_rows == 2)
-      {
-        std::stringstream(elems[0]) >> y1;
-        dy = y1 - y0;
-      }
-
-      for(int n = 2; n < elems.size(); n++)
-      {
-        std::stringstream(elems[n]) >> dose;
-        if(dose < v_min) v_min = dose;
-        if(dose > v_max) v_max = dose;
-        pixel_data.push_back(dose);
-      }
-      std::getline(fin, txt);
-    } while(txt.find("COL") == std::string::npos);
-
-    std::getline(fin, txt);
-    std::vector<std::string> elems = solutio::LineRead(txt, '\t');
-    std::stringstream(elems[2]) >> x0;
-    std::stringstream(elems[3]) >> x1;
-    dx = x1 - x0;
-
-    fin.close();
-
-    dose_image.SetImageSize(n_rows, n_cols, 1, 1);
-    dose_image.SetPixelDimensions(dx, dy, 0.0);
-    dose_image.SetPixelOrigin(x0, y0, 0.0);
-    dose_image.SetDirectionCosines(1.0, 0.0, 0.0, 0.0, -1.0, 0.0);
-    dose_image.SetMaxValue(v_max);
-    dose_image.SetMinValue(v_min);
-    dose_image.SetImage(pixel_data);
-
-    return dose_image;
-  }
-  */
-  itk::Image<double, 3>::Pointer SncRead(std::string file_name)
+  ItkImageF3::Pointer SncRead(std::string file_name)
   {
     // Create output image pointer
-    using ImageType = itk::Image<double, 3>;
-    ImageType::Pointer dose_image = itk::Image<double, 3>::New();
+    using ImageType = ItkImageF3;
+    ImageType::Pointer dose_image = ImageType::New();
 
     // Read in pixel data and other info
-    std::vector<double> pixel_data;
+    std::vector<float> pixel_data;
     unsigned int n_rows = 0, n_cols = 0;
-    double x0, y0, x1, y1, dx, dy, dose;
+    float x0, y0, x1, y1, dx, dy, dose;
 
     std::string txt = "";
     std::ifstream fin(file_name.c_str());
@@ -136,7 +76,7 @@ namespace solutio
       for(int n = 2; n < elems.size(); n++)
       {
         std::stringstream(elems[n]) >> dose;
-        pixel_data.push_back(dose);
+        pixel_data.push_back(0.01*dose);
       }
       std::getline(fin, txt);
     } while(txt.find("COL") == std::string::npos);
@@ -148,8 +88,6 @@ namespace solutio
     dx = x1 - x0;
 
     fin.close();
-
-    std::cout << n_rows << ' ' << n_cols << '\n';
 
     // Assign to ITK image
     ImageType::SizeType size;
@@ -169,14 +107,14 @@ namespace solutio
     dose_image->FillBuffer(itk::NumericTraits<double>::Zero);
 
     double origin[3];
-    origin[0] = x0;
+    origin[0] = 10.0*x0;
     origin[1] = 0.0;
-    origin[2] = y0;
+    origin[2] = 10.0*y0;
     dose_image->SetOrigin(origin);
 
     double spacing[3];
-    spacing[0] = fabs(dx);
-    spacing[1] = fabs(dy);
+    spacing[0] = fabs(10.0*dx);
+    spacing[1] = fabs(10.0*dy);
     spacing[2] = 1.0;
     dose_image->SetSpacing(spacing);
 
