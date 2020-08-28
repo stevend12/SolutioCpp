@@ -18,8 +18,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// Gamma Analysis Functions                                                   //
-// (GammaAnalysis.hpp)                                                        //
+// Gamma Index Calculation Functions                                          //
+// (GammaIndex.hpp)                                                           //
 //                                                                            //
 // Steven Dolly                                                               //
 // July 28, 2020                                                              //
@@ -34,7 +34,7 @@
 
 #include <vector>
 
-#include "../Utilities/GenericImage.hpp"
+#include "../Utilities/SolutioItk.hpp"
 
 namespace solutio
 {
@@ -50,14 +50,24 @@ namespace solutio
   //                                                                          //
   // DistCriteria: Units should match units for input doses                   //
   //                                                                          //
+  // PassThreshold: The gamma value threshold to determine the gamma pass     //
+  // rate (almost always equal to 1)                                          //
+  //                                                                          //
+  // DoseThreshold: Cutoff for gamma pass rate calculation. Example: a value  //
+  // of 0.1 means that all dose values less than 10% of the reference max     //
+  // dose will not be included in the pass rate calculation.                  //
+  //                                                                          //
+  // SearchRadius: The search radius for the reference dose values used to    //
+  // calculate gamma. Rather than calculating gamma for every reference dose  //
+  // point at every test point, only the reference points within this radial  //
+  // distance from the test point will be used for calculation. Expressed     //
+  // relative to the DistCriteria. For example, if DistCriteria = 3 mm and    //
+  // the SearchRadius = 2, then the search distance will be 2*3 = 6 mm.       //
+  //                                                                          //
   // ResampleRate: Determines the resampling rate of the reference dose used  //
   // for calculation. Smaller values lead to more accurate gamma values but   //
   // at the cost of increased calculation times. A value < 0 will result in   //
-  // the function calculating its own rate.                                   //
-  //                                                                          //
-  // Threshold: Cutoff for gamma pass rate calculation. Example: a value of   //
-  // 0.1 means that all dose values less than 10% of the reference max dose   //
-  // will not be included in the pass rate calculation.                       //
+  // the function calculating its own rate. Only used for 1D calculations.    //
   //                                                                          //
   //////////////////////////////////////////////////////////////////////////////
   struct GammaIndexSettings
@@ -65,19 +75,20 @@ namespace solutio
     bool GlobalMax = true;
     double DoseCriteria = 0.03;
     double DistCriteria = 3.0;
+    double PassThreshold = 1.0;
+    double DoseThreshold = 0.1;
+    double SearchRadius = 2.0;
     double ResampleRate = -1.0;
-    double Threshold = 0.1;
   };
 
-  // Gamma index calculation for two 1D dose profiles
+  // Gamma index calculation for 1D dose profiles
   using DoublePairVec = std::vector< std::pair<double,double> >;
   std::vector<double> CalcGammaIndex(DoublePairVec test_dose,
     DoublePairVec ref_dose, GammaIndexSettings settings, double &pass_rate);
 
-  // Gamma index calculation for two 2D profiles
-  solutio::GenericImage<double> CalcGammaIndex2D(
-    solutio::GenericImage<double> test_dose,
-    solutio::GenericImage<double> ref_dose,
+  // Gamma index calculation for 2D dose images
+  ItkImageF3::Pointer CalcGammaIndex2D(
+    ItkImageF3::Pointer test_dose, ItkImageF3::Pointer ref_dose,
     GammaIndexSettings settings, double &pass_rate
   );
 }
