@@ -271,6 +271,26 @@ namespace solutio
     return (density*LogInterpolation(energies, mass_energy_absorption, energy));
   }
 
+  // Calculate effective atomic number
+  double NistPad::PowerLawEffectiveZ(double m)
+  {
+    double z_eff = 0.0, sum_f = 0.0, f;
+    std::vector<double> f_list;
+    for(int n = 0; n < atomic_composition.size(); n++)
+    {
+      f = atomic_composition[n].second *
+        ElementZARatio[(atomic_composition[n].first)];
+      f_list.push_back(f);
+      sum_f += f;
+    }
+    for(int n = 0; n < atomic_composition.size(); n++)
+    {
+      z_eff += (f_list[n]/sum_f)*pow(double(atomic_composition[n].first), m);
+    }
+    z_eff = pow(z_eff, 1.0/m);
+    return z_eff;
+  }
+
   // Prints data to vector of strings (each entry is a line of text, with
   // no newline characters)
   std::vector<std::string> NistPad::Print()
