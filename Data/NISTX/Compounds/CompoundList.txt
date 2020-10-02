@@ -23,10 +23,10 @@ Gafchromic Sensor	Gafchromic.nistx
 Gallium Arsenide	GalliumArsenide.nistx
 Glass, Borosilicate (Pyrex)	Pyrex.nistx
 Glass, Lead	LeadGlass.nistx
-Lithium Fluoride	LithiumFlouride.nistx
+Lithium Fluoride	LithiumFluoride.nistx
 Lithium Tetraborate	LithiumTetraborate.nistx
 Lung Tissue (ICRU-44)	Lung.nistx
-Magnesium Tetroborate	MagnesiumTetroborate.nistx
+Magnesium Tetroborate	MagnesiumTetraborate.nistx
 Mercuric Iodide	MercuricIodide.nistx
 Muscle, Skeletal (ICRU-44)	Muscle.nistx
 Ovary (ICRU-44)	Ovary.nistx
@@ -38,7 +38,7 @@ Polyethylene Terephthalate, (Mylar)	Mylar.nistx
 Polymethyl Methacrylate	PMMA.nistx
 Polystyrene	Polystyrene.nistx
 Polytetrafluoroethylene, (Teflon)	Teflon.nistx
-Polyvinyl Chloride	PolyvinylChloride.nistx
+Polyvinyl Chloride	Polyvinyl.nistx
 Radiochromic Dye Film, Nylon Base	NylonRadiochromic.nistx
 Testis (ICRU-44)	Testis.nistx
 Tissue, Soft (ICRU-44)	Tissue.nistx
