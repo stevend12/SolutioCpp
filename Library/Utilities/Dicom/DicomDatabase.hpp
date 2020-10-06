@@ -49,23 +49,29 @@ namespace solutio {
   {
     public:
       DicomDatabaseFile();
+      bool ReadDicomInfo(std::string file_name);
       std::string GetPatientName(){ return patient_name; }
       std::string GetStudyUID(){ return study_uid; }
       std::string GetSeriesUID(){ return series_uid; }
-      std::string modality_name;
-      bool ReadDicomInfo(std::string file_name);
       std::string GetPath(){ return file_path; }
+      std::string GetModality(){ return modality_name; }
+      std::string GetRefFrameUID(){ return ref_frame_uid; }
+      std::string GetDisplayName(){ return display_name; }
     private:
-      std::string file_path;
       std::string patient_name;
       std::string study_uid;
       std::string series_uid;
+      std::string file_path;
+      std::string modality_name;
+      std::string ref_frame_uid;
+      std::string display_name;
   };
-  // Struct that contains a DICOM series (i.e. a group of DICOM files)
+  // Struct that contains a DICOM series (i.e. a group of DICOM files sharing
+  // the same series UID)
   class DicomDatabaseSeries
   {
     public:
-      void SetInfo(std::string psuid, std::string suid, std::string mn);
+      void SetInfo(DicomDatabaseFile &ddf);
       void AddFileID(int id){ file_ids.push_back(id); }
       bool CheckStudy(std::string uid){ return (uid == parent_study_uid); }
       unsigned int GetNumFiles(){ return file_ids.size(); }
@@ -73,10 +79,13 @@ namespace solutio {
       std::string GetStudyUID(){ return parent_study_uid; }
       std::string GetSeriesUID(){ return series_uid; }
       std::string GetModalityName(){ return modality_name; }
+      std::string GetDisplayName(){ return display_name; }
     private:
       std::string parent_study_uid;
       std::string series_uid;
       std::string modality_name;
+      std::string ref_frame_uid;
+      std::string display_name;
       std::vector<unsigned int> file_ids;
   };
 

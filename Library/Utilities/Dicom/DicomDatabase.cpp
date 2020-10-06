@@ -41,11 +41,11 @@ namespace solutio {
       std::make_tuple("1.2.840.10008.5.1.4.1.1.2","CT","CT"),
       std::make_tuple("1.2.840.10008.5.1.4.1.1.4","MR","MR"),
       std::make_tuple("1.2.840.10008.5.1.4.1.1.128","PET","PET"),
-      //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.1","RTIMAGE","RI"),
-      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.2","RTDOSE","RD")
-      //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.3","RTSTRUCT","RS")
-      //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.4","RTBEAMS","RT")
-      //std::make_tuple("1.2.840.10008.5.1.4.1.1.481.5","RTPLAN","RP")
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.1","RTIMAGE","RI"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.2","RTDOSE","RD"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.3","RTSTRUCT","RS"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.4","RTBEAMS","RT"),
+      std::make_tuple("1.2.840.10008.5.1.4.1.1.481.5","RTPLAN","RP")
       /*
       else if(class_uid == "1.2.840.10008.5.1.4.1.1.2.1") modality_name = "eCT";
       else if(class_uid == "1.2.840.10008.5.1.4.1.1.4.1") modality_name = "eMR";
@@ -78,14 +78,42 @@ namespace solutio {
       patient_name = GetDicomValue<std::string>(data, DCM_PatientName);
       study_uid = GetDicomValue<std::string>(data, DCM_StudyInstanceUID);
       series_uid = GetDicomValue<std::string>(data, DCM_SeriesInstanceUID);
+      ref_frame_uid = GetDicomValue<std::string>(data, DCM_FrameOfReferenceUID);
       // Assign modality label based on SOP class UID; match to supported list
-      if(class_uid[(class_uid.length()-1)] == '\0') class_uid.erase(class_uid.length()-1);
-
+      if(class_uid[(class_uid.length()-1)] == '\0')
+      {
+        class_uid.erase(class_uid.length()-1);
+      }
       auto it = std::find_if(SupportedIODList.begin(), SupportedIODList.end(),
         [&class_uid](const std::tuple<std::string, std::string, std::string>& e)
           {return std::get<0>(e) == class_uid;});
-      if (it != SupportedIODList.end()) modality_name = std::get<2>(*it);
+      if (it != SupportedIODList.end()) modality_name = std::get<1>(*it);
       else modality_name = "Not Supported";
+      // Assign display name based on modality
+      if(modality_name == "RTIMAGE")
+      {
+        display_name = GetDicomValue<std::string>(data, DCM_RTImageLabel);
+      }
+      else if(modality_name == "RTDOSE")
+      {
+        display_name = GetDicomValue<std::string>(data, DCM_SeriesDescription);
+      }
+      else if(modality_name == "RTSTRUCT")
+      {
+        display_name = GetDicomValue<std::string>(data, DCM_StructureSetLabel);
+      }
+      else if(modality_name == "RTBEAMS")
+      {
+        display_name = GetDicomValue<std::string>(data, DCM_SeriesDescription);
+      }
+      else if(modality_name == "RTPLAN")
+      {
+        display_name = GetDicomValue<std::string>(data, DCM_RTPlanLabel);
+      }
+      else
+      {
+        display_name = GetDicomValue<std::string>(data, DCM_SeriesDescription);
+      }
     }
     else
     {
@@ -100,11 +128,13 @@ namespace solutio {
     return true;
   }
 
-  void DicomDatabaseSeries::SetInfo(std::string psuid, std::string suid, std::string mn)
+  void DicomDatabaseSeries::SetInfo(DicomDatabaseFile &ddf)
   {
-    parent_study_uid = psuid;
-    series_uid = suid;
-    modality_name = mn;
+    parent_study_uid = ddf.GetStudyUID();
+    series_uid = ddf.GetSeriesUID();
+    modality_name = ddf.GetModality();
+    ref_frame_uid = ddf.GetRefFrameUID();
+    display_name = ddf.GetDisplayName();
   }
 
   void DicomDatabase::MakeDatabase(std::string database_path)
@@ -157,7 +187,7 @@ namespace solutio {
       if(series_it == series_list.end())
       {
         DicomDatabaseSeries temp_series;
-        temp_series.SetInfo(st_text, se_text, temp_file.modality_name);
+        temp_series.SetInfo(temp_file);
         temp_series.AddFileID(
           std::distance(file_list.begin(), file_it) - skipped_files
         );
@@ -217,8 +247,12 @@ namespace solutio {
           {
             if(series_list[se].CheckStudy(study_list[st].first))
             {
-              print_text.push_back("    "+series_list[se].GetModalityName()+
-                " ("+std::to_string(series_list[se].GetNumFiles())+" files)");
+              std::string txt = "    "+series_list[se].GetDisplayName()+
+              " (" + series_list[se].GetModalityName()+
+                ", "+std::to_string(series_list[se].GetNumFiles())+" file";
+              if(series_list[se].GetNumFiles() == 1) txt += ")";
+              else txt += "s)";
+              print_text.push_back(txt);
             }
           }
         }
@@ -248,8 +282,12 @@ namespace solutio {
           {
             if(series_list[se].CheckStudy(study_list[st].first))
             {
-              temp.first = series_list[se].GetModalityName()+
-                " ("+std::to_string(series_list[se].GetNumFiles())+" files)";
+              std::string txt = series_list[se].GetDisplayName() + " ("
+                + series_list[se].GetModalityName() +
+                ", "+std::to_string(series_list[se].GetNumFiles())+" file";
+              if(series_list[se].GetNumFiles() == 1) txt += ")";
+              else txt += "s)";
+              temp.first = txt;
               temp.second = 2;
               tree.push_back(temp);
             }
