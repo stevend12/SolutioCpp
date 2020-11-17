@@ -34,6 +34,7 @@
 #include <dcmtk/dcmimgle/dcmimage.h>
 #include <dcmtk/dcmiod/iodcommn.h>
 #include <dcmtk/dcmrt/drmdose.h>
+#include <dcmtk/dcmrt/drmstrct.h>
 
 namespace solutio
 {
@@ -350,7 +351,6 @@ namespace solutio
               int n_slice = d / (size[0]*size[1]);
               int c = d % size[0];
               int r = (d - (n_slice*size[0]*size[1])) / size[0];
-              //std::cout << d << ' ' << c << ' ' << r << ' ' << n_slice << '\n';
               const ImageType::IndexType pixel_index = {{c, r, n_slice}};
               output_image->SetPixel(pixel_index, *it);
             }
@@ -383,5 +383,96 @@ namespace solutio
     }
 
     return output_image;
+  }
+
+  RTStructureSet ReadRTS(std::string file_name,
+    std::function<void(float)> progress_function)
+  {
+    RTStructureSet rts;
+    Sint32 roi_num, ref_num, con_num, col_num[3], con_id, num_points;
+    OFString name, geo_type, att_con;
+    OFVector<Float64> point_data;
+
+    // Read in DICOM image modules using DCMTK
+    DRTStructureSet rts_dcm;
+    OFCondition status = rts_dcm.loadFile(file_name.c_str());
+    if(status.good())
+    {
+      DRTStructureSetROISequence roi_seq = rts_dcm.getStructureSetROISequence();
+      if(!roi_seq.isValid())
+      {
+        std::cout << "Error: StructureSetROISequence not valid\n";
+        return rts;
+      }
+      DRTROIContourSequence roi_con_seq = rts_dcm.getROIContourSequence();
+      if(!roi_con_seq.isValid())
+      {
+        std::cout << "Error: ROIContourSequence not valid\n";
+        return rts;
+      }
+      for(int n = 0; n < roi_seq.getNumberOfItems(); n++)
+      {
+        solutio::Vec3<double> point;
+        RTStructure s;
+        DRTStructureSetROISequence::Item roi_seq_it = roi_seq.getItem(n);
+        DRTROIContourSequence::Item roi_con_seq_it;
+        // Set name
+        roi_seq_it.getROIName(name);
+        s.SetName(std::string(name.c_str()));
+        // Find contour data based on ROI number
+        roi_seq_it.getROINumber(roi_num);
+        for(int c = 0; c < roi_con_seq.getNumberOfItems(); c++)
+        {
+          roi_con_seq[c].getReferencedROINumber(con_num);
+          if(con_num == roi_num)
+          {
+            ref_num = c;
+            break;
+          }
+        }
+        // Get contour data
+        roi_con_seq_it = roi_con_seq.getItem(ref_num);
+        if(roi_con_seq_it.isValid())
+        {
+          // Contour color
+          for(int c = 0; c < 3; c++)
+          {
+            roi_con_seq_it.getROIDisplayColor(col_num[c], c);
+          }
+          s.SetColor(float(col_num[0]) / 255.0, float(col_num[1]) / 255.0,
+            float(col_num[2]) / 255.0);
+          // Contour data
+          DRTContourSequence con_seq = roi_con_seq_it.getContourSequence();
+          for(int c = 0; c < con_seq.getNumberOfItems(); c++)
+          {
+            StructureContour contour;
+            con_seq[c].getContourGeometricType(geo_type);
+            contour.SetGeometricType(std::string(geo_type.c_str()));
+            con_seq[c].getContourData(point_data);
+            con_seq[c].getNumberOfContourPoints(num_points);
+            for(int p = 0; p < 3*num_points; p+=3)
+            {
+              point.x = point_data[p];
+              point.y = point_data[p+1];
+              point.z = point_data[p+2];
+              contour.AddPoint(point);
+            }
+            s.AddContour(contour);
+          }
+        }
+        else
+        {
+          std::cout << name << ": " << status.text() << '\n';
+          continue;
+        }
+        std::cout << roi_num << ": " << s.GetName() << " (" << s.GetColor(0) <<
+          ", " << s.GetColor(1) << ", " << s.GetColor(2) << "), " <<
+          s.GetNumContours() << " contours\n";
+        rts.AddStructure(s);
+      }
+    }
+    else std::cout << status.text() << '\n';
+
+    return rts;
   }
 }

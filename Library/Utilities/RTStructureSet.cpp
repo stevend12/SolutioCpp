@@ -18,65 +18,74 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// DCMTK Read Functions                                                       //
-// (DcmtkRead.hpp)                                                            //
+// RT Structure Set                                                           //
+// (RTStructureSet.cpp)                                                       //
 //                                                                            //
 // Steven Dolly                                                               //
-// June 4, 2020                                                               //
+// October 6, 2020                                                            //
 //                                                                            //
-// This file contains utility functions to read DICOM files using DCMTK.      //
+// This is the main for the classes which load, store, and manipulate         //
+// individual RT structure as well as sets of RT structures.                  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef DCMTKREAD_HPP
-#define DCMTKREAD_HPP
+#include "RTStructureSet.hpp"
 
-#include <string>
-
-#include <dcmtk/config/osconfig.h>
-#include <dcmtk/dcmdata/dctk.h>
-
-#include "../SolutioItk.hpp"
-#include "../RTStructureSet.hpp"
+#include <algorithm>
 
 namespace solutio
 {
-  // DCMTK helper functions
-  template<class T>
-  T GetDicomValue(DcmDataset * data, DcmTagKey key)
+  void RTStructure::SetColor(float r, float g, float b)
   {
-    T output;
-    OFString v;
-    if(data->findAndGetOFString(key, v).good()) std::stringstream(v.c_str()) >> output;
-    return output;
+    color[0] = r; color[1] = g; color[2] = b;
   }
 
-  template<class T>
-  std::vector<T> GetDicomArray(DcmDataset * data, DcmTagKey key, int length)
+  RTStructure RTStructureSet::GetStructure(int id)
   {
-    std::vector<T> output;
-    for(int l = 0; l < length; l++)
+    if(id < structures.size()) return structures[id];
+    else
     {
-      T val;
-      OFString s_val;
-      data->findAndGetOFString(key, s_val, l);
-      std::stringstream(s_val.c_str()) >> val;
-      output.push_back(val);
+      RTStructure s;
+      return s;
     }
-    return output;
   }
 
-  ItkImageF3::Pointer ReadImageSeries(std::vector<std::string> file_list,
-    std::function<void(float)> progress_function =
-      [](float p){ std::cout << 100.0*p << "%\n"; });
+  RTStructure RTStructureSet::GetStructure(std::string name)
+  {
+    for(int n = 0; n < structures.size(); n++)
+    {
+      if(name == structures[n].GetName()) return structures[n];
+    }
+    RTStructure s;
+    return s;
+  }
 
-  ItkImageF3::Pointer ReadRTDose(std::string file_name,
-    std::function<void(float)> progress_function =
-      [](float p){ std::cout << "Loading RT Dose: " << 100.0*p << "%\n"; });
-
-  RTStructureSet ReadRTS(std::string file_name,
-    std::function<void(float)> progress_function =
-      [](float p){ std::cout << "Loading RT Structures: " << 100.0*p << "%\n"; });
+  std::vector<double> RTStructureSet::SliceVectorZ()
+  {
+    std::vector<double> slice_z;
+    for(int n = 0; n < structures.size(); n++)
+    {
+      for(int c = 0; c < structures[n].GetNumContours(); c++)
+      {
+        StructureContour con = structures[n].GetContour(c);
+        Vec3<double> p = con.GetPoint(0);
+        if(slice_z.size() == 0) slice_z.push_back(p.z);
+        else
+        {
+          bool add_to = true;
+          for(int z = 0; z < slice_z.size(); z++)
+          {
+            if(fabs(slice_z[z] - p.z) < 1.0e-05)
+            {
+              add_to = false;
+              break;
+            }
+          }
+          if(add_to) slice_z.push_back(p.z);
+        }
+      }
+    }
+    std::sort(slice_z.begin(), slice_z.end());
+    return slice_z;
+  }
 }
-
-#endif

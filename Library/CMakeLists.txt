@@ -48,6 +48,7 @@ set(SOURCE
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.cpp
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTStructureSet.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SncRead.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.cc
@@ -77,6 +78,7 @@ set(HEADERS
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/DataInterpolation.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTStructureSet.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SncRead.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SolutioItk.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.hpp

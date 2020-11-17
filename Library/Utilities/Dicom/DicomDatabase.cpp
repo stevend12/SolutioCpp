@@ -232,6 +232,12 @@ namespace solutio {
     return ReadRTDose(file_list[0]);
   }
 
+  RTStructureSet DicomDatabase::GetRTS(unsigned int series_id)
+  {
+    std::vector<std::string> file_list = GetSeriesFileNames(series_id);
+    return ReadRTS(file_list[0]);
+  }
+
   std::vector<std::string> DicomDatabase::PrintTree()
   {
     std::vector<std::string> print_text;

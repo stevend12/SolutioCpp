@@ -101,6 +101,7 @@ namespace solutio {
         std::function<void(float)> progress_function =
           [](float p){ std::cout << 100.0*p << "%\n"; });
       ItkImageF3::Pointer GetRTDose(unsigned int series_id);
+      RTStructureSet GetRTS(unsigned int series_id);
       std::vector<std::string> PrintTree();
       std::vector< std::pair<std::string,int> > GetTree();
     private:
