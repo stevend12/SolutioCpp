@@ -51,9 +51,10 @@ set(SOURCE
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTStructureSet.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SncRead.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/VarianTrajectoryLog.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DcmtkRead.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomDatabase.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.cc
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.cpp
@@ -82,9 +83,10 @@ set(HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SncRead.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SolutioItk.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/VarianTrajectoryLog.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DcmtkRead.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomDatabase.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.h
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.hpp
