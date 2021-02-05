@@ -57,7 +57,7 @@ set(SOURCE
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.cc
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDoseTG43.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/GammaIndex.cpp
 )
 
@@ -89,7 +89,7 @@ set(HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.h
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDoseTG43.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/GammaIndex.hpp
 )
 
