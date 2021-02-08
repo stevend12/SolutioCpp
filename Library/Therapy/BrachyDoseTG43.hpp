@@ -39,7 +39,7 @@
 
 namespace solutio
 {
-  float GeometryFactorTG43(float r, float theta, bool is_line, float L);
+  float GeometryFactorTG43(float r, float theta, bool is_line = false, float L = 0.0);
 
   class BrachyDoseTG43
   {
