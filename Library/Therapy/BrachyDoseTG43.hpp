@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/* Copyright 2016-2017 Steven Dolly                                           */
+/* Copyright 2016 Steven Dolly                                                */
 /*                                                                            */
 /* Licensed under the Apache License, Version 2.0 (the "License");            */
 /* you may not use this file except in compliance with the License.           */
@@ -18,7 +18,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// BrachyDose43.hpp                                                           //
+// BrachyDoseTG43.hpp                                                         //
 // TG-43 Based Brachytherapy Dose Calculation Class                           //
 // Created November 3, 2017 (Steven Dolly)                                    //
 //                                                                            //
@@ -30,8 +30,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // Header guards
-#ifndef DOSETG43_HPP
-#define DOSETG43_HPP
+#ifndef BRACHYDOSETG43_HPP
+#define BRACHYDOSETG43_HPP
 
 // Standard C++ header files
 #include <string>
@@ -44,16 +44,16 @@
 namespace solutio
 {
   float GeometryFactorTG43(float r, float theta, bool is_line, float L);
-  
-  class BrachyDose43
+
+  class BrachyDoseTG43
   {
     public:
       // Load data from text file
       void LoadData(std::string file_name, char delimiter);
       // Get values
-      float Get_dose_rate_constant(){ return dose_rate_constant; }
-      float Get_g_r(float r);
-      float Get_anisotropy_2d(float r, float theta);
+      float GetDoseRateConstant(){ return dose_rate_constant; }
+      float GetRadialDoseFactor(float r);
+      float GetAnisotropyFactor(float r, float theta);
       // Calculate dose rate to point (r, theta), given air kerma strength (aks)
       float CalcDoseRate(float aks, float r, float theta);
     private:

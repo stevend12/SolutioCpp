@@ -18,7 +18,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// BrachyDose43.hpp                                                           //
+// BrachyDoseTG43.hpp                                                         //
 // TG-43 Based Brachytherapy Dose Calculation Class                           //
 // Created November 3, 2017 (Steven Dolly)                                    //
 //                                                                            //
@@ -30,7 +30,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // Class header
-#include "BrachyDose43.hpp"
+#include "BrachyDoseTG43.hpp"
 
 // Standard C++ header files
 #include <iostream>
@@ -71,8 +71,8 @@ namespace solutio
     }
     return geometry_factor;
   }
-  
-  void BrachyDose43::LoadData(std::string file_name, char delimiter)
+
+  void BrachyDoseTG43::LoadData(std::string file_name, char delimiter)
   {
     // Initialization and open file
     std::ifstream fin;
@@ -80,26 +80,26 @@ namespace solutio
     size_t p1, p2;
     bool reading = true;
     float temp;
-    
+
     fin.open(file_name.c_str());
-    
+
     // Get first line and display
     std::getline(fin, input);
     std::cout << input << '\n';
     std::getline(fin, input);
-    
+
     // Get dose rate constant and source length
     std::getline(fin, input);
     p1 = input.find(':'); p1++; p2 = input.find('c');
     std::stringstream(input.substr(p1)) >> dose_rate_constant;
     std::cout << "Dose rate constant: " << dose_rate_constant << '\n';
-    
+
     std::getline(fin, input);
     p1 = input.find(':'); p1++;
     std::stringstream(input.substr(p1)) >> source_length;
     std::cout << "Source length (cm): " << source_length << '\n';
     for(int n = 0; n < 3; n++){ std::getline(fin, input); }
-    
+
     // Get radial dose function data
     while(std::getline(fin, input))
     {
@@ -111,7 +111,7 @@ namespace solutio
       g_r_data.push_back(temp);
     }
     for(int n = 0; n < 3; n++){ std::getline(fin, input); }
-    
+
     // Get 2D anisotropy data
     std::getline(fin, input);
     std::vector<std::string> column = LineRead(input, delimiter);
@@ -126,7 +126,7 @@ namespace solutio
       std::vector<std::string> row = LineRead(input, delimiter);
       std::stringstream(row[0]) >> temp;
       theta_anisotropy_2d.push_back(temp);
-      
+
       std::vector<float> buffer;
       for(int n = 1; n < column.size(); n++)
       {
@@ -135,26 +135,26 @@ namespace solutio
       }
       anisotropy_2d_data.push_back(buffer);
     }
-    
+
     fin.close();
   }
-  
-  float BrachyDose43::Get_g_r(float r)
+
+  float BrachyDoseTG43::GetRadialDoseFactor(float r)
   {
     return solutio::LinearInterpolation(r_g_r, g_r_data, r);
   }
-  
-  float BrachyDose43::Get_anisotropy_2d(float r, float theta)
+
+  float BrachyDoseTG43::GetAnisotropyFactor(float r, float theta)
   {
     return solutio::LinearInterpolation(theta_anisotropy_2d, r_anisotropy_2d,
         anisotropy_2d_data, theta, r);
   }
-  
-  float BrachyDose43::CalcDoseRate(float aks, float r, float theta)
+
+  float BrachyDoseTG43::CalcDoseRate(float aks, float r, float theta)
   {
     float G = GeometryFactorTG43(r, theta, true, source_length);
-    float g = Get_g_r(r);
-    float F = Get_anisotropy_2d(r, theta);
+    float g = GetRadialDoseFactor(r);
+    float F = GetAnisotropyFactor(r, theta);
     return (aks*dose_rate_constant*G*g*F);
   }
 }
