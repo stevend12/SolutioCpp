@@ -43,13 +43,13 @@ namespace solutio
     radius = r;
     height = h;
   }
-  
+
   double Cylinder::CalcVolume()
   {
     volume = M_PI*pow(radius,2.0)*height;
     return volume;
   }
-  
+
   double Cylinder::RayPathlength(Ray3 ray)
   {
     double solution[2];

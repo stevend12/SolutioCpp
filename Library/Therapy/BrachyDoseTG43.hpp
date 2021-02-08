@@ -23,7 +23,7 @@
 // Created November 3, 2017 (Steven Dolly)                                    //
 //                                                                            //
 // This header file defines a class for dose calculation for brachytherapy    //
-// sources, using the TG-43 based methodology. The BrachyDose43 class reads   //
+// sources, using the TG-43 based methodology. The BrachyDoseTG43 class reads //
 // in source data and calculates the dose to a point for a given location, in //
 // polar coordinates.                                                         //
 //                                                                            //
@@ -36,10 +36,6 @@
 // Standard C++ header files
 #include <string>
 #include <vector>
-
-#ifndef M_PI
-#define M_PI (3.14159265358979323846)
-#endif
 
 namespace solutio
 {

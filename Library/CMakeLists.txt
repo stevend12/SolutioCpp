@@ -81,6 +81,7 @@ set(HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTStructureSet.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SncRead.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SolutioConstants.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SolutioItk.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/VarianTrajectoryLog.hpp

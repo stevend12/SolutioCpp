@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/* Copyright 2016-2017 Steven Dolly                                           */
+/* Copyright 2021 Steven Dolly                                                */
 /*                                                                            */
 /* Licensed under the Apache License, Version 2.0 (the "License");            */
 /* you may not use this file except in compliance with the License.           */
@@ -18,42 +18,22 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// Cylinder.hpp                                                               //
-// Cylinder Geometric Object Class                                            //
-// Created June 2, 2017 (Steven Dolly)                                        //
+// SolutioConstants.hpp                                                       //
+// SolutioCpp Math & Physics Constants                                        //
+// Created February 8, 2021 (Steven Dolly)                                    //
 //                                                                            //
-// This header file contains a class for a three-dimensional cylindrical      //
-// geometric object, including basic geometric definitions and ray            //
-// intersection calculations.                                                 //
+// This header file defines the math and physics constants used by the        //
+// SolutioCpp library.                                                        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef CYLINDER_HPP
-#define CYLINDER_HPP
-
-// Custom headers
-#include "Vec3.hpp"
-#include "Ray3.hpp"
-#include "GeometricObject.hpp"
+// Header guards
+#ifndef SOLUTIOCONSTANTS_HPP
+#define SOLUTIOCONSTANTS_HPP
 
 namespace solutio
 {
-  class Cylinder : public GeometricObject
-  {
-    public:
-      // Constructor and setter
-      Cylinder(Vec3<double> c, double r, double h);
-      // Get functions
-      Vec3<double> GetCentroid(){ return centroid; }
-      double GetRadius(){ return radius; }
-      double GetHeight(){ return height; }
-      // Calc functions
-      double CalcVolume();
-      double RayPathlength(Ray3 ray);
-    private:
-      double radius;
-      double height;
-  };
+  //double const M_PI = 3.14159265358979323846;
 }
 
 #endif
