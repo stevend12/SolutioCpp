@@ -72,7 +72,7 @@ namespace solutio
     return geometry_factor;
   }
 
-  void BrachyDoseTG43::LoadData(std::string file_name, char delimiter)
+  void BrachyDoseTG43::LoadData(std::string file_name)
   {
     // Initialization and open file
     std::ifstream fin;
@@ -83,17 +83,39 @@ namespace solutio
 
     fin.open(file_name.c_str());
 
-    // Get first line and display
+    /////////////////////////////////
+    // Get and display header data //
+    /////////////////////////////////
     std::getline(fin, input);
     std::cout << input << '\n';
     std::getline(fin, input);
-
-    // Get dose rate constant and source length
+    std::cout << input << '\n';
+    // Reference for data
     std::getline(fin, input);
-    p1 = input.find(':'); p1++; p2 = input.find('c');
+    p1 = input.find(' '); p1++;
+    reference = input.substr(p1);
+    std::cout << "Reference: " << reference << '\n';
+    // Source vendor name
+    std::getline(fin, input);
+    p1 = input.find(' '); p1++;
+    vendor_name = input.substr(p1);
+    std::cout << "Vendor: " << vendor_name << '\n';
+    // Source model name
+    std::getline(fin, input);
+    p1 = input.find(' '); p1++;
+    model_name = input.substr(p1);
+    std::cout << "Model: " << model_name << '\n';
+    // Source radionuclide name
+    std::getline(fin, input);
+    p1 = input.find(' '); p1++;
+    nuclide_name = input.substr(p1);
+    std::cout << "Nuclide: " << nuclide_name << '\n';
+    // Dose rate constant and source length
+    std::getline(fin, input);
+    p1 = input.find(':'); p1++;
     std::stringstream(input.substr(p1)) >> dose_rate_constant;
     std::cout << "Dose rate constant: " << dose_rate_constant << '\n';
-
+    // Source length
     std::getline(fin, input);
     p1 = input.find(':'); p1++;
     std::stringstream(input.substr(p1)) >> source_length;
@@ -104,7 +126,7 @@ namespace solutio
     while(std::getline(fin, input))
     {
       if(input.find("end radial dose function data") != std::string::npos) break;
-      std::vector<std::string> data = LineRead(input, delimiter);
+      std::vector<std::string> data = LineRead(input, ',');
       std::stringstream(data[0]) >> temp;
       r_g_r.push_back(temp);
       std::stringstream(data[1]) >> temp;
@@ -114,7 +136,7 @@ namespace solutio
 
     // Get 2D anisotropy data
     std::getline(fin, input);
-    std::vector<std::string> column = LineRead(input, delimiter);
+    std::vector<std::string> column = LineRead(input, ',');
     for(int n = 0; n < column.size(); n++)
     {
       std::stringstream(column[n]) >> temp;
@@ -123,7 +145,7 @@ namespace solutio
     while(std::getline(fin, input))
     {
       if(input.find("end 2d anisotropy factor data") != std::string::npos) break;
-      std::vector<std::string> row = LineRead(input, delimiter);
+      std::vector<std::string> row = LineRead(input, ',');
       std::stringstream(row[0]) >> temp;
       theta_anisotropy_2d.push_back(temp);
 

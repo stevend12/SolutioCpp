@@ -45,7 +45,7 @@ namespace solutio
   {
     public:
       // Load data from text file
-      void LoadData(std::string file_name, char delimiter);
+      void LoadData(std::string file_name);
       // Get values
       float GetDoseRateConstant(){ return dose_rate_constant; }
       float GetRadialDoseFactor(float r);
@@ -53,6 +53,11 @@ namespace solutio
       // Calculate dose rate to point (r, theta), given air kerma strength (aks)
       float CalcDoseRate(float aks, float r, float theta);
     private:
+      // Header data
+      std::string reference; // Reference for data
+      std::string vendor_name; // Source vendor name
+      std::string model_name; // Source model name
+      std::string nuclide_name; // Source radionuclide name
       // Dose rate constant
       float dose_rate_constant;
       // Source length
