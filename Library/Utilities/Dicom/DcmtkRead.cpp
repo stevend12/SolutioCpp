@@ -38,6 +38,15 @@
 
 namespace solutio
 {
+  template<>
+  std::string GetDicomValue<std::string>(DcmDataset * data, DcmTagKey key)
+  {
+    std::string output;
+    OFString v;
+    if(data->findAndGetOFString(key, v).good()) output = std::string(v.c_str());
+    return output;
+  }
+  
   ItkImageF3::Pointer ReadImageSeries(std::vector<std::string> file_list,
     std::function<void(float)> progress_function)
   {

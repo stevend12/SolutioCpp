@@ -32,6 +32,7 @@
 #define DCMTKREAD_HPP
 
 #include <string>
+#include <functional>
 
 #include <dcmtk/config/osconfig.h>
 #include <dcmtk/dcmdata/dctk.h>
