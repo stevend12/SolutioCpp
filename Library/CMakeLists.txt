@@ -48,6 +48,7 @@ set(SOURCE
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.cpp
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTPlan.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTStructureSet.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SncRead.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.cpp
@@ -79,6 +80,7 @@ set(HEADERS
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/DataInterpolation.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTPlan.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTStructureSet.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SncRead.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SolutioConstants.hpp
@@ -86,7 +88,9 @@ set(HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/VarianTrajectoryLog.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DcmtkRead.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomAttributes.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomDatabase.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomModules.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.h
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.hpp
