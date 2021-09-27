@@ -39,36 +39,58 @@
 
 namespace solutio
 {
-  float GeometryFactorTG43(float r, float theta, bool is_line = false, float L = 0.0);
+  double GeometryFactorTG43(double r, double theta, double L);
 
   class BrachyDoseTG43
   {
     public:
+      // Default constructor
+      BrachyDoseTG43();
       // Load data from text file
       void LoadData(std::string file_name);
+      bool IsLoaded(){ return data_loaded; }
+      // Pre-compute evenly-spaced tables for fast interpolation
+      void PreCompute(double d_radius, double d_theta);
+      // Write current data (with interpolated/pre-computed values) to text file
+      void WriteData(std::string file_name);
       // Get values
-      float GetDoseRateConstant(){ return dose_rate_constant; }
-      float GetRadialDoseFactor(float r);
-      float GetAnisotropyFactor(float r, float theta);
+      std::string GetNuclideName(){ return nuclide_name; }
+      std::string GetVendorName(){ return vendor_name; }
+      std::string GetModelName(){ return model_name; }
+      double GetDoseRateConstant(){ return dose_rate_constant; }
+      double GetSourceLength(){ return source_length; }
+      double GetRadialDoseFunctionPoint(double r);
+      double GetRadialDoseFunctionLine(double r);
+      double GetAnisotropyFunctionPoint(double r);
+      double GetAnisotropyFunctionLine(double r, double theta);
       // Calculate dose rate to point (r, theta), given air kerma strength (aks)
-      float CalcDoseRate(float aks, float r, float theta);
+      double CalcDoseRatePoint(double aks, double r);
+      double CalcDoseRateLine(double aks, double r, double theta);
     private:
+      // Internal parameters
+      bool data_loaded;
+      bool precomputed;
+      double delta_radius;
+      double delta_theta;
       // Header data
       std::string reference; // Reference for data
+      std::string source_type; // Type (HDR, LDR, PDR)
+      std::string nuclide_name; // Source radionuclide name
       std::string vendor_name; // Source vendor name
       std::string model_name; // Source model name
-      std::string nuclide_name; // Source radionuclide name
       // Dose rate constant
-      float dose_rate_constant;
+      double dose_rate_constant;
       // Source length
-      float source_length;
+      double source_length;
       // Radial dose function data
-      std::vector<float> r_g_r;
-      std::vector<float> g_r_data;
+      std::vector<double> r_g_r;
+      std::vector<double> g_r_line_data;
+      std::vector<double> g_r_point_data;
       // 2D anisotropy factor data
-      std::vector<float> theta_anisotropy_2d;
-      std::vector<float> r_anisotropy_2d;
-      std::vector< std::vector<float> > anisotropy_2d_data;
+      std::vector<double> theta_anisotropy_2d;
+      std::vector<double> r_anisotropy;
+      std::vector< std::vector<double> > anisotropy_2d_data;
+      std::vector<double> anisotropy_1d_data;
   };
 }
 

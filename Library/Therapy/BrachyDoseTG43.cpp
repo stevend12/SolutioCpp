@@ -46,30 +46,29 @@
 
 namespace solutio
 {
-  float GeometryFactorTG43(float r, float theta, bool is_line, float L)
+  double GeometryFactorTG43(double r, double theta, double L)
   {
-    float geometry_factor;
-    if(is_line)
+    double geometry_factor = 0.0;
+    double G_0 = (atan2(-L/2.0, 1.0) - atan2(L/2.0, 1.0)) / L;
+    if(theta == 0.0)
     {
-      float G_0 = (atan2(-L/2.0, 1.0) - atan2(L/2.0, 1.0)) / (L*r);
-      float beta = 1.0;
-      if(theta == 0.0)
-      {
-        geometry_factor = 1.0/(r*r - (L*L)/4.0);
-        geometry_factor /= G_0;
-      }
-      else {
-        float beta = atan2(r*cos(theta*(M_PI/180.0))-L/2.0, r*sin(theta*(M_PI/180.0)))
-            - atan2(r*cos(theta*(M_PI/180.0))+L/2.0, r*sin(theta*(M_PI/180.0)));
-        geometry_factor = beta/(L*r*sin(theta*(M_PI/180.0)));
-        geometry_factor /= G_0;
-      }
+      geometry_factor = 1.0/(r*r - (L*L)/4.0);
+      geometry_factor /= G_0;
     }
-    else
-    {
-      geometry_factor = 1.0/(r*r);
+    else {
+      double beta = atan2(r*cos(theta*(M_PI/180.0))-L/2.0, r*sin(theta*(M_PI/180.0)))
+          - atan2(r*cos(theta*(M_PI/180.0))+L/2.0, r*sin(theta*(M_PI/180.0)));
+      geometry_factor = beta/(L*r*sin(theta*(M_PI/180.0)));
+      geometry_factor /= G_0;
     }
     return geometry_factor;
+  }
+
+  // Default constructor
+  BrachyDoseTG43::BrachyDoseTG43()
+  {
+    data_loaded = false;
+    precomputed = false;
   }
 
   void BrachyDoseTG43::LoadData(std::string file_name)
@@ -79,50 +78,48 @@ namespace solutio
     std::string input, str;
     size_t p1, p2;
     bool reading = true;
-    float temp;
+    double temp;
+    std::vector<double>::iterator it1, it2;
 
     fin.open(file_name.c_str());
 
     /////////////////////////////////
     // Get and display header data //
     /////////////////////////////////
+    // Skip first two lines
     std::getline(fin, input);
-    std::cout << input << '\n';
     std::getline(fin, input);
-    std::cout << input << '\n';
     // Reference for data
     std::getline(fin, input);
     p1 = input.find(' '); p1++;
     reference = input.substr(p1);
-    std::cout << "Reference: " << reference << '\n';
-    // Source vendor name
+    // Source type
     std::getline(fin, input);
     p1 = input.find(' '); p1++;
-    vendor_name = input.substr(p1);
-    std::cout << "Vendor: " << vendor_name << '\n';
-    // Source model name
-    std::getline(fin, input);
-    p1 = input.find(' '); p1++;
-    model_name = input.substr(p1);
-    std::cout << "Model: " << model_name << '\n';
+    source_type = input.substr(p1);
     // Source radionuclide name
     std::getline(fin, input);
     p1 = input.find(' '); p1++;
     nuclide_name = input.substr(p1);
-    std::cout << "Nuclide: " << nuclide_name << '\n';
+    // Source vendor name
+    std::getline(fin, input);
+    p1 = input.find(' '); p1++;
+    vendor_name = input.substr(p1);
+    // Source model name
+    std::getline(fin, input);
+    p1 = input.find(' '); p1++;
+    model_name = input.substr(p1);
     // Dose rate constant and source length
     std::getline(fin, input);
     p1 = input.find(':'); p1++;
     std::stringstream(input.substr(p1)) >> dose_rate_constant;
-    std::cout << "Dose rate constant: " << dose_rate_constant << '\n';
     // Source length
     std::getline(fin, input);
     p1 = input.find(':'); p1++;
     std::stringstream(input.substr(p1)) >> source_length;
-    std::cout << "Source length (cm): " << source_length << '\n';
     for(int n = 0; n < 3; n++){ std::getline(fin, input); }
 
-    // Get radial dose function data
+    // Get radial dose function data; interpolate as needed
     while(std::getline(fin, input))
     {
       if(input.find("end radial dose function data") != std::string::npos) break;
@@ -130,53 +127,256 @@ namespace solutio
       std::stringstream(data[0]) >> temp;
       r_g_r.push_back(temp);
       std::stringstream(data[1]) >> temp;
-      g_r_data.push_back(temp);
+      g_r_line_data.push_back(temp);
+      std::stringstream(data[2]) >> temp;
+      g_r_point_data.push_back(temp);
+    }
+    // Nearest neighbor interpolation for r = 0
+    if(r_g_r[0] != 0.0)
+    {
+      it1 = r_g_r.begin();
+      r_g_r.insert(it1, 0.0);
+      it1 = g_r_line_data.begin();
+      g_r_line_data.insert(it1, g_r_line_data[0]);
+      it1 = g_r_point_data.begin();
+      g_r_point_data.insert(it1, g_r_point_data[0]);
     }
     for(int n = 0; n < 3; n++){ std::getline(fin, input); }
 
-    // Get 2D anisotropy data
+    // Get 2D anisotropy data; interpolate as needed
+    bool interpolate_zero = false;
     std::getline(fin, input);
     std::vector<std::string> column = LineRead(input, ',');
-    for(int n = 0; n < column.size(); n++)
+    for(int n = 1; n < column.size(); n++)
     {
       std::stringstream(column[n]) >> temp;
-      r_anisotropy_2d.push_back(temp);
+      r_anisotropy.push_back(temp);
+    }
+    double r_min = r_anisotropy[0];
+    if(r_anisotropy[0] != 0.0)
+    {
+      interpolate_zero = true;
+      it1 = r_anisotropy.begin();
+      r_anisotropy.insert(it1, 0.0);
     }
     while(std::getline(fin, input))
     {
-      if(input.find("end 2d anisotropy factor data") != std::string::npos) break;
+      if(input.find("end anisotropy function data") != std::string::npos) break;
       std::vector<std::string> row = LineRead(input, ',');
-      std::stringstream(row[0]) >> temp;
-      theta_anisotropy_2d.push_back(temp);
-
-      std::vector<float> buffer;
-      for(int n = 1; n < column.size(); n++)
+      if(row[0] == "point")
       {
-        std::stringstream(row[n]) >> temp;
-        buffer.push_back(temp);
+        for(int n = 1; n < column.size(); n++)
+        {
+          std::stringstream(row[n]) >> temp;
+          anisotropy_1d_data.push_back(temp);
+        }
+        if(interpolate_zero)
+        {
+          it1 = anisotropy_1d_data.begin();
+          anisotropy_1d_data.insert(it1, anisotropy_1d_data[0]);
+        }
       }
-      anisotropy_2d_data.push_back(buffer);
+      else
+      {
+        std::stringstream(row[0]) >> temp;
+        theta_anisotropy_2d.push_back(temp);
+
+        std::vector<double> buffer;
+        for(int n = column.size()-1; n > 0; n--)
+        {
+          if(row[n] == "-")
+          {
+            it1 = r_anisotropy.begin() + n + 1;
+            it2 = r_anisotropy.end();
+            std::vector<double> r_buf(it1, it2);
+            it1 = buffer.begin();
+            buffer.insert(it1,
+              LinearInterpolation<double>(r_buf, buffer, r_anisotropy[n]));
+          }
+          else
+          {
+            std::stringstream(row[n]) >> temp;
+            it1 = buffer.begin();
+            buffer.insert(it1, temp);
+          }
+        }
+        if(interpolate_zero)
+        {
+          it1 = buffer.begin();
+          buffer.insert(it1, buffer[0]);
+        }
+        anisotropy_2d_data.push_back(buffer);
+      }
     }
 
     fin.close();
+    data_loaded = true;
   }
 
-  float BrachyDoseTG43::GetRadialDoseFactor(float r)
+  void BrachyDoseTG43::WriteData(std::string file_name)
   {
-    return solutio::LinearInterpolation(r_g_r, g_r_data, r);
+    std::ofstream fout(file_name.c_str());
+    // Write header data
+    fout << "TG-43 Brachytherapy Source Data\n";
+    fout << "-------------------------------\n";
+    fout << "Reference: " << reference << '\n';
+    fout << "Source Type: " << source_type << '\n';
+    fout << "Nuclide: " << nuclide_name << '\n';
+    fout << "Vendor: " << vendor_name << '\n';
+    fout << "Model: " << model_name << '\n';
+    fout << "Dose Rate Constant: " << dose_rate_constant << '\n';
+    fout << "Source Length (cm): " << source_length << "\n\n";
+    // Radial dose function data
+    fout << "Radial Dose Function\n";
+    fout << "--------------------\n";
+    for(int n = 0; n < r_g_r.size(); n++)
+    {
+      fout << r_g_r[n] << ',' << g_r_line_data[n] << ',' << g_r_point_data[n]
+        << '\n';
+    }
+    fout << '\n';
+    // 2D anisotropy factor data
+    fout << "Anisotropy Function\n";
+    fout << "-------------------\n";
+    for(int n = 0; n < r_anisotropy.size(); n++)
+    {
+      fout << r_anisotropy[n];
+      if(n != r_anisotropy.size()-1) fout << ',';
+    }
+    fout << '\n';
+    for(int n = 0; n < theta_anisotropy_2d.size(); n++)
+    {
+      fout << theta_anisotropy_2d[n] << ',';
+      for(int a = 0; a < anisotropy_2d_data[n].size(); a++)
+      {
+        fout << anisotropy_2d_data[n][a];
+        if(n != anisotropy_2d_data[n].size()-1) fout << ',';
+      }
+      fout << '\n';
+    }
+    fout << "point,";
+    for(int a = 0; a < anisotropy_1d_data.size(); a++)
+    {
+      fout << anisotropy_1d_data[a];
+      if(a != anisotropy_1d_data.size()-1) fout << ',';
+    }
+    fout << '\n';
+
+    fout.close();
   }
 
-  float BrachyDoseTG43::GetAnisotropyFactor(float r, float theta)
+  void BrachyDoseTG43::PreCompute(double d_radius, double d_theta)
   {
-    return solutio::LinearInterpolation(theta_anisotropy_2d, r_anisotropy_2d,
+    if(data_loaded)
+    {
+      delta_radius = d_radius;
+      delta_theta = d_theta;
+      double x;
+      std::vector<double> temp_r, temp_t, temp_grp, temp_grl, temp_a1d;
+      std::vector< std::vector<double> > temp_2d;
+      // Make radius and theta axes
+      x = r_g_r[0];
+      while(x <= r_g_r[(r_g_r.size()-1)])
+      {
+        temp_r.push_back(x);
+        x += delta_radius;
+      }
+      x = theta_anisotropy_2d[0];
+      while(x <= theta_anisotropy_2d[(theta_anisotropy_2d.size()-1)])
+      {
+        temp_t.push_back(x);
+        x += delta_theta;
+      }
+      // Make 1d data
+      for(int n = 0; n < temp_r.size(); n++)
+      {
+        temp_grp.push_back(GetRadialDoseFunctionPoint(temp_r[n]));
+        temp_grl.push_back(GetRadialDoseFunctionLine(temp_r[n]));
+        temp_a1d.push_back(GetAnisotropyFunctionPoint(temp_r[n]));
+      }
+      // Make 2D data
+      for(int a = 0; a < temp_t.size(); a++)
+      {
+        std::vector<double> buffer;
+        for(int n = 0; n < temp_r.size(); n++)
+        {
+          buffer.push_back(GetAnisotropyFunctionLine(temp_r[n], temp_t[a]));
+        }
+        temp_2d.push_back(buffer);
+      }
+      // Set new data and toggle precompiled status
+      r_g_r = temp_r;
+      g_r_line_data = temp_grl;
+      g_r_point_data = temp_grp;
+      r_anisotropy = temp_r;
+      theta_anisotropy_2d = temp_t;
+      anisotropy_2d_data = temp_2d;
+      anisotropy_1d_data = temp_a1d;
+      precomputed = true;
+    }
+  }
+
+  double BrachyDoseTG43::GetRadialDoseFunctionPoint(double r)
+  {
+    double ans;
+    if(precomputed)
+    {
+      ans = solutio::LinearInterpolationFast(r_g_r, g_r_point_data, r, delta_radius);
+    }
+    else ans = solutio::LinearInterpolation(r_g_r, g_r_point_data, r);
+    return ans;
+  }
+
+  double BrachyDoseTG43::GetRadialDoseFunctionLine(double r)
+  {
+    double ans;
+    if(precomputed)
+    {
+      ans = solutio::LinearInterpolationFast(r_g_r, g_r_line_data, r, delta_radius);
+    }
+    else ans = solutio::LinearInterpolation(r_g_r, g_r_line_data, r);
+    return ans;
+  }
+
+  double BrachyDoseTG43::GetAnisotropyFunctionPoint(double r)
+  {
+    double ans;
+    if(precomputed)
+    {
+      ans = solutio::LinearInterpolationFast(r_anisotropy, anisotropy_1d_data, r, delta_radius);
+    }
+    else ans = solutio::LinearInterpolation(r_anisotropy, anisotropy_1d_data, r);
+    return ans;
+  }
+
+  double BrachyDoseTG43::GetAnisotropyFunctionLine(double r, double theta)
+  {
+    double ans;
+    if(precomputed)
+    {
+      //ans = solutio::LinearInterpolationFast(theta_anisotropy_2d, r_anisotropy,
+      //  anisotropy_2d_data, theta, r, delta_theta, delta_radius);
+      ans = solutio::LinearInterpolation(theta_anisotropy_2d, r_anisotropy,
         anisotropy_2d_data, theta, r);
+    }
+    else ans = solutio::LinearInterpolation(theta_anisotropy_2d, r_anisotropy,
+      anisotropy_2d_data, theta, r);
+    return ans;
   }
 
-  float BrachyDoseTG43::CalcDoseRate(float aks, float r, float theta)
+  double BrachyDoseTG43::CalcDoseRatePoint(double aks, double r)
   {
-    float G = GeometryFactorTG43(r, theta, true, source_length);
-    float g = GetRadialDoseFactor(r);
-    float F = GetAnisotropyFactor(r, theta);
+    double G = 1.0 / (r*r);
+    double g = GetRadialDoseFunctionPoint(r);
+    double F = GetAnisotropyFunctionPoint(r);
+    return (aks*dose_rate_constant*G*g*F);
+  }
+
+  double BrachyDoseTG43::CalcDoseRateLine(double aks, double r, double theta)
+  {
+    double G = GeometryFactorTG43(r, theta, source_length);
+    double g = GetRadialDoseFunctionLine(r);
+    double F = GetAnisotropyFunctionLine(r, theta);
     return (aks*dose_rate_constant*G*g*F);
   }
 }
