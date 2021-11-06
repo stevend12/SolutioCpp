@@ -11,9 +11,12 @@ find_package(ITK REQUIRED)
 include(${ITK_USE_FILE})
 
 # FFTW
-#find_library(FFTW_LIBRARY NAMES fftw3 fftw fftw3_omp)
 find_library(FFTW_LIBRARY NAMES fftw3)
-set(FFTW_LIBRARIES "${FFTW_LIBRARY}")
+if(CMAKE_SYSTEM_NAME EQUAL Linux)
+  set(FFTW_LIBRARIES "${FFTW_LIBRARY}")
+else()
+  set(FFTW_LIBRARIES "fftw3_omp ${FFTW_LIBRARY}")
+endif()
 
 # DCMTK
 find_package(DCMTK)
