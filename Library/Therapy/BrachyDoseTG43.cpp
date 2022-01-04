@@ -71,7 +71,7 @@ namespace solutio
     precomputed = false;
   }
 
-  void BrachyDoseTG43::LoadData(std::string file_name)
+  bool BrachyDoseTG43::LoadData(std::string file_name)
   {
     // Initialization and open file
     std::ifstream fin;
@@ -82,48 +82,54 @@ namespace solutio
     std::vector<double>::iterator it1, it2;
 
     fin.open(file_name.c_str());
+    if(fin.bad()) return false;
 
     /////////////////////////////////
     // Get and display header data //
     /////////////////////////////////
     // Skip first two lines
-    std::getline(fin, input);
-    std::getline(fin, input);
+    if(!std::getline(fin, input)) return false;
+    if(!std::getline(fin, input)) return false;
     // Reference for data
-    std::getline(fin, input);
+    if(!std::getline(fin, input)) return false;
     p1 = input.find(' '); p1++;
     reference = input.substr(p1);
     // Source type
-    std::getline(fin, input);
+    if(!std::getline(fin, input)) return false;
     p1 = input.find(' '); p1++;
     source_type = input.substr(p1);
     // Source radionuclide name
-    std::getline(fin, input);
+    if(!std::getline(fin, input)) return false;
     p1 = input.find(' '); p1++;
     nuclide_name = input.substr(p1);
     // Source vendor name
-    std::getline(fin, input);
+    if(!std::getline(fin, input)) return false;
     p1 = input.find(' '); p1++;
     vendor_name = input.substr(p1);
     // Source model name
-    std::getline(fin, input);
+    if(!std::getline(fin, input)) return false;
     p1 = input.find(' '); p1++;
     model_name = input.substr(p1);
     // Dose rate constant and source length
-    std::getline(fin, input);
+    if(!std::getline(fin, input)) return false;
     p1 = input.find(':'); p1++;
     std::stringstream(input.substr(p1)) >> dose_rate_constant;
     // Source length
-    std::getline(fin, input);
+    if(!std::getline(fin, input)) return false;
     p1 = input.find(':'); p1++;
     std::stringstream(input.substr(p1)) >> source_length;
-    for(int n = 0; n < 3; n++){ std::getline(fin, input); }
+
+    for(int n = 0; n < 3; n++)
+    {
+      if(!std::getline(fin, input)) return false;
+    }
 
     // Get radial dose function data; interpolate as needed
     while(std::getline(fin, input))
     {
       if(input.find("end radial dose function data") != std::string::npos) break;
       std::vector<std::string> data = LineRead(input, ',');
+      if(data.size() < 3) return false;
       std::stringstream(data[0]) >> temp;
       r_g_r.push_back(temp);
       std::stringstream(data[1]) >> temp;
@@ -132,6 +138,7 @@ namespace solutio
       g_r_point_data.push_back(temp);
     }
     // Nearest neighbor interpolation for r = 0
+    if(r_g_r.size() == 0) return false;
     if(r_g_r[0] != 0.0)
     {
       it1 = r_g_r.begin();
@@ -141,12 +148,17 @@ namespace solutio
       it1 = g_r_point_data.begin();
       g_r_point_data.insert(it1, g_r_point_data[0]);
     }
-    for(int n = 0; n < 3; n++){ std::getline(fin, input); }
+
+    for(int n = 0; n < 3; n++)
+    {
+      if(!std::getline(fin, input)) return false;
+    }
 
     // Get 2D anisotropy data; interpolate as needed
     bool interpolate_zero = false;
-    std::getline(fin, input);
+    if(!std::getline(fin, input)) return false;
     std::vector<std::string> column = LineRead(input, ',');
+    if(column.size() < 3) return false;
     for(int n = 1; n < column.size(); n++)
     {
       std::stringstream(column[n]) >> temp;
@@ -163,6 +175,7 @@ namespace solutio
     {
       if(input.find("end anisotropy function data") != std::string::npos) break;
       std::vector<std::string> row = LineRead(input, ',');
+      if(row.size() < 3) return false;
       if(row[0] == "point")
       {
         for(int n = 1; n < column.size(); n++)
@@ -210,7 +223,9 @@ namespace solutio
     }
 
     fin.close();
+    
     data_loaded = true;
+    return true;
   }
 
   void BrachyDoseTG43::WriteData(std::string file_name)

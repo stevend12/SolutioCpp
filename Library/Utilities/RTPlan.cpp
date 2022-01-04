@@ -85,7 +85,7 @@ namespace solutio
     TreatmentMachineName = "";
   }
 
-  void BrachyPlan::ReadDicom(std::string file_name)
+  bool BrachyPlan::ReadDicom(std::string file_name)
   {
     BrachyPlan bp;
     Sint32 id_num, ref_num;
@@ -143,7 +143,7 @@ namespace solutio
         if(!source_seq.isValid())
         {
           std::cout << "Error: Source Sequence not valid\n";
-          return;
+          return false;
         }
         for(int n = 0; n < source_seq.getNumberOfItems(); n++)
         {
@@ -181,7 +181,7 @@ namespace solutio
         if(!app_seq.isValid())
         {
           std::cout << "Error: Application Setup Sequence not valid\n";
-          return;
+          return false;
         }
         for(int n = 0; n < app_seq.getNumberOfItems(); n++)
         {
@@ -245,7 +245,9 @@ namespace solutio
           Applicators.push_back(ba);
         }
       }
+      return true;
     }
+    else return false;
   }
 
   void BrachyPlan::Print()

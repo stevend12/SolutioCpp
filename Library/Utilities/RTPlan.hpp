@@ -92,7 +92,7 @@ namespace solutio
   {
     public:
       BrachyPlan();
-      void ReadDicom(std::string file_name);
+      bool ReadDicom(std::string file_name);
       void Print();
       int GetNumSources(){ return Sources.size(); }
       int GetNumApplicators(){ return Applicators.size(); }
