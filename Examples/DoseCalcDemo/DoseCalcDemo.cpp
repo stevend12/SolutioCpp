@@ -44,7 +44,7 @@ int main()
   std::cout << "--------------------------------------\n\n";
   // Set data folder
   std::string folder = "../../Data/SourceData/";
-  std::string source_file = folder + "Nucletron_mHDR-v2_tg43.txt";
+  std::string source_file = folder + "CLRP_HDR_Ir-192_Nucletron_microSelectron-v2_TG43.txt";
   solutio::BrachyDoseTG43 BrachyDoseCalc;
   BrachyDoseCalc.LoadData(source_file);
 }
