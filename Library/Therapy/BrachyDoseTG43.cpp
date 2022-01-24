@@ -41,6 +41,7 @@
 #include <cmath>
 
 // Solutio C++ headers
+#include "Physics/RadioactiveDecay.hpp"
 #include "Utilities/FileIO.hpp"
 #include "Utilities/DataInterpolation.hpp"
 
@@ -223,7 +224,7 @@ namespace solutio
     }
 
     fin.close();
-    
+
     data_loaded = true;
     return true;
   }
@@ -393,5 +394,64 @@ namespace solutio
     double g = GetRadialDoseFunctionLine(r);
     double F = GetAnisotropyFunctionLine(r, theta);
     return (aks*dose_rate_constant*G*g*F);
+  }
+
+  BrachyDoseTG43::CalcStats BrachyDoseTG43::CalcDoseBrachyPlan(double ref_aks,
+    struct tm ref_dt, BrachyPlan plan, Vec3<double> point, bool line_source)
+  {
+    int counter = 0;
+    CalcStats Results;
+    Results.DoseSum = 0.0;
+    Results.MinRadius = 30.0; Results.MaxRadius = -0.1; Results.AveRadius = 0.0;
+    Results.MinTheta = 200.0; Results.MaxTheta = -0.1; Results.AveTheta = 0.0;
+    Vec3<double> dist, direction;
+    for(int a = 0; a < plan.GetNumApplicators(); a++)
+    {
+      BrachyApplicator App = plan.GetApplicator(a);
+      for(int c = 0; c < App.Channels.size(); c++)
+      {
+        Radionuclide Isotope(nuclide_name);
+        int sid = App.Channels[c].ReferencedSourceNumber;
+        double aks = ref_aks * Isotope.DecayFactor(
+          ref_dt, plan.GetSource(sid).StrengthReferenceDateTime
+        );
+
+        double prev = 0.0;
+        int ind = App.Channels[c].ControlPoints.size()-1;
+        direction = App.Channels[c].ControlPoints[ind].Position
+          - App.Channels[c].ControlPoints[0].Position;
+        direction.Normalize();
+        for(int p = 0; p < App.Channels[c].ControlPoints.size(); p++)
+        {
+          dist = point - App.Channels[c].ControlPoints[p].Position;
+          double r = dist.Magnitude() / 10.0;
+          Results.AveRadius += r;
+          if(r > Results.MaxRadius) Results.MaxRadius = r;
+          if(r < Results.MinRadius) Results.MinRadius = r;
+
+          double weight = App.Channels[c].ControlPoints[p].Weight - prev;
+          prev = App.Channels[c].ControlPoints[p].Weight;
+          double dwell_time = App.Channels[c].TotalTime*
+            (weight / App.Channels[c].FinalCumulativeTimeWeight);
+
+          if(line_source)
+          {
+            double theta = acos(Dot(dist, direction) /
+              (dist.Magnitude() * direction.Magnitude()));
+            theta *= (180.0 / M_PI);
+            Results.AveTheta += theta;
+            if(theta > Results.MaxTheta) Results.MaxTheta = theta;
+            if(theta < Results.MinTheta) Results.MinTheta = theta;
+            Results.DoseSum += (dwell_time/3600.0)*CalcDoseRateLine(aks, r, theta);
+          }
+          else Results.DoseSum += (dwell_time/3600.0)*CalcDoseRatePoint(aks, r);
+          counter++;
+        }
+      }
+    }
+    Results.AveRadius /= double(counter);
+    Results.AveTheta /= double(counter);
+
+    return Results;
   }
 }

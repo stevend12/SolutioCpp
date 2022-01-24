@@ -37,8 +37,11 @@
 #include <string>
 #include <vector>
 
+#include "../Utilities/RTPlan.hpp"
+
 namespace solutio
 {
+
   double GeometryFactorTG43(double r, double theta, double L);
 
   class BrachyDoseTG43
@@ -66,6 +69,22 @@ namespace solutio
       // Calculate dose rate to point (r, theta), given air kerma strength (aks)
       double CalcDoseRatePoint(double aks, double r);
       double CalcDoseRateLine(double aks, double r, double theta);
+      // Data struct that stores calculation data from a multi-source plan
+      // calculation
+      struct CalcStats
+      {
+        double DoseSum;
+        double MinRadius;
+        double MaxRadius;
+        double AveRadius;
+        double MinTheta;
+        double MaxTheta;
+        double AveTheta;
+      };
+      // Calculate the dose from a BrachyPlan object with a user-defined air
+      // kerma strength and reference time
+      CalcStats CalcDoseBrachyPlan(double ref_aks, struct tm ref_dt,
+        BrachyPlan plan, Vec3<double> point, bool line_source = true);
     private:
       // Internal parameters
       bool data_loaded;

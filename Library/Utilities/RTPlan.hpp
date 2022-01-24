@@ -37,7 +37,6 @@
 #include <vector>
 
 #include "../Geometry/Vec3.hpp"
-#include "../Therapy/BrachyDoseTG43.hpp"
 
 namespace solutio
 {
@@ -98,8 +97,6 @@ namespace solutio
       int GetNumApplicators(){ return Applicators.size(); }
       BrachySource GetSource(int n){ return Sources[n]; }
       BrachyApplicator GetApplicator(int n){ return Applicators[n]; }
-      std::vector<double> CalculateDose(BrachyDoseTG43 &bdc, Vec3<double> point,
-        bool line_source = true);
       std::vector<ReferenceDosePoint> DosePoints;
       std::string TreatmentMachineName;
     private:
