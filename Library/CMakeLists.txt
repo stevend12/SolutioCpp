@@ -49,6 +49,7 @@ set(SOURCE
   # Physics
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistEstar.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Physics/RadioactiveDecay.cpp
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTPlan.cpp
@@ -80,6 +81,7 @@ set(HEADERS
   # Physics
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistEstar.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Physics/RadioactiveDecay.hpp
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/DataInterpolation.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.hpp
