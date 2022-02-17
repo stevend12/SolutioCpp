@@ -40,6 +40,15 @@
 
 namespace solutio
 {
+  struct FractionGroup
+  {
+    int Index;
+    int Fractions;
+    std::string Type;
+    std::vector<double> Dose;
+    std::vector<int> DoseID;
+  };
+
   struct ReferenceDosePoint
   {
     int Index;
@@ -97,8 +106,11 @@ namespace solutio
       int GetNumApplicators(){ return Applicators.size(); }
       BrachySource GetSource(int n){ return Sources[n]; }
       BrachyApplicator GetApplicator(int n){ return Applicators[n]; }
+      std::vector<FractionGroup> FractionGroups;
       std::vector<ReferenceDosePoint> DosePoints;
       std::string TreatmentMachineName;
+      std::string TreatmentTechnique;
+      std::string TreatmentType;
     private:
       std::vector<BrachySource> Sources;
       std::vector<BrachyApplicator> Applicators;

@@ -82,7 +82,7 @@ namespace solutio
 
   BrachyPlan::BrachyPlan()
   {
-    TreatmentMachineName = "";
+    TreatmentMachineName = TreatmentTechnique = TreatmentType = "";
   }
 
   bool BrachyPlan::ReadDicom(std::string file_name)
@@ -105,6 +105,33 @@ namespace solutio
       status = rtp_dcm.read(*data);
       if(status.good())
       {
+        // Load fraction schemes
+        DRTFractionGroupSequence frac_seq = rtp_dcm.getFractionGroupSequence();
+        if(frac_seq.isValid())
+        {
+          for(int n = 0; n < frac_seq.getNumberOfItems(); n++)
+          {
+            DRTFractionGroupSequence::Item frac_seq_it = frac_seq.getItem(n);
+            FractionGroup fg;
+            frac_seq_it.getFractionGroupNumber(id_num);
+            fg.Index = id_num;
+            frac_seq_it.getNumberOfFractionsPlanned(id_num);
+            fg.Fractions = id_num;
+            fg.Type = "Brachy";
+            DRTReferencedBrachyApplicationSetupSequenceInRTFractionSchemeModule
+              bass_seq = frac_seq_it.getReferencedBrachyApplicationSetupSequence();
+            for(int b = 0; b < bass_seq.getNumberOfItems(); b++)
+            {
+              DRTReferencedBrachyApplicationSetupSequenceInRTFractionSchemeModule::Item
+                bass_seq_it = bass_seq.getItem(b);
+              bass_seq_it.getBrachyApplicationSetupDose(strength);
+              fg.Dose.push_back(double(strength));
+              bass_seq_it.getReferencedBrachyApplicationSetupNumber(id_num);
+              fg.DoseID.push_back(id_num);
+            }
+            FractionGroups.push_back(fg);
+          }
+        }
         // Load dose points (if present)
         DRTDoseReferenceSequence dose_seq = rtp_dcm.getDoseReferenceSequence();
         if(dose_seq.isValid())
@@ -138,6 +165,11 @@ namespace solutio
           tx_seq_it = tx_seq.getItem(0);
         tx_seq_it.getTreatmentMachineName(name);
         TreatmentMachineName = std::string(name.c_str());
+        // Load treatment technique and type
+        rtp_dcm.getBrachyTreatmentTechnique(name);
+        TreatmentTechnique = std::string(name.c_str());
+        rtp_dcm.getBrachyTreatmentType(name);
+        TreatmentType = std::string(name.c_str());
         // Load source sequence
         DRTSourceSequence source_seq = rtp_dcm.getSourceSequence();
         if(!source_seq.isValid())
