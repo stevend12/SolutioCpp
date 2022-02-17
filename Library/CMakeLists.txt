@@ -11,9 +11,12 @@ find_package(ITK REQUIRED)
 include(${ITK_USE_FILE})
 
 # FFTW
-#find_library(FFTW_LIBRARY NAMES fftw3 fftw fftw3_omp)
 find_library(FFTW_LIBRARY NAMES fftw3)
-set(FFTW_LIBRARIES "${FFTW_LIBRARY}")
+if(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
+  set(FFTW_LIBRARIES "fftw3_omp ${FFTW_LIBRARY}")
+else()
+  set(FFTW_LIBRARIES "${FFTW_LIBRARY}")
+endif()
 
 # DCMTK
 find_package(DCMTK)
@@ -46,8 +49,10 @@ set(SOURCE
   # Physics
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistEstar.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Physics/RadioactiveDecay.cpp
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTPlan.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTStructureSet.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SncRead.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.cpp
@@ -57,7 +62,7 @@ set(SOURCE
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.cc
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDoseTG43.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/GammaIndex.cpp
 )
 
@@ -76,20 +81,25 @@ set(HEADERS
   # Physics
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistEstar.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Physics/NistPad.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Physics/RadioactiveDecay.hpp
   # Utilities
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/DataInterpolation.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/FileIO.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTPlan.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/RTStructureSet.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SncRead.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SolutioConstants.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/SolutioItk.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Statistics.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/VarianTrajectoryLog.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DcmtkRead.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomAttributes.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomDatabase.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Dicom/DicomModules.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Utilities/fftw++-2.05/fftw++.h
   # Therapy
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/CBDose.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDose43.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/BrachyDoseTG43.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Therapy/GammaIndex.hpp
 )
 

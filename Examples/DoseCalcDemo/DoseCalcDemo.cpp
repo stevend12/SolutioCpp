@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/* Copyright 2016-2017 Steven Dolly                                           */
+/* Copyright 2021 Steven Dolly                                                */
 /*                                                                            */
 /* Licensed under the Apache License, Version 2.0 (the "License");            */
 /* you may not use this file except in compliance with the License.           */
@@ -18,42 +18,33 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-// Cylinder.hpp                                                               //
-// Cylinder Geometric Object Class                                            //
-// Created June 2, 2017 (Steven Dolly)                                        //
+// DoseCalcDemo.cpp                                                           //
+// Demonstration of SolutioCpp Therapy Dose Calculation Features              //
+// Created February 8, 2021 (Steven Dolly)                                    //
 //                                                                            //
-// This header file contains a class for a three-dimensional cylindrical      //
-// geometric object, including basic geometric definitions and ray            //
-// intersection calculations.                                                 //
+// This file demonstrates various uses of the SolutioCpp library for therapy  //
+// dose calculation algorithms. Results can be viewed in the command line or  //
+// using Octave/MATLAB and the script DoseCalcDemo.m (in same folder).        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef CYLINDER_HPP
-#define CYLINDER_HPP
+// C++ headers
+#include <iostream>
 
-// Custom headers
-#include "Vec3.hpp"
-#include "Ray3.hpp"
-#include "GeometricObject.hpp"
+// Solutio library headers
+#include "Therapy/BrachyDoseTG43.hpp"
 
-namespace solutio
+int main()
 {
-  class Cylinder : public GeometricObject
-  {
-    public:
-      // Constructor and setter
-      Cylinder(Vec3<double> c, double r, double h);
-      // Get functions
-      Vec3<double> GetCentroid(){ return centroid; }
-      double GetRadius(){ return radius; }
-      double GetHeight(){ return height; }
-      // Calc functions
-      double CalcVolume();
-      double RayPathlength(Ray3 ray);
-    private:
-      double radius;
-      double height;
-  };
+  std::cout << "This program tests therapy dose calculation aspects of the SolutioCpp library.\n\n";
+  ///////////////////////////////
+  // Test BrachyDoseTG43 class //
+  ///////////////////////////////
+  std::cout << "Brachytherapy Dose Calculation (TG 43)\n";
+  std::cout << "--------------------------------------\n\n";
+  // Set data folder
+  std::string folder = "../../Data/SourceData/";
+  std::string source_file = folder + "CLRP_HDR_Ir-192_Nucletron_microSelectron-v2_TG43.txt";
+  solutio::BrachyDoseTG43 BrachyDoseCalc;
+  BrachyDoseCalc.LoadData(source_file);
 }
-
-#endif

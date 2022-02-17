@@ -54,7 +54,7 @@ namespace solutio
 
   // Normal linear interpolation for 1D vector data
   template <class T>
-  T LinearInterpolation(std::vector<T> x_data, std::vector<T> y_data, T x_value)
+  T LinearInterpolation(const std::vector<T> &x_data, const std::vector<T> &y_data, T x_value)
   {
     int index = 0;
     while((index < x_data.size()) && (x_value >= x_data[index])) index++;
@@ -64,26 +64,26 @@ namespace solutio
     T y_value = f*y_data[index] + (1-f)*y_data[(index-1)];
     return y_value;
   }
-  
+
   // Normal linear interpolation for 2D vector data
   template <class T>
-  T LinearInterpolation(std::vector<T> x_data, std::vector<T> y_data,
-      std::vector< std::vector<T> > table, T x_value, T y_value)
+  T LinearInterpolation(const std::vector<T> &x_data, const std::vector<T> &y_data,
+      const std::vector< std::vector<T> > &table, T x_value, T y_value)
   {
     int index = 0;
     while((index < x_data.size()) && (x_value >= x_data[index])) index++;
     if(index <= 0) index = 1;
     if(index >= x_data.size()) index = x_data.size()-1;
-    float y_1 = LinearInterpolation(y_data, table[(index-1)], y_value);
-    float y_2 = LinearInterpolation(y_data, table[index], y_value);
+    T y_1 = LinearInterpolation(y_data, table[(index-1)], y_value);
+    T y_2 = LinearInterpolation(y_data, table[index], y_value);
     T f = (x_value - x_data[(index-1)]) / (x_data[index] - x_data[(index-1)]);
     T t_value = f*y_2 + (1-f)*y_1;
     return t_value;
   }
-  
+
   // Normal linear interpolation for 1D vector<pair> data
   template <class T>
-  T LinearInterpolation(std::vector< std::pair<T,T> > data, T x_value)
+  T LinearInterpolation(const std::vector< std::pair<T,T> > &data, T x_value)
   {
     int index = 0;
     while((index < data.size()) && (x_value >= data[index].first)) index++;
@@ -93,7 +93,7 @@ namespace solutio
     T y_value = f*data[index].second + (1-f)*data[(index-1)].second;
     return y_value;
   }
-  
+
   //////////////////////////////////////////////////////////////////////////////
   //                                                                          //
   // Fast linear interpolation: specified sample size                         //
@@ -108,7 +108,7 @@ namespace solutio
 
   // Fast linear interpolation for 1D vector data
   template <class T>
-  T LinearInterpolationFast(std::vector<T> x_data, std::vector<T> y_data,
+  T LinearInterpolationFast(const std::vector<T> &x_data, const std::vector<T> &y_data,
       T x_value, T delta_x)
   {
     int index = ceil((x_value-x_data[0])/delta_x);
@@ -118,25 +118,23 @@ namespace solutio
     T y_value = f*y_data[index] + (1-f)*y_data[(index-1)];
     return y_value;
   }
-  
+
   // Fast linear interpolation for 2D vector data
   template <class T>
-  T LinearInterpolationFast(std::vector<T> x_data, std::vector<T> y_data,
-      std::vector< std::vector<T> > table, T x_value, T y_value, T delta_x,
+  T LinearInterpolationFast(const std::vector<T> &x_data, const std::vector<T> &y_data,
+      const std::vector< std::vector<T> > &table, T x_value, T y_value, T delta_x,
       T delta_y)
   {
     int index = ceil((x_value-x_data[0])/delta_x);
     if(index <= 0) index = 1;
     if(index >= x_data.size()) index = x_data.size()-1;
-    float y_1 = LinearInterpolationQuick(y_data, table[(index-1)],
-        y_value, delta_y);
-    float y_2 = LinearInterpolationQuick(y_data, table[index],
-        y_value, delta_y);
+    T y_1 = LinearInterpolationFast(y_data, table[(index-1)], y_value, delta_y);
+    T y_2 = LinearInterpolationFast(y_data, table[index], y_value, delta_y);
     T f = (x_value - x_data[(index-1)]) / (x_data[index] - x_data[(index-1)]);
     T t_value = f*y_2 + (1-f)*y_1;
     return t_value;
   }
-  
+
   //////////////////////////////////////////////////////////////////////////////
   //                                                                          //
   // Normal logarithmic interpolation: unspecified sample size                //
@@ -148,9 +146,9 @@ namespace solutio
   // template functions).                                                     //
   //                                                                          //
   //////////////////////////////////////////////////////////////////////////////
-  
+
   template <class T>
-  T LogInterpolation(std::vector<T> x_data, std::vector<T> y_data, T x_value)
+  T LogInterpolation(const std::vector<T> &x_data, const std::vector<T> &y_data, T x_value)
   {
     int index = 0;
     while((index < x_data.size()) && (x_value >= x_data[index])) index++;
@@ -161,8 +159,8 @@ namespace solutio
     T value_y = (pow(y_data[index], f) * pow(y_data[(index-1)],(1-f)));
     return value_y;
   }
-  
+
 };
-  
+
 // End header guard
 #endif
