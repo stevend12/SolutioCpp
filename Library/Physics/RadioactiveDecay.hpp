@@ -45,8 +45,17 @@ namespace solutio
   class Radionuclide
   {
     public:
+      // Constructors
       Radionuclide(std::string name);
       Radionuclide(std::string n, std::string abbr, double hl, std::string hlu);
+      // Get/set functions
+      std::string GetName(){ return name; }
+      std::string GetAbbrevation(){ return abbreviation; }
+      double GetHalfLife(){ return half_life; }
+      std::string GetHalfLifeUnits(){ return half_life_units; }
+      double GetElapsedTime(){ return elapsed_time; }
+      std::string GetElapsedTimeUnits(){ return elapsed_time_units; }
+      // Decay calculation
       double DecayFactor(double time, std::string units);
       double DecayFactor(struct tm ref_time, struct tm calc_time);
     private:
@@ -54,6 +63,8 @@ namespace solutio
       std::string abbreviation;
       double half_life;
       std::string half_life_units;
+      double elapsed_time;
+      std::string elapsed_time_units;
   };
 }
 

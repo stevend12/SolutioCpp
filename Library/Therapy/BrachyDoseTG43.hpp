@@ -80,6 +80,14 @@ namespace solutio
         double MinTheta;
         double MaxTheta;
         double AveTheta;
+        double OriginalStrength;
+        std::string NuclideName;
+        double NuclideHalfLife;
+        std::string NuclideHalfLifeUnits;
+        double ElapsedTime;
+        std::string ElapsedTimeUnits;
+        double DecayFactor;
+        double DecayedStrength;
       };
       // Calculate the dose from a BrachyPlan object with a user-defined air
       // kerma strength and reference time

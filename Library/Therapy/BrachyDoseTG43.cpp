@@ -405,17 +405,25 @@ namespace solutio
     Results.MinRadius = 30.0; Results.MaxRadius = -0.1; Results.AveRadius = 0.0;
     Results.MinTheta = 200.0; Results.MaxTheta = -0.1; Results.AveTheta = 0.0;
     Vec3<double> dist, direction;
+
+    Radionuclide Isotope(nuclide_name);
+    double df = Isotope.DecayFactor(
+      ref_dt, plan.GetSource(0).StrengthReferenceDateTime
+    );
+    Results.OriginalStrength = ref_aks;
+    Results.NuclideName = nuclide_name;
+    Results.NuclideHalfLife = Isotope.GetHalfLife();
+    Results.NuclideHalfLifeUnits = Isotope.GetHalfLifeUnits();
+    Results.ElapsedTime = Isotope.GetElapsedTime();
+    Results.ElapsedTimeUnits = Isotope.GetElapsedTimeUnits();
+    Results.DecayFactor = df;
+    Results.DecayedStrength = ref_aks * Results.DecayFactor;
+
     for(int a = 0; a < plan.GetNumApplicators(); a++)
     {
       BrachyApplicator App = plan.GetApplicator(a);
       for(int c = 0; c < App.Channels.size(); c++)
       {
-        Radionuclide Isotope(nuclide_name);
-        int sid = App.Channels[c].ReferencedSourceNumber;
-        double aks = ref_aks * Isotope.DecayFactor(
-          ref_dt, plan.GetSource(sid).StrengthReferenceDateTime
-        );
-
         double prev = 0.0;
         int ind = App.Channels[c].ControlPoints.size()-1;
         direction = App.Channels[c].ControlPoints[ind].Position
@@ -442,9 +450,14 @@ namespace solutio
             Results.AveTheta += theta;
             if(theta > Results.MaxTheta) Results.MaxTheta = theta;
             if(theta < Results.MinTheta) Results.MinTheta = theta;
-            Results.DoseSum += (dwell_time/3600.0)*CalcDoseRateLine(aks, r, theta);
+            Results.DoseSum += (dwell_time/3600.0)*CalcDoseRateLine(
+              Results.DecayedStrength, r, theta);
           }
-          else Results.DoseSum += (dwell_time/3600.0)*CalcDoseRatePoint(aks, r);
+          else
+          {
+            Results.DoseSum += (dwell_time/3600.0)*CalcDoseRatePoint(
+              Results.DecayedStrength, r);
+          }
           counter++;
         }
       }

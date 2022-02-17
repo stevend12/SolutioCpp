@@ -78,9 +78,11 @@ namespace solutio
   double Radionuclide::DecayFactor(struct tm ref_time, struct tm calc_time)
   {
     double decay_time = difftime(mktime(&calc_time), mktime(&ref_time)); // seconds
-    if(half_life_units == "hours") decay_time /= (3600.);
-    if(half_life_units == "days") decay_time /= (24.*3600.);
-    if(half_life_units == "years") decay_time /= (365.*24.*3600.);
+    if(half_life_units == "hours") decay_time /= (3600.0);
+    if(half_life_units == "days") decay_time /= (24.0*3600.0);
+    if(half_life_units == "years") decay_time /= (365.0*24.0*3600.0);
+    elapsed_time = decay_time;
+    elapsed_time_units = half_life_units;
     return pow(0.5, decay_time/half_life);
   }
 }
