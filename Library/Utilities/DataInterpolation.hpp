@@ -40,6 +40,41 @@
 
 namespace solutio
 {
+  // Utility function to find index (vector)
+  template <class T>
+  int FindIndex(const std::vector<T> &axis_data, T value)
+  {
+    int index = 0;
+    if(axis_data[0] < axis_data[1])
+    {
+      while((index < axis_data.size()) && (value >= axis_data[index])) index++;
+    }
+    else
+    {
+      while((index < axis_data.size()) && (value <= axis_data[index])) index++;
+    }
+    if(index <= 0) index = 1;
+    if(index >= axis_data.size()) index = axis_data.size()-1;
+    return index;
+  }
+  // Utility function to find index (pair vector)
+  template <class T>
+  int FindIndex(const std::vector< std::pair<T,T> > &data, T value)
+  {
+    int index = 0;
+    if(data[0].first < data[1].first)
+    {
+      while((index < data.size()) && (value >= data[index].first)) index++;
+    }
+    else
+    {
+      while((index < data.size()) && (value <= data[index].first)) index++;
+    }
+    if(index <= 0) index = 1;
+    if(index >= data.size()) index = data.size()-1;
+    return index;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   //                                                                          //
   // Normal linear interpolation: unspecified sample size                     //
@@ -56,10 +91,7 @@ namespace solutio
   template <class T>
   T LinearInterpolation(const std::vector<T> &x_data, const std::vector<T> &y_data, T x_value)
   {
-    int index = 0;
-    while((index < x_data.size()) && (x_value >= x_data[index])) index++;
-    if(index <= 0) index = 1;
-    if(index >= x_data.size()) index = x_data.size()-1;
+    int index = FindIndex(x_data, x_value);
     T f = (x_value - x_data[(index-1)]) / (x_data[index] - x_data[(index-1)]);
     T y_value = f*y_data[index] + (1-f)*y_data[(index-1)];
     return y_value;
@@ -70,10 +102,7 @@ namespace solutio
   T LinearInterpolation(const std::vector<T> &x_data, const std::vector<T> &y_data,
       const std::vector< std::vector<T> > &table, T x_value, T y_value)
   {
-    int index = 0;
-    while((index < x_data.size()) && (x_value >= x_data[index])) index++;
-    if(index <= 0) index = 1;
-    if(index >= x_data.size()) index = x_data.size()-1;
+    int index = FindIndex(x_data, x_value);
     T y_1 = LinearInterpolation(y_data, table[(index-1)], y_value);
     T y_2 = LinearInterpolation(y_data, table[index], y_value);
     T f = (x_value - x_data[(index-1)]) / (x_data[index] - x_data[(index-1)]);
@@ -85,10 +114,7 @@ namespace solutio
   template <class T>
   T LinearInterpolation(const std::vector< std::pair<T,T> > &data, T x_value)
   {
-    int index = 0;
-    while((index < data.size()) && (x_value >= data[index].first)) index++;
-    if(index <= 0) index = 1;
-    if(index >= data.size()) index = data.size()-1;
+    int index = FindIndex(data, x_value);
     T f = (x_value - data[(index-1)].first) / (data[index].first - data[(index-1)].first);
     T y_value = f*data[index].second + (1-f)*data[(index-1)].second;
     return y_value;
@@ -150,10 +176,7 @@ namespace solutio
   template <class T>
   T LogInterpolation(const std::vector<T> &x_data, const std::vector<T> &y_data, T x_value)
   {
-    int index = 0;
-    while((index < x_data.size()) && (x_value >= x_data[index])) index++;
-    if(index <= 0) index = 1;
-    if(index >= x_data.size()) index = x_data.size()-1;
+    int index = FindIndex(x_data, x_value);
     T f = (log10(x_value) - log10(x_data[(index-1)])) /
         (log10(x_data[index]) - log10(x_data[(index-1)]));
     T value_y = (pow(y_data[index], f) * pow(y_data[(index-1)],(1-f)));
