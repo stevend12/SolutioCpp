@@ -408,7 +408,7 @@ namespace solutio
 
     Radionuclide Isotope(nuclide_name);
     double df = Isotope.DecayFactor(
-      ref_dt, plan.GetSource(0).StrengthReferenceDateTime
+      ref_dt, plan.Sources[0].StrengthReferenceDateTime
     );
     Results.OriginalStrength = ref_aks;
     Results.NuclideName = nuclide_name;
@@ -419,28 +419,27 @@ namespace solutio
     Results.DecayFactor = df;
     Results.DecayedStrength = ref_aks * Results.DecayFactor;
 
-    for(int a = 0; a < plan.GetNumApplicators(); a++)
+    for(int a = 0; a < plan.Applicators.size(); a++)
     {
-      BrachyApplicator App = plan.GetApplicator(a);
-      for(int c = 0; c < App.Channels.size(); c++)
+      for(int c = 0; c < plan.Applicators[a].Channels.size(); c++)
       {
         double prev = 0.0;
-        int ind = App.Channels[c].ControlPoints.size()-1;
-        direction = App.Channels[c].ControlPoints[ind].Position
-          - App.Channels[c].ControlPoints[0].Position;
+        int ind = plan.Applicators[a].Channels[c].ControlPoints.size()-1;
+        direction = plan.Applicators[a].Channels[c].ControlPoints[ind].Position
+          - plan.Applicators[a].Channels[c].ControlPoints[0].Position;
         direction.Normalize();
-        for(int p = 0; p < App.Channels[c].ControlPoints.size(); p++)
+        for(int p = 0; p < plan.Applicators[a].Channels[c].ControlPoints.size(); p++)
         {
-          dist = point - App.Channels[c].ControlPoints[p].Position;
+          dist = point - plan.Applicators[a].Channels[c].ControlPoints[p].Position;
           double r = dist.Magnitude() / 10.0;
           Results.AveRadius += r;
           if(r > Results.MaxRadius) Results.MaxRadius = r;
           if(r < Results.MinRadius) Results.MinRadius = r;
 
-          double weight = App.Channels[c].ControlPoints[p].Weight - prev;
-          prev = App.Channels[c].ControlPoints[p].Weight;
-          double dwell_time = App.Channels[c].TotalTime*
-            (weight / App.Channels[c].FinalCumulativeTimeWeight);
+          double weight = plan.Applicators[a].Channels[c].ControlPoints[p].Weight - prev;
+          prev = plan.Applicators[a].Channels[c].ControlPoints[p].Weight;
+          double dwell_time = plan.Applicators[a].Channels[c].TotalTime*
+            (weight / plan.Applicators[a].Channels[c].FinalCumulativeTimeWeight);
 
           if(line_source)
           {

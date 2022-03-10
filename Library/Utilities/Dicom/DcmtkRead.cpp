@@ -35,6 +35,7 @@
 #include <dcmtk/dcmiod/iodcommn.h>
 #include <dcmtk/dcmrt/drmdose.h>
 #include <dcmtk/dcmrt/drmstrct.h>
+#include <dcmtk/dcmrt/drmplan.h>
 
 namespace solutio
 {
@@ -46,7 +47,7 @@ namespace solutio
     if(data->findAndGetOFString(key, v).good()) output = std::string(v.c_str());
     return output;
   }
-  
+
   ItkImageF3::Pointer ReadImageSeries(std::vector<std::string> file_list,
     std::function<void(float)> progress_function)
   {
@@ -483,5 +484,196 @@ namespace solutio
     else std::cout << status.text() << '\n';
 
     return rts;
+  }
+
+  BrachyPlan ReadBrachyPlan(std::string file_name)
+  {
+    BrachyPlan bp;
+
+    Sint32 id_num, ref_num;
+    OFString type, name, units, txt;
+    std::string ref_date, ref_time;
+    Float64 half_life, strength, rel_pos, weight;
+    Float64 pos[3];
+
+    // Read in DICOM file using DCMTK
+    DcmFileFormat fileformat;
+    OFCondition status = fileformat.loadFile(file_name.c_str());
+    if(status.good())
+    {
+      // Read DICOM plan data
+      DcmDataset * data = fileformat.getDataset();
+      DRTPlanIOD rtp_dcm;
+      status = rtp_dcm.read(*data);
+      if(status.good())
+      {
+        // Load fraction schemes
+        DRTFractionGroupSequence frac_seq = rtp_dcm.getFractionGroupSequence();
+        if(frac_seq.isValid())
+        {
+          for(int n = 0; n < frac_seq.getNumberOfItems(); n++)
+          {
+            DRTFractionGroupSequence::Item frac_seq_it = frac_seq.getItem(n);
+            FractionGroup fg;
+            frac_seq_it.getFractionGroupNumber(id_num);
+            fg.Index = id_num;
+            frac_seq_it.getNumberOfFractionsPlanned(id_num);
+            fg.Fractions = id_num;
+            fg.Type = "Brachy";
+            DRTReferencedBrachyApplicationSetupSequenceInRTFractionSchemeModule
+              bass_seq = frac_seq_it.getReferencedBrachyApplicationSetupSequence();
+            for(int b = 0; b < bass_seq.getNumberOfItems(); b++)
+            {
+              DRTReferencedBrachyApplicationSetupSequenceInRTFractionSchemeModule::Item
+                bass_seq_it = bass_seq.getItem(b);
+              bass_seq_it.getBrachyApplicationSetupDose(strength);
+              fg.Dose.push_back(double(strength));
+              bass_seq_it.getReferencedBrachyApplicationSetupNumber(id_num);
+              fg.DoseID.push_back(id_num);
+            }
+            bp.FractionGroups.push_back(fg);
+          }
+        }
+        // Load dose points (if present)
+        DRTDoseReferenceSequence dose_seq = rtp_dcm.getDoseReferenceSequence();
+        if(dose_seq.isValid())
+        {
+          for(int n = 0; n < dose_seq.getNumberOfItems(); n++)
+          {
+            DRTDoseReferenceSequence::Item dose_seq_it = dose_seq.getItem(n);
+            dose_seq_it.getDoseReferenceStructureType(type);
+            if(type == "COORDINATES")
+            {
+              ReferenceDosePoint dp;
+              dose_seq_it.getDoseReferenceNumber(id_num);
+              dp.Index = id_num;
+              for(int v = 0; v < 3; v++)
+              {
+                dose_seq_it.getDoseReferencePointCoordinates(pos[v], v);
+              }
+              dp.Position.x = pos[0];
+              dp.Position.y = pos[1];
+              dp.Position.z = pos[2];
+              dose_seq_it.getTargetPrescriptionDose(strength);
+              dp.Dose = double(strength);
+              bp.DosePoints.push_back(dp);
+            }
+          }
+        }
+        // Load treatment machine name
+        DRTTreatmentMachineSequenceInRTBrachyApplicationSetupsModule tx_seq =
+          rtp_dcm.getTreatmentMachineSequence();
+        DRTTreatmentMachineSequenceInRTBrachyApplicationSetupsModule::Item
+          tx_seq_it = tx_seq.getItem(0);
+        tx_seq_it.getTreatmentMachineName(name);
+        bp.TreatmentMachineName = std::string(name.c_str());
+        // Load treatment technique and type
+        rtp_dcm.getBrachyTreatmentTechnique(name);
+        bp.TreatmentTechnique = std::string(name.c_str());
+        rtp_dcm.getBrachyTreatmentType(name);
+        bp.TreatmentType = std::string(name.c_str());
+        // Load source sequence
+        DRTSourceSequence source_seq = rtp_dcm.getSourceSequence();
+        if(!source_seq.isValid())
+        {
+          for(int n = 0; n < source_seq.getNumberOfItems(); n++)
+          {
+            BrachySource bs;
+            DRTSourceSequence::Item source_seq_it = source_seq.getItem(n);
+            source_seq_it.getSourceNumber(id_num);
+            source_seq_it.getSourceType(type);
+            source_seq_it.getSourceIsotopeName(name);
+            source_seq_it.getSourceIsotopeHalfLife(half_life);
+            source_seq_it.getSourceStrengthUnits(units);
+            source_seq_it.getReferenceAirKermaRate(strength);
+            source_seq_it.getSourceStrengthReferenceDate(txt);
+            ref_date = std::string(txt.c_str());
+            source_seq_it.getSourceStrengthReferenceTime(txt);
+            ref_time = std::string(txt.c_str());
+            struct std::tm ref_dt;
+            ref_dt.tm_sec = std::stoi(ref_time.substr(4,2));
+            ref_dt.tm_min = std::stoi(ref_time.substr(2,2));
+            ref_dt.tm_hour = std::stoi(ref_time.substr(0,2));
+            ref_dt.tm_mday = std::stoi(ref_date.substr(6,2));
+            ref_dt.tm_mon = std::stoi(ref_date.substr(4,2)) - 1;
+            ref_dt.tm_year = std::stoi(ref_date.substr(0,4)) - 1900;
+            bs.Number = id_num;
+            bs.Type = std::string(type.c_str());
+            bs.IsotopeName = std::string(name.c_str());
+            bs.IsotopeHalfLife = double(half_life);
+            bs.StrengthUnits = std::string(units.c_str());
+            bs.Strength = double(strength);
+            bs.StrengthReferenceDateTime = ref_dt;
+            bp.Sources.push_back(bs);
+          }
+        }
+        // Load application sequence
+        DRTApplicationSetupSequence app_seq =
+          rtp_dcm.getApplicationSetupSequence();
+        if(!app_seq.isValid())
+        {
+          for(int n = 0; n < app_seq.getNumberOfItems(); n++)
+          {
+            BrachyApplicator ba;
+            DRTApplicationSetupSequence::Item app_seq_it = app_seq.getItem(n);
+            app_seq_it.getApplicationSetupNumber(id_num);
+            app_seq_it.getApplicationSetupType(type);
+            app_seq_it.getTotalReferenceAirKerma(strength);
+            ba.Number = id_num;
+            ba.Type = std::string(type.c_str());
+            ba.TotalStrength = double(strength);
+            DRTChannelSequence ch_seq = app_seq_it.getChannelSequence();
+            if(!ch_seq.isValid())
+            {
+              bp.Applicators.push_back(ba);
+              continue;
+            }
+            for(int c = 0; c < ch_seq.getNumberOfItems(); c++)
+            {
+              DRTChannelSequence::Item ch_seq_it = ch_seq.getItem(c);
+              if(ch_seq_it.isValid())
+              {
+                BrachyChannel bc;
+                ch_seq_it.getChannelNumber(id_num);
+                ch_seq_it.getChannelTotalTime(strength);
+                ch_seq_it.getSourceMovementType(type);
+                ch_seq_it.getReferencedSourceNumber(ref_num);
+                ch_seq_it.getFinalCumulativeTimeWeight(weight);
+                bc.Number = id_num;
+                bc.TotalTime = strength;
+                bc.SourceMovementType = std::string(type.c_str());
+                bc.ReferencedSourceNumber = ref_num;
+                bc.FinalCumulativeTimeWeight = weight;
+                DRTBrachyControlPointSequence cp_seq = ch_seq_it.getBrachyControlPointSequence();
+                if(cp_seq.isValid())
+                {
+                  for(int p = 0; p < cp_seq.getNumberOfItems(); p++)
+                  {
+                    BrachyControlPoint bcp;
+                    cp_seq[p].getControlPointIndex(id_num);
+                    bcp.Index = id_num;
+                    for(int v = 0; v < 3; v++)
+                    {
+                      cp_seq[p].getControlPoint3DPosition(pos[v], v);
+                    }
+                    bcp.Position.x = pos[0];
+                    bcp.Position.y = pos[1];
+                    bcp.Position.z = pos[2];
+                    cp_seq[p].getControlPointRelativePosition(rel_pos);
+                    bcp.RelativePosition = double(rel_pos);
+                    cp_seq[p].getCumulativeTimeWeight(strength);
+                    bcp.Weight = double(strength);
+                    bc.ControlPoints.push_back(bcp);
+                  }
+                }
+                ba.Channels.push_back(bc);
+              }
+            }
+            bp.Applicators.push_back(ba);
+          }
+        }
+      }
+    }
+    return bp;
   }
 }

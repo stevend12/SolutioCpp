@@ -39,6 +39,7 @@
 
 #include "../SolutioItk.hpp"
 #include "../RTStructureSet.hpp"
+#include "../RTPlan.hpp"
 
 namespace solutio
 {
@@ -78,6 +79,8 @@ namespace solutio
   RTStructureSet ReadRTS(std::string file_name,
     std::function<void(float)> progress_function =
       [](float p){ std::cout << "Loading RT Structures: " << 100.0*p << "%\n"; });
+
+  BrachyPlan ReadBrachyPlan(std::string file_name);
 }
 
 #endif
