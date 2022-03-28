@@ -48,7 +48,7 @@ namespace solutio
     return output;
   }
 
-  ItkImageF3::Pointer ReadImageSeries(std::vector<std::string> file_list,
+  ItkImageF3::Pointer DcmtkReadImageSeries(std::vector<std::string> file_list,
     std::function<void(float)> progress_function)
   {
     // Create output image pointer
@@ -260,7 +260,7 @@ namespace solutio
     return output_image;
   }
 
-  ItkImageF3::Pointer ReadRTDose(std::string file_name,
+  ItkImageF3::Pointer DcmtkReadRTDose(std::string file_name,
     std::function<void(float)> progress_function)
   {
     using ImageType = ItkImageF3;
@@ -395,7 +395,7 @@ namespace solutio
     return output_image;
   }
 
-  RTStructureSet ReadRTS(std::string file_name,
+  RTStructureSet DcmtkReadRTS(std::string file_name,
     std::function<void(float)> progress_function)
   {
     RTStructureSet rts;
@@ -486,7 +486,7 @@ namespace solutio
     return rts;
   }
 
-  BrachyPlan ReadBrachyPlan(std::string file_name)
+  BrachyPlan DcmtkReadBrachyPlan(std::string file_name)
   {
     BrachyPlan bp;
 
@@ -574,7 +574,7 @@ namespace solutio
         bp.TreatmentType = std::string(name.c_str());
         // Load source sequence
         DRTSourceSequence source_seq = rtp_dcm.getSourceSequence();
-        if(!source_seq.isValid())
+        if(source_seq.isValid())
         {
           for(int n = 0; n < source_seq.getNumberOfItems(); n++)
           {
@@ -610,7 +610,7 @@ namespace solutio
         // Load application sequence
         DRTApplicationSetupSequence app_seq =
           rtp_dcm.getApplicationSetupSequence();
-        if(!app_seq.isValid())
+        if(app_seq.isValid())
         {
           for(int n = 0; n < app_seq.getNumberOfItems(); n++)
           {
@@ -673,6 +673,18 @@ namespace solutio
           }
         }
       }
+      else
+      {
+        std::string err_text = "Error obtaining DICOM data set. DCMTK Error: ";
+        err_text += status.text();
+        throw std::runtime_error(err_text);
+      }
+    }
+    else
+    {
+      std::string err_text = "Error: file is not DICOM or could not be read. DCMTK Error: ";
+      err_text += status.text();
+      throw std::runtime_error(err_text);
     }
     return bp;
   }

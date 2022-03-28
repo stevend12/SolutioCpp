@@ -35,6 +35,12 @@
 
 namespace solutio
 {
+  void ReferenceDosePoint::Print()
+  {
+    std::cout << Index << ": (" << Position.x << ", " << Position.y << ", " <<
+      Position.z << ") - " << Dose << '\n';
+  }
+
   void BrachySource::Print()
   {
     std::cout << "Source Number: " << Number << '\n';
@@ -78,12 +84,25 @@ namespace solutio
 
   void BrachyPlan::Print()
   {
+    std::cout << "Treatment Machine Name: " << TreatmentMachineName << '\n';
+    std::cout << "Treatment Technique: " << TreatmentTechnique << '\n';
+    std::cout << "Treatment Type: " << TreatmentType << '\n';
+    std::cout << '\n';
+
+    std::cout << "Dose Point List (" << DosePoints.size() << " points)\n";
+    for(int n = 0; n < DosePoints.size(); n++)
+    {
+      DosePoints[n].Print();
+    }
+    std::cout << '\n';
+
     std::cout << "Brachy Source List (" << Sources.size() << " sources)\n";
     for(int n = 0; n < Sources.size(); n++)
     {
       Sources[n].Print();
       std::cout << '\n';
     }
+
     std::cout << "Brachy Applicator List (" << Applicators.size() << " applicators)\n";
     for(int n = 0; n < Applicators.size(); n++)
     {

@@ -51,6 +51,7 @@ namespace solutio
 
   struct ReferenceDosePoint
   {
+    void Print();
     int Index;
     Vec3<double> Position;
     double Dose;
