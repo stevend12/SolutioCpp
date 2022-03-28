@@ -68,12 +68,36 @@ namespace solutio
   // Default constructor
   BrachyDoseTG43::BrachyDoseTG43()
   {
-    data_loaded = false;
-    precomputed = false;
+    SetDefaults();
   }
 
-  bool BrachyDoseTG43::LoadData(std::string file_name)
+  void BrachyDoseTG43::SetDefaults()
   {
+    data_loaded = false;
+    precomputed = false;
+    delta_radius = delta_theta = dose_rate_constant = source_length = 0.0;
+    reference = source_type = nuclide_name = vendor_name = model_name = "NA";
+  }
+
+  void BrachyDoseTG43::ClearData()
+  {
+    SetDefaults();
+
+    r_g_r.clear();
+    g_r_line_data.clear();
+    g_r_point_data.clear();
+
+    theta_anisotropy_2d.clear();
+    r_anisotropy.clear();
+    anisotropy_2d_data.clear();
+    anisotropy_1d_data.clear();
+  }
+
+  void BrachyDoseTG43::LoadData(std::string file_name)
+  {
+    // Clear previous data before loading new
+    ClearData();
+
     // Initialization and open file
     std::ifstream fin;
     std::string input, str;
@@ -83,54 +107,76 @@ namespace solutio
     std::vector<double>::iterator it1, it2;
 
     fin.open(file_name.c_str());
-    if(fin.bad()) return false;
-
-    /////////////////////////////////
-    // Get and display header data //
-    /////////////////////////////////
-    // Skip first two lines
-    if(!std::getline(fin, input)) return false;
-    if(!std::getline(fin, input)) return false;
-    // Reference for data
-    if(!std::getline(fin, input)) return false;
-    p1 = input.find(' '); p1++;
-    reference = input.substr(p1);
-    // Source type
-    if(!std::getline(fin, input)) return false;
-    p1 = input.find(' '); p1++;
-    source_type = input.substr(p1);
-    // Source radionuclide name
-    if(!std::getline(fin, input)) return false;
-    p1 = input.find(' '); p1++;
-    nuclide_name = input.substr(p1);
-    // Source vendor name
-    if(!std::getline(fin, input)) return false;
-    p1 = input.find(' '); p1++;
-    vendor_name = input.substr(p1);
-    // Source model name
-    if(!std::getline(fin, input)) return false;
-    p1 = input.find(' '); p1++;
-    model_name = input.substr(p1);
-    // Dose rate constant and source length
-    if(!std::getline(fin, input)) return false;
-    p1 = input.find(':'); p1++;
-    std::stringstream(input.substr(p1)) >> dose_rate_constant;
-    // Source length
-    if(!std::getline(fin, input)) return false;
-    p1 = input.find(':'); p1++;
-    std::stringstream(input.substr(p1)) >> source_length;
-
-    for(int n = 0; n < 3; n++)
+    if(fin.bad())
     {
-      if(!std::getline(fin, input)) return false;
+      throw std::runtime_error("BrachyDoseTG43 Error: bad ifstream");
     }
 
-    // Get radial dose function data; interpolate as needed
+    /////////////////////
+    // Get header data //
+    /////////////////////
+    for(int n = 0; n < 9; n++)
+    {
+      if(!std::getline(fin, input))
+      {
+        throw std::runtime_error(
+          "BrachyDoseTG43 Error: file header format incorrect"
+        );
+      }
+      // Skip first two lines, import header information
+      if(n > 1)
+      {
+        p1 = input.find(':');
+        if(p1 == std::string::npos)
+        {
+          throw std::runtime_error(
+            "BrachyDoseTG43 Error: file header format incorrect"
+          );
+        }
+        p1+=2;
+        if(p1 >= input.length())
+        {
+          throw std::runtime_error(
+            "BrachyDoseTG43 Error: file header format incorrect"
+          );
+        }
+        switch(n)
+        {
+          case 2: reference = input.substr(p1); break;
+          case 3: source_type = input.substr(p1); break;
+          case 4: nuclide_name = input.substr(p1); break;
+          case 5: vendor_name = input.substr(p1); break;
+          case 6: model_name = input.substr(p1); break;
+          case 7: std::stringstream(input.substr(p1)) >> dose_rate_constant; break;
+          case 8: std::stringstream(input.substr(p1)) >> source_length; break;
+        }
+      }
+    }
+
+    ///////////////////////////////////////////////////////////
+    // Get radial dose function data (interpolate as needed) //
+    ///////////////////////////////////////////////////////////
+    // Skip to data
+    for(int n = 0; n < 3; n++)
+    {
+      if(!std::getline(fin, input))
+      {
+        throw std::runtime_error(
+          "BrachyDoseTG43 Error: radial dose function file format incorrect"
+        );
+      }
+    }
+    // Read radial dose function data
     while(std::getline(fin, input))
     {
       if(input.find("end radial dose function data") != std::string::npos) break;
       std::vector<std::string> data = LineRead(input, ',');
-      if(data.size() < 3) return false;
+      if(data.size() < 3)
+      {
+        throw std::runtime_error(
+          "BrachyDoseTG43 Error: radial dose function file format incorrect"
+        );
+      }
       std::stringstream(data[0]) >> temp;
       r_g_r.push_back(temp);
       std::stringstream(data[1]) >> temp;
@@ -138,8 +184,13 @@ namespace solutio
       std::stringstream(data[2]) >> temp;
       g_r_point_data.push_back(temp);
     }
+    if(r_g_r.size() == 0)
+    {
+      throw std::runtime_error(
+        "BrachyDoseTG43 Error: radial dose function data missing"
+      );
+    }
     // Nearest neighbor interpolation for r = 0
-    if(r_g_r.size() == 0) return false;
     if(r_g_r[0] != 0.0)
     {
       it1 = r_g_r.begin();
@@ -150,21 +201,40 @@ namespace solutio
       g_r_point_data.insert(it1, g_r_point_data[0]);
     }
 
+    ////////////////////////////////////////////////////
+    // Get 2D anisotropy data (interpolate as needed) //
+    ////////////////////////////////////////////////////
+    bool interpolate_zero = false;
+    // Skip to data
     for(int n = 0; n < 3; n++)
     {
-      if(!std::getline(fin, input)) return false;
+      if(!std::getline(fin, input))
+      {
+        throw std::runtime_error(
+          "BrachyDoseTG43 Error: anisotropy function file format incorrect"
+        );
+      }
     }
-
-    // Get 2D anisotropy data; interpolate as needed
-    bool interpolate_zero = false;
-    if(!std::getline(fin, input)) return false;
+    // Get column headers
+    if(!std::getline(fin, input))
+    {
+      throw std::runtime_error(
+        "BrachyDoseTG43 Error: anisotropy function file format incorrect"
+      );
+    }
     std::vector<std::string> column = LineRead(input, ',');
-    if(column.size() < 3) return false;
+    if(column.size() < 3)
+    {
+      throw std::runtime_error(
+        "BrachyDoseTG43 Error: anisotropy function file format incorrect"
+      );
+    }
     for(int n = 1; n < column.size(); n++)
     {
       std::stringstream(column[n]) >> temp;
       r_anisotropy.push_back(temp);
     }
+    // Nearest neighbor interpolation for r = 0
     double r_min = r_anisotropy[0];
     if(r_anisotropy[0] != 0.0)
     {
@@ -172,11 +242,17 @@ namespace solutio
       it1 = r_anisotropy.begin();
       r_anisotropy.insert(it1, 0.0);
     }
+    // Get row data
     while(std::getline(fin, input))
     {
       if(input.find("end anisotropy function data") != std::string::npos) break;
       std::vector<std::string> row = LineRead(input, ',');
-      if(row.size() < 3) return false;
+      if(row.size() < 3)
+      {
+        throw std::runtime_error(
+          "BrachyDoseTG43 Error: anisotropy function file format incorrect"
+        );
+      }
       if(row[0] == "point")
       {
         for(int n = 1; n < column.size(); n++)
@@ -184,6 +260,7 @@ namespace solutio
           std::stringstream(row[n]) >> temp;
           anisotropy_1d_data.push_back(temp);
         }
+        // Nearest neighbor interpolation for r = 0
         if(interpolate_zero)
         {
           it1 = anisotropy_1d_data.begin();
@@ -200,6 +277,7 @@ namespace solutio
         {
           if(row[n] == "-")
           {
+            // Linear interpolation for missing data
             it1 = r_anisotropy.begin() + n + 1;
             it2 = r_anisotropy.end();
             std::vector<double> r_buf(it1, it2);
@@ -214,6 +292,7 @@ namespace solutio
             buffer.insert(it1, temp);
           }
         }
+        // Nearest neighbor interpolation for r = 0
         if(interpolate_zero)
         {
           it1 = buffer.begin();
@@ -223,10 +302,15 @@ namespace solutio
       }
     }
 
-    fin.close();
+    if(anisotropy_1d_data.size() == 0 && anisotropy_2d_data.size() == 0)
+    {
+      throw std::runtime_error(
+        "BrachyDoseTG43 Error: anisotropy function data missing"
+      );
+    }
 
+    fin.close();
     data_loaded = true;
-    return true;
   }
 
   void BrachyDoseTG43::WriteData(std::string file_name)
@@ -399,17 +483,28 @@ namespace solutio
   BrachyDoseTG43::CalcStats BrachyDoseTG43::CalcDoseBrachyPlan(double ref_aks,
     struct tm ref_dt, BrachyPlan plan, Vec3<double> point, bool line_source)
   {
-    int counter = 0;
+    // Initial error checking
+    if(plan.Sources.size() == 0)
+    {
+      throw std::runtime_error(
+        "BrachyDoseTG43 calculation failed: plan has no sources!");
+    }
+    if(plan.Applicators.size() == 0)
+    {
+      throw std::runtime_error(
+        "BrachyDoseTG43 calculation failed: plan has no applicators!");
+    }
+    // Set initial variables
+    int counter = 0, ind1, ind2;
     CalcStats Results;
     Results.DoseSum = 0.0;
     Results.MinRadius = 30.0; Results.MaxRadius = -0.1; Results.AveRadius = 0.0;
     Results.MinTheta = 200.0; Results.MaxTheta = -0.1; Results.AveTheta = 0.0;
-    Vec3<double> dist, direction;
+    Vec3<double> dist, direction, s_dist;
 
     Radionuclide Isotope(nuclide_name);
-    double df = Isotope.DecayFactor(
-      ref_dt, plan.Sources[0].StrengthReferenceDateTime
-    );
+    double df = Isotope.DecayFactor(ref_dt,
+      plan.Sources[0].StrengthReferenceDateTime);
     Results.OriginalStrength = ref_aks;
     Results.NuclideName = nuclide_name;
     Results.NuclideHalfLife = Isotope.GetHalfLife();
@@ -421,28 +516,65 @@ namespace solutio
 
     for(int a = 0; a < plan.Applicators.size(); a++)
     {
-      for(int c = 0; c < plan.Applicators[a].Channels.size(); c++)
+      for(auto & it_c : plan.Applicators[a].Channels)
       {
+        // Initialize calculation variable
         double prev = 0.0;
-        int ind = plan.Applicators[a].Channels[c].ControlPoints.size()-1;
-        direction = plan.Applicators[a].Channels[c].ControlPoints[ind].Position
-          - plan.Applicators[a].Channels[c].ControlPoints[0].Position;
-        direction.Normalize();
-        for(int p = 0; p < plan.Applicators[a].Channels[c].ControlPoints.size(); p++)
+        // Check if channel only has one source (treat as point if true)
+        bool single_source =
+          (it_c.ControlPoints.size() == 1);
+        // Calculate initial direction vector (if unable, treat as point source)
+        if(!single_source)
         {
-          dist = point - plan.Applicators[a].Channels[c].ControlPoints[p].Position;
+          ind1 = 0;
+          s_dist = it_c.ControlPoints[(ind1+1)].Position -
+            it_c.ControlPoints[ind1].Position;
+          while((s_dist.Magnitude() < 1.0e-5) &&
+            ind1 < it_c.ControlPoints.size()-3)
+          {
+            ind1++;
+            s_dist = it_c.ControlPoints[(ind1+1)].Position -
+              it_c.ControlPoints[ind1].Position;
+          }
+          if((s_dist.Magnitude() < 1.0e-5) &&
+            ind1 == it_c.ControlPoints.size()-1)
+          {
+            single_source = true;
+          }
+          else
+          {
+            direction = it_c.ControlPoints[(ind1+1)].Position
+              - it_c.ControlPoints[ind1].Position;
+            direction.Normalize();
+          }
+        }
+        for(int p = 0; p < it_c.ControlPoints.size(); p++)
+        {
+          dist = point - it_c.ControlPoints[p].Position;
           double r = dist.Magnitude() / 10.0;
           Results.AveRadius += r;
           if(r > Results.MaxRadius) Results.MaxRadius = r;
           if(r < Results.MinRadius) Results.MinRadius = r;
 
-          double weight = plan.Applicators[a].Channels[c].ControlPoints[p].Weight - prev;
-          prev = plan.Applicators[a].Channels[c].ControlPoints[p].Weight;
-          double dwell_time = plan.Applicators[a].Channels[c].TotalTime*
-            (weight / plan.Applicators[a].Channels[c].FinalCumulativeTimeWeight);
+          double weight = it_c.ControlPoints[p].Weight - prev;
+          prev = it_c.ControlPoints[p].Weight;
+          double dwell_time = it_c.TotalTime*
+            (weight / it_c.FinalCumulativeTimeWeight);
 
-          if(line_source)
+          if(line_source && !single_source)
           {
+            if(p == it_c.ControlPoints.size()-1){ ind1 = p - 1; ind2 = p; }
+            else { ind1 = p; ind2 = p + 1; }
+
+            s_dist = it_c.ControlPoints[ind2].Position -
+              it_c.ControlPoints[ind1].Position;
+            if(s_dist.Magnitude() > 1.0e-5)
+            {
+              direction = it_c.ControlPoints[ind2].Position
+                - it_c.ControlPoints[ind1].Position;
+              direction.Normalize();
+            }
+
             double theta = acos(Dot(dist, direction) /
               (dist.Magnitude() * direction.Magnitude()));
             theta *= (180.0 / M_PI);

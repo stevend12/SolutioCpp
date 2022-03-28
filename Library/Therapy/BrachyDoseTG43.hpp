@@ -49,8 +49,11 @@ namespace solutio
     public:
       // Default constructor
       BrachyDoseTG43();
+      // Set default values
+      void SetDefaults();
       // Load data from text file
-      bool LoadData(std::string file_name);
+      void ClearData();
+      void LoadData(std::string file_name);
       bool IsLoaded(){ return data_loaded; }
       // Pre-compute evenly-spaced tables for fast interpolation
       void PreCompute(double d_radius, double d_theta);
