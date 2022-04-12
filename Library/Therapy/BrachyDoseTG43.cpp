@@ -487,20 +487,22 @@ namespace solutio
     if(plan.Sources.size() == 0)
     {
       throw std::runtime_error(
-        "BrachyDoseTG43 calculation failed: plan has no sources!");
+        "BrachyDoseTG43 Error: plan has no sources"
+      );
     }
     if(plan.Applicators.size() == 0)
     {
       throw std::runtime_error(
-        "BrachyDoseTG43 calculation failed: plan has no applicators!");
+        "BrachyDoseTG43 Error: plan has no applicators"
+      );
     }
     // Set initial variables
-    int counter = 0, ind1, ind2;
+    int counter = 0, ind = 0;
     CalcStats Results;
     Results.DoseSum = 0.0;
     Results.MinRadius = 30.0; Results.MaxRadius = -0.1; Results.AveRadius = 0.0;
     Results.MinTheta = 200.0; Results.MaxTheta = -0.1; Results.AveTheta = 0.0;
-    Vec3<double> dist, direction, s_dist;
+    Vec3<double> dist, direction, sp_vec;
 
     Radionuclide Isotope(nuclide_name);
     double df = Isotope.DecayFactor(ref_dt,
@@ -514,82 +516,100 @@ namespace solutio
     Results.DecayFactor = df;
     Results.DecayedStrength = ref_aks * Results.DecayFactor;
 
-    for(int a = 0; a < plan.Applicators.size(); a++)
+    for(const auto &it_a : plan.Applicators)
     {
-      for(auto & it_c : plan.Applicators[a].Channels)
+      for(const auto &it_c : it_a.Channels)
       {
+        // If there are fewer than 2 control points, throw error
+        if(it_c.ControlPoints.size() <= 1)
+        {
+          throw std::runtime_error(
+            "BrachyDoseTG43 Error: every channel must have at least two control points"
+          );
+        }
+        // If first control point has non-zero weight; throw error
+        if(it_c.ControlPoints[0].Weight > 1e-05)
+        {
+          throw std::runtime_error(
+            "BrachyDoseTG43 Error: first control point in channel must be zero"
+          );
+        }
         // Initialize calculation variable
         double prev = 0.0;
-        // Check if channel only has one source (treat as point if true)
-        bool single_source =
-          (it_c.ControlPoints.size() == 1);
         // Calculate initial direction vector (if unable, treat as point source)
-        if(!single_source)
+        bool direction_found = true;
+        ind = 0;
+        sp_vec = it_c.ControlPoints[1].Position -
+          it_c.ControlPoints[0].Position;
+        while((sp_vec.Magnitude() < 1.0e-5) &&
+          ind < it_c.ControlPoints.size()-3)
         {
-          ind1 = 0;
-          s_dist = it_c.ControlPoints[(ind1+1)].Position -
-            it_c.ControlPoints[ind1].Position;
-          while((s_dist.Magnitude() < 1.0e-5) &&
-            ind1 < it_c.ControlPoints.size()-3)
-          {
-            ind1++;
-            s_dist = it_c.ControlPoints[(ind1+1)].Position -
-              it_c.ControlPoints[ind1].Position;
-          }
-          if((s_dist.Magnitude() < 1.0e-5) &&
-            ind1 == it_c.ControlPoints.size()-1)
-          {
-            single_source = true;
-          }
-          else
-          {
-            direction = it_c.ControlPoints[(ind1+1)].Position
-              - it_c.ControlPoints[ind1].Position;
-            direction.Normalize();
-          }
+          ind++;
+          sp_vec = it_c.ControlPoints[(ind+1)].Position -
+            it_c.ControlPoints[ind].Position;
         }
-        for(int p = 0; p < it_c.ControlPoints.size(); p++)
+        if((sp_vec.Magnitude() < 1.0e-5) &&
+          ind == it_c.ControlPoints.size()-1)
         {
-          dist = point - it_c.ControlPoints[p].Position;
-          double r = dist.Magnitude() / 10.0;
-          Results.AveRadius += r;
-          if(r > Results.MaxRadius) Results.MaxRadius = r;
-          if(r < Results.MinRadius) Results.MinRadius = r;
+          direction_found = false;
+        }
+        else
+        {
+          direction = it_c.ControlPoints[(ind+1)].Position
+            - it_c.ControlPoints[ind].Position;
+          direction.Normalize();
+        }
 
-          double weight = it_c.ControlPoints[p].Weight - prev;
-          prev = it_c.ControlPoints[p].Weight;
+        for(auto it_p = std::next(it_c.ControlPoints.begin());
+          it_p != it_c.ControlPoints.end(); it_p++)
+        {
+          // Calculate total weight/time for current control point (CP)
+          double weight = it_p->Weight - prev;
+          prev = it_p->Weight;
           double dwell_time = it_c.TotalTime*
             (weight / it_c.FinalCumulativeTimeWeight);
-
-          if(line_source && !single_source)
+          // Calculate number of sub-points for this CP and sub-point dwell time
+          int n_sub_points;
+          sp_vec = it_p->Position - (it_p-1)->Position;
+          if(sp_vec.Magnitude() < 1.0e-5) n_sub_points = 2;
+          else n_sub_points = std::round(sp_vec.Magnitude() / 2.0d) + 1;
+          double sub_point_time = (dwell_time/3600.0) / double(n_sub_points);
+          // Sum dose for each sub-point
+          for(int sp = 0; sp < n_sub_points; sp++)
           {
-            if(p == it_c.ControlPoints.size()-1){ ind1 = p - 1; ind2 = p; }
-            else { ind1 = p; ind2 = p + 1; }
-
-            s_dist = it_c.ControlPoints[ind2].Position -
-              it_c.ControlPoints[ind1].Position;
-            if(s_dist.Magnitude() > 1.0e-5)
+            // Calculate sub-point position and radius to calculation point
+            dist = point - ((it_p-1)->Position + (sp_vec / double(n_sub_points)));
+            double r = dist.Magnitude() / 10.0;
+            Results.AveRadius += r;
+            if(r > Results.MaxRadius) Results.MaxRadius = r;
+            if(r < Results.MinRadius) Results.MinRadius = r;
+            // If using line source calculation, calculate theta first
+            if(line_source && direction_found)
             {
-              direction = it_c.ControlPoints[ind2].Position
-                - it_c.ControlPoints[ind1].Position;
-              direction.Normalize();
+              // If position changes, update direction
+              if(sp_vec.Magnitude() > 1.0e-5)
+              {
+                direction = it_p->Position - (it_p-1)->Position;
+                direction.Normalize();
+              }
+              // Calculate theta and dose
+              double theta = acos(Dot(dist, direction) /
+                (dist.Magnitude() * direction.Magnitude()));
+              theta *= (180.0 / M_PI);
+              Results.AveTheta += theta;
+              if(theta > Results.MaxTheta) Results.MaxTheta = theta;
+              if(theta < Results.MinTheta) Results.MinTheta = theta;
+              Results.DoseSum += sub_point_time*CalcDoseRateLine(
+                Results.DecayedStrength, r, theta);
             }
-
-            double theta = acos(Dot(dist, direction) /
-              (dist.Magnitude() * direction.Magnitude()));
-            theta *= (180.0 / M_PI);
-            Results.AveTheta += theta;
-            if(theta > Results.MaxTheta) Results.MaxTheta = theta;
-            if(theta < Results.MinTheta) Results.MinTheta = theta;
-            Results.DoseSum += (dwell_time/3600.0)*CalcDoseRateLine(
-              Results.DecayedStrength, r, theta);
+            // Otherwise use point calculation with radius only
+            else
+            {
+              Results.DoseSum += sub_point_time*CalcDoseRatePoint(
+                Results.DecayedStrength, r);
+            }
+            counter++;
           }
-          else
-          {
-            Results.DoseSum += (dwell_time/3600.0)*CalcDoseRatePoint(
-              Results.DecayedStrength, r);
-          }
-          counter++;
         }
       }
     }
