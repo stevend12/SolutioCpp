@@ -108,7 +108,7 @@ namespace solutio
       void Print();
       int NumLogFiles(){ return tlog_files.size(); }
       VarianTrajectoryLog GetLogFile(int n);
-      std::string GetLogInfo(int n);
+      std::vector<std::string> GetLogInfo(int n);
     private:
       struct file_data
       {
