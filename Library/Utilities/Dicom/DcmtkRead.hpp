@@ -39,6 +39,7 @@
 
 #include "../SolutioItk.hpp"
 #include "../RTStructureSet.hpp"
+#include "../RTPlan.hpp"
 
 namespace solutio
 {
@@ -67,17 +68,19 @@ namespace solutio
     return output;
   }
 
-  ItkImageF3::Pointer ReadImageSeries(std::vector<std::string> file_list,
+  ItkImageF3::Pointer DcmtkReadImageSeries(std::vector<std::string> file_list,
     std::function<void(float)> progress_function =
       [](float p){ std::cout << 100.0*p << "%\n"; });
 
-  ItkImageF3::Pointer ReadRTDose(std::string file_name,
+  ItkImageF3::Pointer DcmtkReadRTDose(std::string file_name,
     std::function<void(float)> progress_function =
       [](float p){ std::cout << "Loading RT Dose: " << 100.0*p << "%\n"; });
 
-  RTStructureSet ReadRTS(std::string file_name,
+  RTStructureSet DcmtkReadRTS(std::string file_name,
     std::function<void(float)> progress_function =
       [](float p){ std::cout << "Loading RT Structures: " << 100.0*p << "%\n"; });
+
+  BrachyPlan DcmtkReadBrachyPlan(std::string file_name);
 }
 
 #endif

@@ -50,7 +50,7 @@ namespace solutio
       void Set(T ix, T iy, T iz){ x = ix; y = iy; z = iz; };
       // Overloaded operators
       void operator=(const Vec3 &v)
-      { 
+      {
         x = v.x;
         y = v.y;
         z = v.z;
@@ -78,7 +78,7 @@ namespace solutio
   {
     return sqrt(pow(x,2) + pow(y,2) + pow(z,2));
   }
-  
+
   template <class T>
   void Vec3<T>::Normalize()
   {
@@ -98,7 +98,7 @@ namespace solutio
     sum.z = a.z + b.z;
     return sum;
   }
-  
+
   template <class T>
   Vec3<T> operator-(const Vec3<T> &a, const Vec3<T> &b)
   {
@@ -108,7 +108,7 @@ namespace solutio
     diff.z = a.z - b.z;
     return diff;
   }
-  
+
   template <class T>
   Vec3<T> operator*(const Vec3<T> &a, const T &b)
   {
@@ -117,6 +117,16 @@ namespace solutio
     prod.y = a.y*b;
     prod.z = a.z*b;
     return prod;
+  }
+
+  template <class T>
+  Vec3<T> operator/(const Vec3<T> &a, const T &b)
+  {
+    Vec3<T> div;
+    div.x = a.x/b;
+    div.y = a.y/b;
+    div.z = a.z/b;
+    return div;
   }
 
   // Special vector functions for vector class

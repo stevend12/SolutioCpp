@@ -104,7 +104,7 @@ set(HEADERS
 )
 
 add_library(solutio STATIC ${SOURCE} ${HEADERS})
-target_link_libraries(solutio ${ITK_LIBRARIES} ${FFTW_LIBRARIES} ${DCMTK_LIBRARIES})
+target_link_libraries(solutio ${ITK_LIBRARIES} ${FFTW_STATIC_LIBRARIES} ${DCMTK_STATIC_LIBRARIES})
 
 # Install library
 install(

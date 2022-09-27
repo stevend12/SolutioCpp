@@ -223,19 +223,19 @@ namespace solutio {
     std::function<void(float)> progress_function)
   {
     std::vector<std::string> file_list = GetSeriesFileNames(series_id);
-    return ReadImageSeries(file_list, progress_function);
+    return DcmtkReadImageSeries(file_list, progress_function);
   }
 
   ItkImageF3::Pointer DicomDatabase::GetRTDose(unsigned int series_id)
   {
     std::vector<std::string> file_list = GetSeriesFileNames(series_id);
-    return ReadRTDose(file_list[0]);
+    return DcmtkReadRTDose(file_list[0]);
   }
 
   RTStructureSet DicomDatabase::GetRTS(unsigned int series_id)
   {
     std::vector<std::string> file_list = GetSeriesFileNames(series_id);
-    return ReadRTS(file_list[0]);
+    return DcmtkReadRTS(file_list[0]);
   }
 
   std::vector<std::string> DicomDatabase::PrintTree()

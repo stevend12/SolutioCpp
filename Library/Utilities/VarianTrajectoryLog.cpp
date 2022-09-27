@@ -408,9 +408,11 @@ namespace solutio
 
     return results;
   }
-  
+
   void VarianTrajectoryLogDatabase::MakeDatabase(std::string database_path)
   {
+    // Clear existing list
+    tlog_files.clear();
     for(const auto & entry : std::filesystem::recursive_directory_iterator(database_path))
     {
       if(!std::filesystem::is_directory(entry.path()))
@@ -454,7 +456,6 @@ namespace solutio
             time_t timer = mktime(&temp.date);
             temp.date = *(localtime(&timer));
           }
-          std::cout << "Made it here\n";
           tlog_files.push_back(temp);
         }
       }
@@ -488,17 +489,19 @@ namespace solutio
     return tlg;
   }
 
-  std::string VarianTrajectoryLogDatabase::GetLogInfo(int n)
+  std::vector<std::string> VarianTrajectoryLogDatabase::GetLogInfo(int n)
   {
-    std::string info = "";
+    std::vector<std::string> info;
     if(n >= tlog_files.size())
     {
       std::cout << "Index not found, returning blank string\n";
     }
     else
     {
-      info = tlog_files[n].id+", "+tlog_files[n].plan+", "+
-        tlog_files[n].field+", "+std::string(asctime(&tlog_files[n].date));
+      info.push_back(tlog_files[n].id);
+      info.push_back(tlog_files[n].plan);
+      info.push_back(tlog_files[n].field);
+      info.push_back(std::string(asctime(&tlog_files[n].date)));
     }
     return info;
   }

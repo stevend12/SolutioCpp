@@ -61,6 +61,12 @@ namespace solutio {
           DcmDataset * data = fileformat.getDataset();
           Read(data);
         }
+        else
+        {
+          std::string err_text = "Error reading DICOM file. DCMTK Error: ";
+          err_text += status.text();
+          throw std::runtime_error(err_text);
+        }
       }
       void Insert(DcmDataset * data)
       {

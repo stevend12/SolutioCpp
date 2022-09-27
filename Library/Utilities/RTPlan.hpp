@@ -51,6 +51,7 @@ namespace solutio
 
   struct ReferenceDosePoint
   {
+    void Print();
     int Index;
     Vec3<double> Position;
     double Dose;
@@ -96,24 +97,16 @@ namespace solutio
     std::vector<BrachyChannel> Channels;
   };
 
-  class BrachyPlan
+  struct BrachyPlan
   {
-    public:
-      BrachyPlan();
-      bool ReadDicom(std::string file_name);
-      void Print();
-      int GetNumSources(){ return Sources.size(); }
-      int GetNumApplicators(){ return Applicators.size(); }
-      BrachySource GetSource(int n){ return Sources[n]; }
-      BrachyApplicator GetApplicator(int n){ return Applicators[n]; }
-      std::vector<FractionGroup> FractionGroups;
-      std::vector<ReferenceDosePoint> DosePoints;
-      std::string TreatmentMachineName;
-      std::string TreatmentTechnique;
-      std::string TreatmentType;
-    private:
-      std::vector<BrachySource> Sources;
-      std::vector<BrachyApplicator> Applicators;
+    void Print();
+    std::vector<FractionGroup> FractionGroups;
+    std::vector<ReferenceDosePoint> DosePoints;
+    std::vector<BrachySource> Sources;
+    std::vector<BrachyApplicator> Applicators;
+    std::string TreatmentMachineName;
+    std::string TreatmentTechnique;
+    std::string TreatmentType;
   };
 }
 
