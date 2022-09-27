@@ -60,6 +60,7 @@ namespace solutio
       // Write current data (with interpolated/pre-computed values) to text file
       void WriteData(std::string file_name);
       // Get values
+      std::string GetVersion(){ return version; }
       std::string GetNuclideName(){ return nuclide_name; }
       std::string GetVendorName(){ return vendor_name; }
       std::string GetModelName(){ return model_name; }
@@ -103,6 +104,7 @@ namespace solutio
       double delta_radius;
       double delta_theta;
       // Header data
+      std::string version; // Data file version number
       std::string reference; // Reference for data
       std::string source_type; // Type (HDR, LDR, PDR)
       std::string nuclide_name; // Source radionuclide name

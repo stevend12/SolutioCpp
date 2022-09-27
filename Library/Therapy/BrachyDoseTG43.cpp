@@ -115,7 +115,7 @@ namespace solutio
     /////////////////////
     // Get header data //
     /////////////////////
-    for(int n = 0; n < 9; n++)
+    for(int n = 0; n < 10; n++)
     {
       if(!std::getline(fin, input))
       {
@@ -142,13 +142,14 @@ namespace solutio
         }
         switch(n)
         {
-          case 2: reference = input.substr(p1); break;
-          case 3: source_type = input.substr(p1); break;
-          case 4: nuclide_name = input.substr(p1); break;
-          case 5: vendor_name = input.substr(p1); break;
-          case 6: model_name = input.substr(p1); break;
-          case 7: std::stringstream(input.substr(p1)) >> dose_rate_constant; break;
-          case 8: std::stringstream(input.substr(p1)) >> source_length; break;
+          case 2: version = input.substr(p1); break;
+          case 3: reference = input.substr(p1); break;
+          case 4: source_type = input.substr(p1); break;
+          case 5: nuclide_name = input.substr(p1); break;
+          case 6: vendor_name = input.substr(p1); break;
+          case 7: model_name = input.substr(p1); break;
+          case 8: std::stringstream(input.substr(p1)) >> dose_rate_constant; break;
+          case 9: std::stringstream(input.substr(p1)) >> source_length; break;
         }
       }
     }
@@ -531,7 +532,7 @@ namespace solutio
         if(it_c.ControlPoints[0].Weight > 1e-05)
         {
           throw std::runtime_error(
-            "BrachyDoseTG43 Error: first control point in channel must be zero"
+            "BrachyDoseTG43 Error: first control point in channel must have zero weight"
           );
         }
         // Initialize calculation variable
