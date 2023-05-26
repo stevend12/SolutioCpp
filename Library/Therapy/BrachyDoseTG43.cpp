@@ -50,13 +50,13 @@ namespace solutio
   double GeometryFactorTG43(double r, double theta, double L)
   {
     double geometry_factor = 0.0;
-    double G_0 = (atan2(-L/2.0, 1.0) - atan2(L/2.0, 1.0)) / L;
-    if(theta == 0.0)
+    if(theta == 0.0 || theta == 180.0)
     {
       geometry_factor = 1.0/(r*r - (L*L)/4.0);
-      geometry_factor /= G_0;
+      geometry_factor /= (1.0/(1.0 - (L*L)/4.0));
     }
     else {
+      double G_0 = (atan2(-L/2.0, 1.0) - atan2(L/2.0, 1.0)) / L;
       double beta = atan2(r*cos(theta*(M_PI/180.0))-L/2.0, r*sin(theta*(M_PI/180.0)))
           - atan2(r*cos(theta*(M_PI/180.0))+L/2.0, r*sin(theta*(M_PI/180.0)));
       geometry_factor = beta/(L*r*sin(theta*(M_PI/180.0)));

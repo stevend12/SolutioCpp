@@ -39,6 +39,7 @@ namespace solutio
   std::vector< std::tuple<std::string, std::string, double, std::string> >
     RadionuclideList
   {
+    std::make_tuple("Cobalt-60", "Co-60", 5.25, "years"),
     std::make_tuple("Iodine-131", "I-131", 8.0, "days"),
     std::make_tuple("Iridium-192", "Ir-192", 74.0, "days")
   };
