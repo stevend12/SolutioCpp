@@ -46,5 +46,13 @@ int main()
   std::string folder = "../../Data/SourceData/";
   std::string source_file = folder + "CLRP_HDR_Ir-192_Nucletron_microSelectron-v2_TG43.txt";
   solutio::BrachyDoseTG43 BrachyDoseCalc;
+  // Loads data from file
   BrachyDoseCalc.LoadData(source_file);
+  // Calculates dose rate at a point for the given parameters
+  double air_kerma_strength = 40000.0; // Units: U
+  double radius = 2.3; // Units: cm
+  double theta = 65.0; // Units: deg
+  double dose_rate =
+    BrachyDoseCalc.CalcDoseRateLine(air_kerma_strength, radius, theta);
+  std::cout << "Dose Rate = " << dose_rate << " cGy/hr\n";
 }
