@@ -161,6 +161,17 @@ namespace solutio
     return t_value;
   }
 
+  // Fast linear interpolation for 1D vector<pair> data
+  template <class T>
+  T LinearInterpolationFast(const std::vector< std::pair<T,T> > &data,
+    T x_value, T delta_x)
+  {
+    int index = ceil((x_value-data[0].first)/delta_x);
+    T f = (x_value - data[(index-1)].first) / (data[index].first - data[(index-1)].first);
+    T y_value = f*data[index].second + (1-f)*data[(index-1)].second;
+    return y_value;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   //                                                                          //
   // Normal logarithmic interpolation: unspecified sample size                //
@@ -173,14 +184,29 @@ namespace solutio
   //                                                                          //
   //////////////////////////////////////////////////////////////////////////////
 
+  // Normal log interpolation for 1D vector data
   template <class T>
   T LogInterpolation(const std::vector<T> &x_data, const std::vector<T> &y_data, T x_value)
   {
     int index = FindIndex(x_data, x_value);
     T f = (log10(x_value) - log10(x_data[(index-1)])) /
         (log10(x_data[index]) - log10(x_data[(index-1)]));
-    T value_y = (pow(y_data[index], f) * pow(y_data[(index-1)],(1-f)));
-    return value_y;
+    T y_value = (pow(y_data[index], f) * pow(y_data[(index-1)],(1-f)));
+    return y_value;
+  }
+
+  // Normal log interpolation for 2D vector data
+  template <class T>
+  T LogInterpolation(const std::vector<T> &x_data, const std::vector<T> &y_data,
+      const std::vector< std::vector<T> > &table, T x_value, T y_value)
+  {
+    int index = FindIndex(x_data, x_value);
+    T y_1 = LogInterpolation(y_data, table[(index-1)], y_value);
+    T y_2 = LogInterpolation(y_data, table[index], y_value);
+    T f = (log10(x_value) - log10(x_data[(index-1)])) /
+        (log10(x_data[index]) - log10(x_data[(index-1)]));
+    T t_value = (pow(y_2, f) * pow(y_1, (1-f)));
+    return t_value;
   }
 
 };
